@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- customAccessDenied를 자바빈(객체)으로 등록함 
+		 사용자가 권한이 없을 경우, 접근 거부 처리
+	-->
+	<bean id="customAccessDenied" 
+		class="com.buff.security.CustomAccessDeniedHandler"></bean>
+	
+	<!-- customLoginSuccess : 로그인 성공시 처리할 핸들러 -->
+	<bean id="customLoginSuccess" 
+		class="com.buff.security.CustomLoginSuccessHandler"></bean>
+		
+	<!-- 사용자가 정의한 비밀번호 암호화 처리기를 빈으로 등록함 
+		이는 비밀번호를 암호화를 하지 않는 방식. /////// 주석 처리함.
+	-->
+<!-- 	<bean id="customPasswordEncoder" -->
+<!-- 		class="com.buff.security.CustomNoOpPasswordEncoder"></bean> -->
+	
+	<!-- 사용자정의 사용자 상세 기능을 위한 핸들러 ******* 
+		 로그인 시 사용자의 상세 정보를 DB에서 조회하는 역할
+	-->
+	<bean id="customUserDetailsService"
+		class="com.buff.security.CustomUserDetailsService"></bean>
+		
+	<!-- customLogoutSuccessHandler(사용자정의 로그아웃 성공 핸들러) -->
+	<bean id="customLogoutSuccessHandler"
+		class="com.buff.security.CustomLogoutSuccessHandler"></bean>
+		
+	<!-- 스프링 시큐리티에서 제공하는 BCryptPasswordEncoder 클래스를 자바빈으로 등록함 
+		비밀번호 암호화 사용을 위한 클래스 
+		/////// 주석 풀음.
+	-->
+	<bean id="bcryptPasswordEncoder"
+		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+	
+	<!-- 에러 페이지 별개 이동 설정 -->
+	<bean id="customAuthenticationFailureHandler"
+		class="com.buff.security.CustomAuthenticationFailureHandler" />
+	
+	<!-- xmlns : xml namespace의 약자
+		Role : 권한(authorization)
+		permitAll : 누구나 접근 가능 / hasRole : 권한을 갖은자인가?
+	 -->
+	<security:http>
+		<!-- /// 여기도 건듭니다. /// -->
+		<!-- URI 패턴으로 접근 제한을 설정 -->
+<!-- 		<security:intercept-url pattern="/hdofc/*" 	access="hasRole('ROLE_HDOFC')" /> -->
+<!-- 		<security:intercept-url pattern="/cnpt/*" 	access="hasRole('ROLE_CNPT')" /> -->
+<!-- 		<security:intercept-url pattern="/frcs/*" 	access="hasRole('ROLE_FRCS')" /> -->
+<!-- 		<security:intercept-url pattern="/cust/*" 	access="hasRole('ROLE_CUST')" /> -->
+	
+		<!-- 접근 제한에 걸리면 시큐리티가 기본적으로 제공하는 로그인 페이지로 이동 -->
+<!-- 		<security:form-login/> -->
+
+		<!-- //// 이 부분 건듭니다 //// --> 
+		<!-- 폼 기반 인증 기능을 사용 -->
+		<!-- 사용자가 정의한 로그인 페이지의 URI를 지정함 -->
+		<!-- customLoginSuccess를 인증(로그인) 성공 처리자로 지정함 -->
+		<!-- /// 64번 줄 부터 시큐리티 파일에서 로그인 페이지와 인증 성공/ 실패 처리를 정의하면, 컨트롤러에서 로그인 관련 처리를 
+			 별도로 구현할 필요가 없다. ///	 
+		 -->
+		<security:form-login login-page="/login" 
+			authentication-success-handler-ref="customLoginSuccess"
+			 authentication-failure-handler-ref="customAuthenticationFailureHandler"
+			username-parameter="username"
+			password-parameter="password"
+		/>
+		
+		<!-- 
+		로그인이 된 회원 중에 권한이 없을 때..
+		접근access 거부denied 처리자handler 의 URI를 지정 -->
+<!-- 		<security:access-denied-handler error-page="/accessError" /> -->
+
+		<!-- 등록한 CustomAccessDeniedHandler를 접근 거부 처리자로 지정함
+			 접근 거부 처리자 등록
+		 -->
+		<security:access-denied-handler ref="customAccessDenied" />
+		
+		<!-- 데이터소스를 지정하고 테이블을 이용해서 기존 로그인 정보를 기록 
+			 쿠키의 유효시간을 지정함
+			 token-validity-seconds : 쿠키의 유효시간(초) 604800초는 7일
+			 Remember-me 기능 설정
+		-->
+		<security:remember-me data-source-ref="dataSource"
+		token-validity-seconds="604800" />
+		
+		<!-- 로그아웃 처리를 위한 URI를 지정하고, 로그아웃한 후에 세션을 무효화 함
+		customLogoutSuccessHandler(사용자정의 로그아웃 성공 처리자) 
+		JSESSION_ID : 웹브라우저(유일한 세션)의 그 유일한 세션 값을 쿠키에 담고있음
+		-->
+		<security:logout logout-url="/logout" invalidate-session="true" 
+			 success-handler-ref="customLogoutSuccessHandler"
+			 delete-cookies="remember-me,JSESSION_ID" />
+		
+			 
+	</security:http>
+	
+	<!-- authentication : 인증(로그인) 
+	1) 회원 게시판(Board)
+		가) 목록("/board/list") : 모두가 접근 가능
+		나) 등록("/board/register") : 로그인한 회원만 접근 가능
+	2) 공지사항 게시판(Notice)
+		가) 목록("/notice/list") : 모두가 접근 가능
+		나) 등록("/notice/register") : 로그인한 관리자만 접근 가능
+	
+	1 회원(USERS)테이블 : USERNAME, PASSWORD, ENABLED
+	
+	N 권한(AUTH)테이블 : USERNAME, AUTHORIZE
+	-->
+	<security:authentication-manager>
+		<!-- 지정된 아이디와 패스워드로 로그인이 가능하도록 설정 
+		authentication-provider : 인증(로그인) 제공자
+		-->
+		<security:authentication-provider user-service-ref="customUserDetailsService">
+			<!-- DB를 사용하겠다라는 의미. 데이터 소스(root-context.xml)를 지정. 
+				//////// 주석을 풀음.
+			-->
+<!-- 			<security:jdbc-user-service data-source-ref="dataSource"/> -->
+			<!-- 사용자가 정의한 비밀번호 암호화 처리기를 지정(암호화를 안쓰겠다라는 의미) 
+				//////// 아래를 주석 처리함.
+			-->
+<!-- 			<security:password-encoder ref="customPasswordEncoder" /> -->
+
+			<!-- BCryptPasswordEncoder 비밀번호 암호화 처리기를 사용하겠다라는 의미 
+				//////// 주석을 풀음.
+			-->
+			<security:password-encoder ref="bcryptPasswordEncoder" />
+			
+			
+<!-- 			<security:user-service> -->
+				<!-- 메모리상에 아이디와 패스워드를 지정하고 로그인을 처리함 
+				스프링 시큐리티 5버전부터는 패스워드 암호화 처리기를 반드시 이용해야 함
+				암호화 처리기를 사용하지 않도록 noop 문자열을 비밀번호 앞에 사용함
+				 -->
+<!-- 				<security:user name="member" password="{noop}1234"  -->
+<!-- 									authorities="ROLE_MEMBER" /> -->
+<!-- 				<security:user name="admin" password="{noop}1234"  -->
+<!-- 									authorities="ROLE_ADMIN" /> -->
+<!-- 			</security:user-service> -->
+		</security:authentication-provider>
+	</security:authentication-manager>
+</beans>
+
+
+

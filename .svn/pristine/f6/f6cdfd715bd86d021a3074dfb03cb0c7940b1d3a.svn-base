@@ -1,0 +1,30 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+/**
+* @packageName  : com.buff.vo
+* @fileName     : MngrVO.java
+* @author       : 송예진
+* @date         : 2024.09.13
+* @description  : 관리자 정보
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        송예진     	  			최초 생성
+*/
+@Data
+public class MngrVO {
+	// 순번
+	private int rnum;
+	
+	private String mngrId;
+	private String mngrType; // 관리자 유형
+	private String jncmpYmd; // 재직 일자
+	private String hdofYn; // 재직 여부
+	private String rtrmYmd; // 퇴직 일자
+	
+	// 1:1 회원 정보
+	private MemberVO mbrVO;
+	private MemberVO memberVO;
+}

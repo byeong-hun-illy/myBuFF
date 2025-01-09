@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.09.24
+@description  : 거래처 상품 단가 추이 관련 sql
+ -->
+<mapper namespace="com.buff.cnpt.mapper.CnptAmtTrendMapper">
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>	
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		<association property="gdsAmtVO" resultMap="gdsAmtMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap" />
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	<!--
+ 		@programName : 거래처 상품 단가 변동 추이 조회
+ 		@description : 6개월 간의 상품 단가 변동 추이 그래프 화면
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="selectAmtTrend" resultMap="gdsAmtMap" parameterType="hashMap">
+		SELECT GA.GDS_CODE
+		      , GA.BZENT_NO
+		      , GA.AMT
+		      , GA.AJMT_DT
+		      , SP.QTY
+		      , SP.GDS_AMT
+		      , SP.SPMT_YMD
+		   FROM GDS_AMT GA
+		   JOIN STOCK_PO SP ON GA.GDS_CODE = SP.GDS_CODE
+		                    AND GA.BZENT_NO = SP.BZENT_NO
+		  WHERE GA.GDS_CODE = #{gdsCode}
+		    AND GA.BZENT_NO = #{bzentNo}
+		    AND SP.SPMT_YMD >= TO_CHAR(ADD_MONTHS(SYSDATE, -6), 'YYYYMMDD')
+		ORDER BY SP.SPMT_YMD ASC
+	</select>
+	
+</mapper>

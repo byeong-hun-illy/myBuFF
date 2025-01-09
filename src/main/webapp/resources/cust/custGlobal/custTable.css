@@ -1,0 +1,221 @@
+@charset "UTF-8";
+
+/* table style */
+.table-wrap {
+	overflow-x: auto;
+}
+.table-default {
+	width: 100%; 
+	white-space: nowrap
+}
+.table-default tr {
+	border-top: 1px solid var(--border--secondary); 
+	border-bottom: 1px solid var(--border--secondary); 
+}
+.table-default th,
+.table-default td {
+	padding: 20px 10px;
+    vertical-align: middle;
+}
+.table-default th {
+	color: var(--text--secondary);
+    background-color: var(--gray--05);
+    border-top: 1px solid var(--gray--15);
+    border-bottom: 1px solid var(--gray--15);
+}
+.table-default td {
+	color: var(--text--primary);
+}
+.table-default th.center,
+.table-default td.center {
+	text-align: center;
+}
+.table-default th.right,
+.table-default td.right {
+	text-align: right;
+}
+.table-default tbody tr:hover {
+	background-color: var(--blue--05);
+	cursor: pointer;
+}
+.py-10 {
+	padding: var(--pd--s) !important;	
+}
+
+/* ------------------------- 예진 수정 ------------------------------- */
+/* table-title */
+.table-blue th.center,
+.table-blue td.center {
+	text-align: center;
+}
+.table-blue th.right,
+.table-blue td.right {
+	text-align: right;
+}
+.table-title{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: var(--gap--s);
+}
+/* table-blue 시작 */
+.table-title.blue {
+	height: 38px;
+}
+.table-blue {
+	border-top: 1px solid var(--blue--8);
+    width: -webkit-fill-available;
+}
+.table-blue tr {
+	border-bottom: 1px solid var(--gray--2);
+}
+.table-blue th, 
+.table-blue td {
+    padding: var(--pd--s) var(--pd--m);
+    vertical-align: middle;  
+    height: 65px;
+}
+.table-blue th {
+	background-color: var(--blue--05);
+	text-align: left;
+	font-weight: bold;
+	font-size: var(--primary--size);
+}
+.table-blue .text-input {
+	width: -webkit-fill-available;
+	border: 1px solid var(--gray--2);
+	border-radius: var(--radius--m);
+	padding: var(--pd--s);
+}
+.table-blue textarea {
+	width: -webkit-fill-available;
+    padding: 20px;
+	font-size: 16px;
+	border-radius: var(--radius--m);
+	border: 1px solid var(--gray--2);
+}
+.title-icon{
+	vertical-align: middle;
+    color: var(--text--primary) !important;
+    font-size: var(--page--title--size) !important;
+    margin-right: 5px;
+}
+
+/* 상세 페이지 tap 스타일 */
+.page-tap {
+	padding-bottom: 0;
+	height: auto !important
+}
+.page-tap-wrap {
+	display: flex;
+    height: inherit;
+    gap: var(--gap--s);
+}
+.page-tap-cont {
+	padding: var(--pd--s) var(--pd--m);
+    height: inherit;
+    border: 1px solid var(--gray--8);
+    border-bottom: none;
+    border-radius: var(--radius--m) var(--radius--m) 0 0;
+    color: var(--text--primary);
+    cursor: pointer;
+    font-weight: 400;
+    user-select: none;
+}
+.page-tap-cont.active {
+    background-color: var(--blue--7);
+    color: white;
+    font-weight: bold;
+    border-radius: var(--radius--m) var(--radius--m) 0 0;
+}
+.page-tap-cont .title-icon {
+	font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+}
+.page-tap-cont.active .title-icon {
+	color: white !important;
+}
+
+/* tap style */
+.tap-wrap {
+	display: flex;
+	gap: var(--gap--m);
+}
+.tap-btn-wrap {
+	display: flex;
+    justify-content: space-between;
+}
+.tap-cont {
+    padding-top: 5px;
+	padding-bottom: 25px;
+	cursor: pointer;
+}
+.tap-cont.active {
+	border-bottom: 1px solid var(--border--accent);
+}
+.tap-cont.active .tap-title {
+	color: var(--gray--9);
+	font-weight: 700;
+}
+.tap-title {
+	color: var(--gray--9);
+	font-weight: 300;
+}
+
+/* error 테이블 영역 */
+.table-error tr td.error-info {
+    text-align: center;
+    padding: var(--pd--l) 0 40px 0 !important;
+}
+.table-error tr td.error-info:hover {
+	background-color: var(--gray--0) !important;
+}
+.table-error tr td.error-info .icon {
+	font-size: 5rem !important;
+	font-variation-settings:
+	'FILL' 0,
+	'wght' 100,
+	'GRAD' 0,
+	'opsz' 24
+}
+.error-msg {
+	padding-top: var(--pd--s);
+	font-size: 1.2rem;
+	color: var(--text--secondary);
+}
+
+/* pagination */
+.pagination-wrap {
+	text-align: center;
+	padding: var(--pd--m) 0 0 0;
+}
+.pagination {
+  display: inline-block;
+}
+.pagination a {
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color .3s;
+  border-radius: var(--radius--s);
+}
+.pagination a.active {
+  background-color: var(--blue--5);
+  color: var(--gray--0);
+}
+.pagination a:hover:not(.active) {background-color: var(--blue--2);}
+.pagination .icon {
+	font-size:  18px;
+}
+.page-link {
+    display: block;
+    padding: 0;
+    margin-left: 0;
+    line-height: 1.25;
+    color: var(--text--secondary);
+    background-color: var(--gray--0);
+    border: none;
+}
+.page-link:focus {
+    box-shadow: none;
+}
+

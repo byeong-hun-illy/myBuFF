@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.hdofc.mapper.HdofcMenuMapper">
+	<resultMap type="menuVO" id="menuMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="menuTypeNm" column="MENU_TYPE_NM"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="ntslTypeNm" column="NTSL_TYPE_NM"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		
+		<result property="ntslQty" column="NTSL_QTY"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+		<collection property="recipeVOList" resultMap="recipeMap"/>
+		<collection property="menuSetList" resultMap="menuSetMap"/>
+	</resultMap>
+	
+	<resultMap type="recipeVO" id="recipeMap">
+		<result property="qty" column="QTY"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		
+		<association property="gdsVO" resultMap="gdsMap"/>
+	</resultMap>
+	
+	<resultMap type="menuSetVO" id="menuSetMap">
+		<result property="setNo" column="SET_NO"/>
+		<result property="menuNo" column="MENU_SET_NO"/>
+		<result property="qty" column="SET_QTY"/>
+		
+		<result property="menuNm" column="SET_NM"/>
+		<result property="menuAmt" column="SET_AMT"/>
+		<result property="menuType" column="SET_TYPE"/>
+		<result property="menuTypeNm" column="SET_TYPE_NM"/>
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+	</resultMap>
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!   메뉴 조회 시작   !!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 메뉴 조회
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectMenu" resultMap="menuMap" parameterType="hashMap">
+		SELECT *
+		FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_menu"/> <include refid="orderby"/>) AS RNUM
+					, M.MENU_NO
+					, M.MENU_NM
+					, M.MENU_IMG_PATH
+					, M.MENU_AMT
+					, M.MENU_TYPE
+					, M.MNGR_ID
+					, N.MBR_NM
+					, T.COM_NM AS MENU_TYPE_NM
+					, M.RLS_YMD
+					, M.REG_YMD
+					, M.NTSL_TYPE
+					, C.COM_NM AS NTSL_TYPE_NM
+					, COALESCE(Q.SUM,0) AS NTSL_QTY
+			FROM MENU M
+			JOIN MEMBER N ON N.MBR_ID=M.MNGR_ID
+			JOIN COM_CODE C 
+				ON M.NTSL_TYPE = C.COM_NO
+			JOIN COM_CODE T
+				ON T.COM_NO = M.MENU_TYPE
+			LEFT JOIN (SELECT MENU_NO, SUM(ORDR_QTY) AS SUM
+						FROM ORDR_DTL
+						GROUP BY MENU_NO) Q ON M.MENU_NO=Q.MENU_NO
+			WHERE 1=1
+		  <include refid="menu_search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_menu">
+		<!-- 유형 상태 순 -->
+		<if test="sort == 'menuNm'">
+			ORDER BY M.MENU_NM
+		</if>
+		<!-- 거래처 이름 순 -->
+		<if test="sort == 'menuAmt'">
+			ORDER BY M.MENU_AMT
+		</if>
+		<!-- 담당자 이름 순 -->
+		<if test="sort == 'menuType'">
+			ORDER BY M.MENU_TYPE
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'ntslType'">
+			ORDER BY M.NTSL_TYPE
+		</if>
+		<!-- 출시일 순 -->
+		<if test="sort == 'rlsYmd'">
+			ORDER BY M.RLS_YMD
+		</if>
+		<!-- 등록일 순 -->
+		<if test="sort == 'regYmd'">
+			ORDER BY M.REG_YMD
+		</if>
+		<!-- 판매순 순 -->
+		<if test="sort == 'ntslQty'">
+			ORDER BY COALESCE(Q.SUM,0)
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'mngrNm'">
+			ORDER BY N.MBR_NM
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="menu_search">
+		<!-- 세트 메뉴 제외 검색 검색 -->
+		<if test="notSet != null">
+			AND M.MENU_TYPE NOT IN('MENU01')
+		</if>
+		<!-- 거래처 이름 검색 -->
+		<if test="menuNm != null and menuNm != ''">
+			AND M.MENU_NM LIKE '%'||#{menuNm}||'%'
+		</if>
+		<!-- 담당자 이름 검색 -->
+		<if test="menuType != null and menuType != ''">
+			AND M.MENU_TYPE = #{menuType}
+		</if>
+		<!-- 관리자 검색 -->
+		<if test="ntslType != null and ntslType != ''">
+			AND M.NTSL_TYPE = #{ntslType}
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null and sregYmd != ''">
+		<![CDATA[
+			AND M.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null and eregYmd != ''">
+		<![CDATA[
+			AND M.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+		<!-- 출시 일자 검색 -->
+		<if test="srlsYmd != null and srlsYmd != ''">
+		<![CDATA[
+			AND M.RLS_YMD >= #{srlsYmd}
+		]]>
+		</if>
+		<if test="erlsYmd != null and erlsYmd != ''">
+		<![CDATA[
+			AND M.RLS_YMD <= #{erlsYmd}
+		]]>
+		</if>
+		<!-- 관리자 검색 -->
+		<if test="mngrId != null and mngrId != ''">
+			AND M.MNGR_ID = #{mngrId}
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<select id="selectTotalMenu" parameterType="hashMap" resultType="int">
+		    SELECT COUNT(1)
+			FROM MENU M
+			JOIN COM_CODE C 
+				ON M.NTSL_TYPE = C.COM_NO
+			JOIN COM_CODE T
+				ON T.COM_NO = M.MENU_TYPE
+		  <include refid="menu_search"/>
+	</select>
+	
+	<select id="selectMenuDtl" parameterType="String" resultMap="menuMap">
+		SELECT  M.MENU_NO
+		        , M.MENU_NM
+		        , M.MENU_IMG_PATH
+		        , M.MENU_AMT
+		        , M.MENU_EXPLN
+		        , M.MENU_TYPE
+		        , M.MNGR_ID
+		        , N.MBR_NM
+		        , N.MBR_TELNO
+		        , N.MBR_EML_ADDR
+		        , T.COM_NM AS MENU_TYPE_NM
+		        , M.RLS_YMD
+		        , M.REG_YMD
+		        , M.NTSL_TYPE
+		        , NT.COM_NM AS NTSL_TYPE_NM
+		        , R.QTY
+		        , R.GDS_CODE
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , GT.COM_NM AS GDS_TYPE_NM
+		        , COALESCE(Q.SUM,0) AS NTSL_QTY
+		        , MS.QTY AS SET_QTY
+                , MS.MENU_NO AS MENU_SET_NO
+                , MM.MENU_NM AS SET_NM
+                , MM.MENU_TYPE AS SET_TYPE
+                , MM.MENU_AMT AS SET_AMT
+                , SC.COM_NM AS SET_TYPE_NM
+		FROM MENU M
+		JOIN MEMBER N ON M.MNGR_ID=N.MBR_ID
+		JOIN COM_CODE NT ON M.NTSL_TYPE=NT.COM_NO
+		JOIN COM_CODE T ON M.MENU_TYPE=T.COM_NO
+		JOIN RECIPE R ON M.MENU_NO=R.MENU_NO
+		JOIN GDS G ON R.GDS_CODE=G.GDS_CODE
+		JOIN COM_CODE GT ON GT.COM_NO=G.GDS_TYPE
+        LEFT JOIN MENU_SET MS ON MS.SET_NO=M.MENU_NO
+        LEFT JOIN MENU MM ON MS.MENU_NO=MM.MENU_NO
+		LEFT JOIN (SELECT MENU_NO, SUM(ORDR_QTY) AS SUM
+						FROM ORDR_DTL
+						GROUP BY MENU_NO) Q ON M.MENU_NO=Q.MENU_NO
+        LEFT JOIN COM_CODE SC ON SC.COM_NO=MM.MENU_TYPE
+		WHERE M.MENU_NO=#{menuNo}
+	</select>
+	
+	
+	<!-- 상품 추가를 위한 상품 조회 -->
+	<select id="selectGdsFood" parameterType="hashMap" resultType="gdsVO">
+		SELECT * FROM(
+		SELECT ROW_NUMBER() OVER (ORDER BY 
+							<if test="sort=='gdsNm'">
+								G.GDS_NM 
+							</if>
+							<if test="sort=='unitNm'">
+								G.UNIT_NM
+							</if>
+							<if test="sort=='gdsType'">
+								G.GDS_TYPE
+							</if>
+							<include refid="orderby"/>) AS RNUM
+	           , G.GDS_NM
+	           , G.GDS_CODE
+	           , G.UNIT_NM
+	           , G.GDS_TYPE
+           , T.COM_NM AS GDS_TYPE_NM
+	    FROM GDS G
+	    JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+	    WHERE G.GDS_TYPE LIKE 'FD%'
+		<if test="gdsType != null and gdsType != ''">
+			AND G.GDS_TYPE = #{gdsType}
+		</if>	
+		<if test="gdsNm != null and gdsNm != ''">
+			AND G.GDS_NM LIKE '%'|| #{gdsNm} || '%'
+		</if>	
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 상품 추가를 위한 상품 조회 -->
+	<select id="selectTotalGdsFood" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+	    FROM GDS G
+	    JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+	    WHERE G.GDS_TYPE LIKE 'FD%'
+		<if test="gdsType != null and gdsType != ''">
+			AND G.GDS_TYPE = #{gdsType}
+		</if>	
+		<if test="gdsNm != null and gdsNm != ''">
+			AND G.GDS_NM LIKE '%'|| #{gdsNm} || '%'
+		</if>	
+	</select>
+	
+	<!-- !! 메뉴 수정/추가 !! -->
+	<update id="updateMenu" parameterType="menuVO">
+		UPDATE MENU
+		SET MENU_NM=#{menuNm}
+		<if test="menuImgPath != null">
+			, MENU_IMG_PATH=#{menuImgPath}
+		</if>
+			, MENU_AMT=#{menuAmt}
+			, MENU_EXPLN=#{menuExpln}
+		<if test="rlsYmd != null">
+			, RLS_YMD=#{rlsYmd}
+		</if>
+			, NTSL_TYPE=#{ntslType}
+			, MNGR_ID=#{mngrId}
+		WHERE MENU_NO = #{menuNo}
+	</update>
+	
+	<!-- 세트 레시피 추가/변경 
+	변경 시 
+	deleteRecipe > deleteRecipe > insertMenuSet > insertSetRecipe
+	-->
+	<!-- 세트 레시피 삭제 -->
+	<delete id="deleteSetRecipe" parameterType="String">
+		DELETE
+		FROM MENU_SET
+		WHERE SET_NO=#{setNo}
+	</delete>
+	
+	<!-- 세트 레시피 추가 MENU_SET -->
+	<insert id="insertMenuSet" parameterType="menuSetVO">
+		INSERT INTO MENU_SET(SET_NO, MENU_NO, QTY)
+		VALUES(#{setNo}, #{menuNo}, #{qty})
+	</insert>
+	
+	<!-- 세트 레시피 추가 -->
+	<insert id="insertSetRecipe" parameterType="String">
+		INSERT INTO RECIPE(GDS_CODE, MENU_NO, QTY)
+		SELECT R.GDS_CODE, #{setNo},  SUM(R.QTY)
+		FROM MENU_SET S
+		JOIN RECIPE R ON S.MENU_NO=R.MENU_NO
+		WHERE S.SET_NO=#{setNo}
+		GROUP BY R.GDS_CODE
+	</insert>
+	<!-- 세트 레시피 끝 -->
+	
+	<!-- 레시피 삭제 -->
+	<delete id="deleteRecipe" parameterType="String">
+		DELETE
+		FROM RECIPE
+		WHERE MENU_NO=#{menuNo}
+	</delete>
+	
+	<!-- 레시피 추가 -->
+	<insert id="insertRecipe" parameterType="recipeVO">
+		INSERT INTO RECIPE(GDS_CODE, MENU_NO, QTY)
+		VALUES(#{gdsCode}, #{menuNo}, #{qty})
+	</insert>
+	
+	<!-- 메뉴 등록 -->
+	<insert id="insertMenu" parameterType="menuVO">
+		<selectKey keyProperty="menuNo" order="BEFORE" resultType="String">
+			SELECT SUBSTR(MAX(MENU_NO),1,2)||LPAD(TO_NUMBER(SUBSTR(MAX(MENU_NO),3))+1,4,0)
+			FROM MENU
+			WHERE MENU_TYPE = #{menuType}
+		</selectKey>
+	
+		INSERT INTO MENU(MENU_NO, MENU_NM, MENU_IMG_PATH, MENU_AMT, MENU_EXPLN, MENU_TYPE
+		<if test="rlsYmd != null">
+		, RLS_YMD
+		</if>
+		, REG_YMD, NTSL_TYPE, MNGR_ID)
+		VALUES(#{menuNo}, #{menuNm},#{menuImgPath},#{menuAmt},#{menuExpln},#{menuType}
+		<if test="rlsYmd != null">
+		,#{rlsYmd}
+		</if>
+		,TO_CHAR(SYSDATE,'YYYYMMDD'), #{ntslType}, #{mngrId})
+	</insert>
+	
+	<delete id="deleteMenu" parameterType="String">
+		DELETE 
+		FROM MENU
+		WHERE MENU_NO=#{menuNo}
+	</delete>
+</mapper>

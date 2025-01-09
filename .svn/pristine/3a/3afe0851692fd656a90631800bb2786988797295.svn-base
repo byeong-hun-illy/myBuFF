@@ -1,0 +1,271 @@
+<%--
+    @fileName    : selectFrcsStockDetail.jsp
+    @programName : 가맹점 재고 상세
+    @description : 가맹점 재고 상세를 보기 위한 화면
+    @author      : 정현종
+    @date        : 2024. 09. 24
+--%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<script src='/resources/js/global/value.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<sec:authentication property="principal.MemberVO" var="user"/>
+
+<script type="text/javascript">
+let originalSafetyStockValue; // 원래 안전 재고 값을 저장할 변수
+let originalAdjustStockQty; // 원래 조정 수량 값을 저장할 변수
+let originalAdjustStockReason; // 원래 조정 사유 값을 저장할 변수
+
+// 안전 재고 설정 버튼 클릭시...
+function enableSafetyStock() {
+    const safetyStockInput = document.getElementById("safetyStockInput");
+    originalSafetyStockValue = safetyStockInput.value; // 원래 값을 저장
+    safetyStockInput.disabled = false;
+
+    // 버튼들 숨기기
+    document.getElementById("safetyStockButton").style.display = 'none';
+    document.getElementById("stockAdjustmentButton").style.display = 'none';
+
+    // 취소 및 저장 버튼 보이기
+    document.getElementById("cancelButton").style.display = 'inline-block';
+    document.getElementById("saveButton").style.display = 'inline-block';
+}
+
+// 안전 재고 설정 -> 취소 버튼 클릭시...
+function cancelEdit() {
+    const safetyStockInput = document.getElementById("safetyStockInput");
+    safetyStockInput.disabled = true;
+    safetyStockInput.value = originalSafetyStockValue; // 원래 값으로 되돌리기
+
+    // 버튼들 보이기
+    document.getElementById("safetyStockButton").style.display = 'inline-block';
+    document.getElementById("stockAdjustmentButton").style.display = 'inline-block';
+
+    // 취소 및 저장 버튼 숨기기
+    document.getElementById("cancelButton").style.display = 'none';
+    document.getElementById("saveButton").style.display = 'none';
+}
+
+// 안전 재고 설정 -> 저장 버튼 클릭시...
+function saveChanges() {
+    const sfStockQty = $("#safetyStockInput").val(); // 안전 재고 수량
+    const gdsCode = "${gdsVO.gdsCode}"; // JSP에서 gdsCode 값을 가져옵니다.
+
+    console.log("gdsCode:", gdsCode);
+    console.log("sfStockQty:", sfStockQty);
+
+    $.ajax({
+        url: '/frcs/safeStockFrcsUpdateAjax',
+        type: 'POST',
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify({
+            gdsCode: gdsCode,
+            sfStockQty: sfStockQty
+        }),
+        dataType: "text",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+        },
+        success: function (response) {
+            console.log("Success response:", response);
+            Swal.fire({
+                title: "안전 재고 설정",
+                text: "안전 재고가 설정되었습니다.",
+                icon: "success",
+                confirmButtonColor: "#00C157",
+                confirmButtonText: "확인",
+            }).then((result) => {
+                cancelEdit(); // 저장 후 편집 취소
+                location.reload(); // 페이지 새로고침
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error("Error response:", xhr);
+            console.error("Error message:", error);
+            Swal.fire({
+                title: "오류",
+                text: "안전 재고 설정 중 오류가 발생했습니다: " + error,
+                icon: "error",
+                confirmButtonColor: "#FF0000",
+                confirmButtonText: "확인",
+            });
+        }
+    });
+}
+
+// 재고 조정 버튼 클릭시...
+function stockAdjust() {
+    const adjustStockQty = document.getElementById("adjustStockQty");
+    const adjustStockReason = document.getElementById("adjustStockReason");
+
+    // 원래 값을 저장
+    originalAdjustStockQty = adjustStockQty.value; // 원래 조정 수량 값
+    originalAdjustStockReason = adjustStockReason.value; // 원래 조정 사유 값
+
+    // 입력란 활성화
+    adjustStockQty.disabled = false;
+    adjustStockReason.disabled = false;
+
+    // 버튼들 숨기기
+    document.getElementById("safetyStockButton").style.display = 'none';
+    document.getElementById("stockAdjustmentButton").style.display = 'none';
+
+    // 취소 및 저장 버튼 보이기
+    document.getElementById("saveButton").style.display = 'none';
+    document.getElementById("cancelButton").style.display = 'none';
+    document.getElementById("stockAdjustmentSaveButton").style.display = 'inline-block'; // 재고 조정 저장 버튼 보임
+    document.getElementById("stockAdjustmentCancelButton").style.display = 'inline-block'; // 재고 조정 취소 버튼 보임
+}
+
+// 재고 조정 -> 취소 버튼 클릭시
+function cancelStockAdjustment() {
+    const adjustStockQty = document.getElementById("adjustStockQty");
+    const adjustStockReason = document.getElementById("adjustStockReason");
+
+    // 입력란 비활성화
+    adjustStockQty.disabled = true;
+    adjustStockReason.disabled = true;
+
+    // 원래 값으로 되돌리기
+    adjustStockQty.value = originalAdjustStockQty; // 원래 조정 수량 값 복원
+    adjustStockReason.value = originalAdjustStockReason; // 원래 조정 사유 값 복원
+
+    // 버튼들 보이기
+    document.getElementById("safetyStockButton").style.display = 'inline-block';
+    document.getElementById("stockAdjustmentButton").style.display = 'inline-block';
+
+    // 취소 및 저장 버튼 숨기기
+    document.getElementById("cancelButton").style.display = 'none';
+    document.getElementById("saveButton").style.display = 'none';
+    document.getElementById("stockAdjustmentSaveButton").style.display = 'none'; // 재고 조정 저장 버튼 숨김
+    document.getElementById("stockAdjustmentCancelButton").style.display = 'none'; // 재고 조정 취소 버튼 숨김
+}
+
+// 재고 조정 -> 저장 버튼 클릭시
+function saveStockAdjustment() {
+    const adjustStockQty = $("#adjustStockQty").val();
+    const adjustStockReason = $("#adjustStockReason").val();
+    const gdsCode = "${gdsVO.gdsCode}"; // JSP에서 gdsCode 값을 가져옵니다.
+
+    console.log("gdsCode:", gdsCode);
+    console.log("adjustStockQty:", adjustStockQty);
+    console.log("adjustStockReason:", adjustStockReason);
+
+    $.ajax({
+        url: '/frcs/stockAdjustmentUpdateAjax',
+        type: 'POST',
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify({
+            gdsCode: gdsCode,
+            adjustStockQty: adjustStockQty,
+            adjustStockReason: adjustStockReason
+        }),
+        dataType: "text",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+        },
+        success: function (response) {
+            console.log("Success response:", response);
+            Swal.fire({
+                title: "재고 조정",
+                text: "재고가 조정되었습니다.",
+                icon: "success",
+                confirmButtonColor: "#00C157",
+                confirmButtonText: "확인",
+            }).then((result) => {
+                cancelEdit(); // 저장 후 편집 취소
+                location.reload(); // 페이지 새로고침
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error("Error response:", xhr);
+            console.error("Error message:", error);
+            Swal.fire({
+                title: "오류",
+                text: "재고 조정 중 오류가 발생했습니다: " + error,
+                icon: "error",
+                confirmButtonColor: "#FF0000",
+                confirmButtonText: "확인",
+            });
+        }
+    });
+}
+</script>
+
+<div class="container-fluid">
+    <div class="row mb-2 justify-content-between">
+        <div class="row align-items-center">
+            <button type="button" class="btn btn-default mr-3" onclick="window.history.back();">
+                <span class="icon material-symbols-outlined">keyboard_backspace</span> 목록으로
+            </button>
+            <h1 class="m-0">재고 내역 상세 보기</h1>
+        </div>
+        <div class="btn-wrap">
+            <button type="button" id="safetyStockButton" class="btn-active" onclick="enableSafetyStock();">안전 재고 설정</button>
+            <button type="button" id="stockAdjustmentButton" class="btn-active" onclick="stockAdjust();">재고 조정</button>
+            <button type="button" id="saveButton" class="btn-active" style="display: none;" onclick="saveChanges();">저장</button>
+            <button type="button" id="cancelButton" class="btn-danger" style="display: none;" onclick="cancelEdit();">취소</button>
+            <button type="button" id="stockAdjustmentSaveButton" class="btn-active" style="display: none;" onclick="saveStockAdjustment();">저장</button>
+            <button type="button" id="stockAdjustmentCancelButton" class="btn-danger" style="display: none;" onclick="cancelStockAdjustment();">취소</button>
+        </div>
+    </div>
+</div>
+<div class="cont">
+    <table class="table-blue">
+        <tbody>
+            <tr>
+                <th class="center">상품 명</th>
+                <td>${gdsVO.gdsNm}</td>
+                <th class="center">상품 번호</th>
+                <td>${gdsVO.gdsCode}</td>
+            </tr>
+            <tr>
+                <th class="center">상품 유형</th>
+                <td>
+                    <c:choose>
+                        <c:when test="${gdsVO.gdsType == 'GD01'}">축산</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD02'}">농산물</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD03'}">유제품</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD04'}">베이커리</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD05'}">조미료/소스</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD06'}">냉동식품</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD07'}">일회 용품</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD08'}">매장 소모품</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD09'}">조리 용품</c:when>
+                        <c:when test="${gdsVO.gdsType == 'GD010'}">위생 용품</c:when>
+                        <c:otherwise>기타</c:otherwise>
+                    </c:choose>
+                </td>
+                <th class="center">단위 </th>
+                <td>${gdsVO.unitNm}</td>
+            </tr>
+            <tr>
+                <th class="center">재고 수량</th>
+                <td>
+                    <c:choose>
+                        <c:when test="${gdsVO.stockVOList[0].qty < gdsVO.stockVOList[0].sfStockQty}">
+                            <input type="text" class="text-input" value="${gdsVO.stockVOList[0].qty}" disabled style="color: red;">
+                        </c:when>
+                        <c:otherwise>
+                            <input type="text" class="text-input" value="${gdsVO.stockVOList[0].qty}" disabled>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+                <th class="center">안전 재고</th>
+                <td>
+                    <input type="text" id="safetyStockInput" class="text-input" value="${gdsVO.stockVOList[0].sfStockQty}" disabled>
+                </td>
+            </tr>
+            <tr>
+                <th class="center">조정 수량</th>
+                <td><input type="text" id="adjustStockQty" class="text-input" disabled></td>
+                <th class="center">조정 사유</th>
+                <td><input type="text" id="adjustStockReason" class="text-input" disabled></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

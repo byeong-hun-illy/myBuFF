@@ -1,0 +1,124 @@
+<%--
+    @fileName    : selectFrcsPeriodSlsList.jsp
+    @programName : 가맹점 매출 관리
+    @description : 가맹점 기간별 매출 조회 페이지
+    @author      : 정현종
+    @date        : 2024. 10. 03
+--%>
+<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<script src='/resources/js/global/value.js'></script>
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<sec:authentication property="principal.MemberVO" var="user" />
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      	<button type="button" class="btn btn-default mr-3"><span class="icon material-symbols-outlined">keyboard_backspace</span> 목록으로</button>
+        <h1 class="m-0">기간별 매출 조회</h1>
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+
+<div class="search-section">
+	<!-- cont: 검색 영역 -->
+	<div class="cont search-original">
+		<div class="search-wrap">
+			<!-- 진행상태 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">진행상태</p>
+				<div class="select-custom" style="width:150px">
+					<select name="eventType" id="eventType">
+						<option value="">전체</option>
+						<option value="EVT01" selected="">대기</option>
+						<option value="EVT04">진행</option>
+						<option value="EVT03">예정</option>
+						<option value="EVT05">완료</option>
+						<option value="EVT02">취소</option>
+					</select>
+				<div class="select-selected">대기</div><div class="select-items select-hide"><div>전체</div><div>대기</div><div>진행</div><div>예정</div><div>완료</div><div>취소</div></div></div>
+			</div>
+			<!-- 일자 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">이벤트 기간</p>
+				<div class="search-date-wrap">
+					<input type="date" id="bgngYmd" name="bgngYmd"> 
+						~ 
+					<input type="date" id="expYmd" name="expYmd">
+				</div>
+			</div>
+			<!-- 셀렉트 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">쿠폰</p>
+				<div class="search-coupon-wrap">
+					<select class="select2-custom select2-hidden-accessible" id="couponGubun" name="couponGubun" data-select2-id="couponGubun" tabindex="-1" aria-hidden="true">
+						<option value="" selected="" data-select2-id="2">전체</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+						<option value="">test</option>
+					</select><span class="select2 select2-container select2-container--default" dir="ltr" data-select2-id="1" style="width: 100%;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-labelledby="select2-couponGubun-container"><span class="select2-selection__rendered" id="select2-couponGubun-container" role="textbox" aria-readonly="true" title="전체">전체</span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
+				</div>
+			</div>
+			<!-- 텍스트 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">제목</p>
+				<input type="text" id="eventTtl" name="eventTtl" placeholder="검색어를 입력하세요"> 
+			</div>
+		</div>
+		<!-- /.search-wrap -->
+	</div>
+	<!-- /.cont: 검색 영역 -->
+	
+	<!-- cont:  검색 접기 영역 -->
+	<div class="cont search-summary">
+		<div class="search-wrap">
+			<!-- 일자 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">이벤트 기간 <span class="summary" id="dateSummary">이벤트기간</span></p>
+			</div>
+			<div class="divide-border"></div>
+			<!-- 셀렉트 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">쿠폰 <span class="summary" id="couponSummary">쿠폰</span></p>
+			</div>
+			<div class="divide-border"></div>
+			<!-- 텍스트 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">제목 <span class="summary" id="ttlSummary">제목</span></p>
+			</div>
+		</div>
+		<!-- /.search-wrap -->
+	</div>
+	<!-- /.cont: 검색 영역 -->
+	
+	<!-- 검색 버튼 영역 -->
+	<div class="search-control">
+		<div class="search-control-btns">
+			<div class="search-toggle">
+				요약보기<span class="icon material-symbols-outlined">Add</span>
+			</div>
+			<div class="search-reset">
+				초기화<span class="icon material-symbols-outlined">restart_alt</span>
+			</div>
+			<div>
+				<button class="btn btn-default search" id="searchBtn">검색 <span class="icon material-symbols-outlined">search</span></button>
+			</div>		
+		</div>
+	</div>
+	<!-- /.검색 버튼 영역 -->
+	<!-- /.search-section: 검색어 영역 -->
+</div>

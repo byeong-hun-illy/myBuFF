@@ -1,0 +1,23 @@
+package com.buff.frcs.service;
+
+import com.buff.vo.BzentVO;
+import com.buff.vo.FrcsVO;
+
+/**
+* @packageName  : com.buff.service.frcs
+* @fileName     : FrcsMyPageService.java
+* @author       : 김현빈
+* @date         : 2024.09.12
+* @description  : 가맹점 마이페이지 Service
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13               김현빈     	  		      최초 생성
+*/
+public interface FrcsMyPageService {
+
+	public FrcsVO selectFrcsMyPage(String mbrId);
+	
+	public int updateFrcsMyPage(String mbrId, FrcsVO frcsVO, BzentVO bzentVO);
+	
+}

@@ -1,0 +1,240 @@
+<%--
+ 	@fileName    : selectFrcs.jsp
+ 	@programName : 가맹점 조회
+ 	@description : 가맹점 조회나 추가를 위한 페이지
+ 	@author      : 송예진
+ 	@date        : 2024. 09. 12
+--%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<link href="/resources/hdofc/css/frcs.css" rel="stylesheet">
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script src="/resources/hdofc/js/frcs.js"></script>
+<script type="text/javascript">
+let currentPage = 1;
+let frcsType = '';
+let sort = 'opbizYmd';
+let orderby = 'desc';
+
+$(function(){
+	selectFrcsAjax();
+	// 지역 select 변화
+	$('#rgnNo').on('change',function(){
+		currentPage=1;
+		selectFrcsAjax();
+	})	
+	// 관리자 select 변화
+	$('#mngrId').on('change',function(){
+		currentPage=1;
+		selectFrcsAjax();
+	})	
+	// 검색어 검색 결과
+	$('#submit').on('click',function(){
+		currentPage=1;
+		selectFrcsAjax();
+	})
+	// 분류 조건 클릭 시 스타일 변화와 데이터 변화
+	$('.tap-cont').on('click', function(){
+		currentPage=1;
+		// 모든 tap-cont에서 active 클래스를 제거
+	    $('.tap-cont').removeClass('active');
+
+	    // 클릭된 tap-cont에 active 클래스를 추가
+	    $(this).addClass('active');
+ 		frcsType = $(this).data('type');
+		selectFrcsAjax();
+	})
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		console.log($(this).data('page'));
+		console.log(currentPage);
+		selectFrcsAjax();
+	})
+	// 가맹점 상세로 이동
+	$(document).on('click','.frcsDtl',function(){
+		let frcsNo = $(this).data('no');
+// 		console.log(frcsNo);
+		location.href='/hdofc/frcs/list/dtl?frcsNo='+frcsNo;
+	})
+	
+	//////////////////////// 정렬  ////////////////////////////////
+	$('.sort').on('click',function(){
+		
+	      // 첫 번째 자식인 .sort-asc와 두 번째 자식인 .sort-desc를 선택
+	      var sortAsc = $('.sort-arrow', this).find('.sort-asc');
+	      var sortDesc = $('.sort-arrow', this).find('.sort-desc');
+	      
+	      sort = $(this).data('sort');
+	      
+	      // 첫 번째 자식이 active 클래스가 있는지 확인
+	      if (sortAsc.hasClass('active')) { // desc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	    	  
+	        	sortDesc.addClass('active');
+	        	orderby = 'desc';
+	      } else{ // asc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	      
+	        	sortAsc.addClass('active');
+	        	
+	        	orderby = 'asc';
+	    	  
+	      }
+	      currentPage=1;
+	      selectFrcsAjax();
+	})
+})
+</script>
+<!-- content-header: 페이지 이름 -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">가맹점 조회</h1>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+<div class="wrap">
+	<!-- 기본 태그 -->
+	<div class="cont">
+			<!-- 검색 조건 시작 -->
+			<div class="search-wrap">
+				<div class="search-cont">
+					<p>관리자</p>
+					<select name="mngrId" id="mngrId">
+						<option value="" selected>전체</option>
+						<c:forEach var="mngr" items="${mngr}">
+							<option value="${mngr.mbrId}">${mngr.mbrNm}(${mngr.mbrId})</option>
+						</c:forEach>
+					</select>
+				</div>
+				<div class="search-cont">
+					<p>지역</p>
+					<select name="rgnNo" id="rgnNo">
+						<option value="">전체</option>
+						<c:forEach var="rgn" items="${rgn}">
+							<option value="${rgn.rgnNo}">${rgn.rgnNm}</option>
+						</c:forEach>
+					</select>
+				</div>
+				<div class="search-cont">
+					<p>검색어</p>
+					<div class="search-input-btn">
+						<select name="gubun" id="gubun">
+							<option value="">전체</option>
+							<option value="bzentNm">가맹점 이름</option>
+							<option value="mbrNm">가맹점 담당자</option>
+						</select>
+						<input name="keyword" id="keyword" type="text" placeholder="입력해주세요" class="search-input"/>
+						<button type="button" id="submit" class="search-btn"></button>				
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 검색 조건 끝 -->
+
+		<!-- 테이블 디자인 1 -->
+		<div class="cont">
+			<div class="table-wrap">
+			<!-- 테이블 분류 시작 -->
+				<div class="tap-btn-wrap">
+					<div class="tap-wrap">
+						<div data-type='' class="tap-cont active">
+							<span class="tap-title">전체</span>
+							<span class="bge bge-default" id="tap-all"></span>
+						</div>
+						<div data-type='FRS01' class="tap-cont" >
+							<span class="tap-title">영업</span>
+							<span class="bge bge-active" id="tap-open"></span>
+						</div>
+						<div data-type='FRS03' class="tap-cont">
+							<span class="tap-title">폐업 예정</span>
+							<span class="bge bge-warning" id="tap-clsing"></span>
+						</div>
+						<div data-type='FRS02' class="tap-cont">
+							<span class="tap-title">폐업</span>
+							<span class="bge bge-danger" id="tap-cls"></span>
+						</div>
+					</div>
+					<div class="btn-wrap">
+						<button class="btn-active" onclick="location.href='/hdofc/frcs/regist'">가맹점 추가 <span class="icon material-symbols-outlined">East</span></button>
+					</div>
+				</div>
+			<!-- 테이블 분류 끝 -->
+			
+				<table class="table-default">
+					<thead>
+						<tr>
+							<th class="center">번호</th>
+							<th class="center">운영상태</th>
+							<th class="center sort sort-frcs" data-sort="bzentNm">가맹점 이름
+							<div class="sort-icon" >
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" data-sort="mbrNm">가맹점주명
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" data-sort="mngrNm">관리자
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" data-sort="opbizYmd">개업일자
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc active">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" data-sort="opbizYmd">폐업일자
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" data-sort="rgnNo">지역
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+						</tr>
+					</thead>
+					<tbody id="table-body">
+					</tbody>
+				</table>
+				<div class="pagination-wrap">
+					<div class="pagination">
+					</div>
+			</div>
+		<!-- table-wrap -->
+		</div>
+	<!-- /테이블 디자인 1 -->
+	</div>
+	<!-- cont 끝 -->
+</div>
+<!-- wrap 끝 -->	
+
+    

@@ -1,0 +1,30 @@
+package com.buff.com.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.ClsbizRsnVO;
+
+/**
+* @packageName  : com.buff.com.mapper
+* @fileName     : ClsbizRsnMapper.java
+* @author       : 김현빈 
+* @date         : 2024.09.18
+* @description  : 폐업 사유 유형 정보와 명을 select하기 위한 공용 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20        김현빈     	  			최초 생성
+*/
+@Mapper
+public interface ClsbizRsnMapper {
+	
+	/**
+	* @methodName  : selectBank
+	* @author      : 김현빈
+	* @date        : 2024.09.20
+	* @return	   : 폐업 사유 유형 번호, 폐업 사유 유형 명 
+	*/
+	public List<ClsbizRsnVO> selectClsbizRsn();
+}

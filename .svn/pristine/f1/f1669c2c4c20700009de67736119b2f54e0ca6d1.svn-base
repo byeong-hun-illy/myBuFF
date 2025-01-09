@@ -1,0 +1,545 @@
+<%--
+ 	@fileName    : selectFrcsClsbiz.jsp
+ 	@programName : 가맹점 폐업 조회
+ 	@description : 가맹점 폐업할 예정인 가맹점 대상 조회
+ 	@author      : 송예진
+ 	@date        : 2024. 09. 21
+--%>
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<link href="/resources/hdofc/css/frcs.css" rel="stylesheet">
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script src="/resources/hdofc/js/frcs.js"></script>
+<script src="/resources/hdofc/js/frcsClsbiz.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="text/javascript">
+let currentPage = 1;
+let sort = 'clsbizYmd';
+let orderby = 'desc';
+let clsbizType = '';
+let frcsNo = '';
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+$(function(){
+	selectFrcsClsbizListAjax();
+	select2Custom();
+	// 분류 조건 클릭 시 스타일 변화와 데이터 변화
+	$('.tap-cont').on('click', function(){
+		currentPage=1;
+		// 모든 tap-cont에서 active 클래스를 제거
+	    $('.tap-cont').removeClass('active');
+
+	    // 클릭된 tap-cont에 active 클래스를 추가
+	    $(this).addClass('active');
+	    clsbizType = $(this).data('type');
+ 		selectFrcsClsbizListAjax();
+	})
+	
+	// 검색영역 초기화
+	$('.search-reset').on('click', function(){
+		$('#bgngYmd').val('');
+		$('#endYmd').val('');
+		$('#apsYmd').val('');
+		$('#apeYmd').val('');
+		$('#rgnNo').val('').trigger('change');
+		$('#mngrId').val('').trigger('change');
+		$('#bzentNm').val('');
+		$('#mbrNm').val('');
+		$('#clsbizRsnType').val('');
+		$('#clsbizType').val('');
+		
+		$('.select-selected').text('전체');
+		clsbizType = '';
+		selectFrcsClsbizListAjax();
+		
+		$('#rgnSummary').text('전체');
+		$('#mngrSummary').text('전체');
+		$('#mbrSummary').text('전체');
+		$('#frcsSummary').text('전체');
+		$('#clsSummary').text('전체');
+		$('#aprvSummary').text('전체');
+		$('#rsnSummary').text('전체');
+		$('#typeSummary').text('전체');
+	})
+	//.search-reset
+	
+	// 검색영역 요약보기
+	$('.search-toggle').on('click',function(){
+	   	if ($(this).hasClass('active')){
+	   		$(this).removeClass('active');
+	   		$('.search-toggle').html(`요약보기<span class="icon material-symbols-outlined">Add</span>`);
+	   		$('.search-original').slideDown(300);
+	   		$('.search-summary').slideUp(300);
+	   	} else {
+	   		$(this).addClass('active');
+	   		$('.search-toggle').html(`전체보기<span class="icon material-symbols-outlined">Remove</span>`);
+	   		$('.search-original').slideUp(300);
+	   		$('.search-summary').slideDown(300);
+	   	} 
+		
+	   	/* 아래 부분은 구현하는 페이지에 맞춰서 작성해주세요!! */
+		// 인풋 데이터 가져오기
+		let bgngYmd= $('#bgngYmd').val();
+		let endYmd= $('#endYmd').val();
+		let apsYmd=$('#apsYmd').val();
+		let apeYmd=$('#apeYmd').val();
+		let rgnNo= $('#rgnNo option:selected').text();
+		let mngrId = $('#mngrId option:selected').text();
+		let mbrNm = $('#mbrNm').val();
+		let bzentNm = $('#bzentNm').val();
+		let clsbizRsnType = $('#clsbizRsnType option:selected').text();
+		let clsbizType = $('#clsbizType option:selected').text();
+
+		dateStr = `\${bgngYmd} ~ \${endYmd}`;
+		dateStr2 = `\${apsYmd} ~ \${apeYmd}`;
+		
+		if(bgngYmd=='' & endYmd==''){
+			$('#clsSummary').text('전체');
+		}else {
+			$('#clsSummary').text(dateStr);
+		}
+		
+		if(apsYmd=='' & apeYmd==''){
+			$('#aprvSummary').text('전체');
+		}else {
+			$('#aprvSummary').text(dateStr2);
+		}
+		
+		if(rgnNo==''){
+			$('#rgnSummary').text('전체');
+		}else {
+			$('#rgnSummary').text(rgnNo);
+		}
+		// 담당자 데이터 입력
+		if(mngrId==''){
+			$('#mngrSummary').text('전체');
+		}else {
+			$('#mngrSummary').text(mngrId);
+		}
+		// 담당자 데이터 입력
+		if(mbrNm==''){
+			$('#mbrSummary').text('전체');
+		}else {
+			$('#mbrSummary').text(mbrNm);
+		}
+		// 담당자 데이터 입력
+		if(bzentNm==''){
+			$('#frcsSummary').text('전체');
+		}else {
+			$('#frcsSummary').text(bzentNm);
+		}
+		// 사유 타입
+		if(clsbizRsnType==''){
+			$('#rsnSummary').text('전체');
+		}else {
+			$('#rsnSummary').text(clsbizRsnType);
+		}
+		// 폐업 타입
+		if(clsbizType==''){
+			$('#typeSummary').text('전체');
+		}else {
+			$('#typeSummary').text(clsbizType);
+		}
+		
+	})
+	//.search-toggle
+	
+	$('#searchBtn').on('click', function() {
+	    currentPage = 1;
+	    clsbizType = $('#clsbizType').val();
+	    selectFrcsClsbizListAjax(); 
+	    
+	    
+		 // 모든 tap-cont에서 active 클래스를 제거
+	    $('.tap-cont').removeClass('active');
+	    if(clsbizType=='CLS01'){
+	    	 $('#tap-pre').parent().addClass('active');
+	    } else if(clsbizType=='CLS02'){
+	    	 $('#tap-noCln').parent().addClass('active');
+	    } else if(clsbizType=='CLS03'){
+	    	 $('#tap-cln').parent().addClass('active');
+	    } else if(clsbizType=='CLS04'){
+	    	 $('#tap-aprv').parent().addClass('active');
+	    } else {
+	    	 $('#tap-all').parent().addClass('active');
+	    }
+	    
+	    var selectedOptionText = $('#clsbizType option:selected').text();
+	 // view창에 담을 text를 담는 변수
+	 $('#clsbizType').parent().find('.select-selected').text(selectedOptionText);
+	});
+	
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		//console.log($(this).data('page'));
+		//console.log(currentPage);
+		selectFrcsClsbizListAjax(); 
+	})
+	
+	//////////////////////// 정렬  ////////////////////////////////
+	$('.sort').on('click',function(){
+		
+	      // 첫 번째 자식인 .sort-asc와 두 번째 자식인 .sort-desc를 선택
+	      var sortAsc = $('.sort-arrow', this).find('.sort-asc');
+	      var sortDesc = $('.sort-arrow', this).find('.sort-desc');
+	      
+	      sort = $(this).data('sort');
+	      $('.sort').removeClass('active');
+	      $(this).addClass('active');
+	      // 첫 번째 자식이 active 클래스가 있는지 확인
+	      if (sortAsc.hasClass('active')) { // desc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	    	  
+	        	sortDesc.addClass('active');
+	        	orderby = 'desc';
+	      } else{ // asc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	      
+	        	sortAsc.addClass('active');
+	        	
+	        	orderby = 'asc';
+	    	  
+	      }
+	      currentPage=1;
+	      selectFrcsClsbizListAjax(); 
+	})
+	
+	///////////////// 상세
+	
+	var clsbizModal = new bootstrap.Modal(document.getElementById('frcsInfoModal'), {
+		 backdrop: 'static',  // 모달 외부 클릭 시 닫히지 않도록 설정
+	     keyboard: false      // ESC 키로 모달 닫기 비활성화
+	})
+	
+	// 클릭 상세 모달 나오기
+	$(document).on('click', '.frcsDtl', function(){
+		frcsNo = $(this).data("no");
+		let clsType = $(this).data("type");
+		if(clsType=='CLS03'){
+			$('#updateClsbiz').prop("disabled",false);
+		}else{
+			$('#updateClsbiz').prop("disabled",true);
+		}
+		$('.modal-check').hide();
+		frcsClsbizDtlAjax();
+		clsbizModal.show();
+	})
+	
+	
+	// 단일 폐업
+	$('#updateClsbiz').on('click', function(){
+		Swal.fire({
+			  html: `<p>폐업처리 시 가맹점주의 권한도 삭제됩니다.</p>
+			  		<p>해당 가맹점을 폐업 처리하시겠습니까?</p>`,
+			  showCancelButton: true,
+			  confirmButtonText: "확인",
+			  cancelButtonText: "취소",
+			  confirmButtonColor: "#E73940",
+			  cancelButtonColor: "#7F9CAB",
+			}).then((result) => {
+				 if (result.isConfirmed) {
+					 updateOneFrcsClsbiz();
+				 } else{
+				 	Swal.fire("변경되지 않았습니다", "", "info");
+				 }
+			});
+	})
+	
+	$('#updateClcln').on('click', function(){
+		updateClclnChk();
+	})
+})
+</script>
+<!-- content-header: 페이지 이름 -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">폐업 현황</h1>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+<div class="wrap">
+	<!-- search-section: 검색 영역 -->
+	<div class="search-section">
+		<!-- cont: 검색 영역 -->
+		<div class="cont search-original">
+			<div class="search-wrap">
+				<sec:authentication property="principal.MemberVO" var="user"/>
+				<!-- 텍스트 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">가맹점명</p>
+					<input type="text" id="bzentNm" name="bzentNm" placeholder="키워드를 입력하세요"> 
+				</div>
+				<!-- 텍스트 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">가맹점주명</p>
+					<input type="text" id="mbrNm" name="mbrNm" placeholder="키워드를 입력하세요"> 
+				</div>
+				<!-- 관리자명 검색조건 -->
+				<div class="search-cont w-200">
+					<p class="search-title">관리자</p>
+						<select name="mngrId" id="mngrId" class="select2-custom">
+							<option value="" selected>전체</option>
+							<c:forEach var="mngr" items="${mngr}">
+								<option 
+								value="${mngr.mbrId}">
+<%-- 								<c:if test="${user.mbrId==mngr.mbrId}">selected</c:if>> --%>
+								${mngr.mbrNm}(${mngr.mbrId})</option>
+							</c:forEach>
+						</select>
+				</div>
+				<!-- 일자 기간 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">폐업일자</p>
+					<div class="search-date-wrap">
+						<input type="date" id="bgngYmd" name="bgngYmd"> 
+							~ 
+						<input type="date" id="endYmd" name="endYmd">
+					</div>
+				</div>
+				<!-- 일자 기간 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">승인일자</p>
+					<div class="search-date-wrap">
+						<input type="date" id="apsYmd"> 
+							~ 
+						<input type="date" id="apeYmd">
+					</div>
+				</div>
+				<!-- 지역 검색조건 -->
+				<div class="search-cont w-200">
+					<p class="search-title">지역</p>
+					<select name="rgnNo" id="rgnNo" class="select2-custom">
+						<option value="">전체</option>
+						<c:forEach var="rgn" items="${rgn}">
+							<option value="${rgn.comNo}">${rgn.comNm}</option>
+						</c:forEach>
+					</select>
+				</div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">사유유형</p>
+					<div class="select-custom w-100">
+					<select id="clsbizRsnType">
+						<option value="">전체</option>
+						<c:forEach var="rsn" items="${rsn}">
+							<option value="${rsn.comNo}">${rsn.comNm}</option>
+						</c:forEach>
+					</select>
+					</div>
+				</div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">폐업유형</p>
+					<div class="select-custom w-100">
+					<select id="clsbizType">
+						<option value="">전체</option>
+						<c:forEach var="cls" items="${cls}">
+							<option value="${cls.comNo}">${cls.comNm}</option>
+						</c:forEach>
+					</select>
+					</div>
+				</div>
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 영역 -->
+		
+		<!-- cont:  검색 접기 영역 -->
+		<div class="cont search-summary">
+			<div class="search-wrap">
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">가맹점명 <span class="summary" id="frcsSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">가맹점주명 <span class="summary" id="mbrSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">관리자 <span class="summary" id="mngrSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">폐업일자 <span class="summary" id="clsSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">승인일자 <span class="summary" id="aprvSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">지역 <span class="summary" id="rgnSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">사유유형 <span class="summary" id="rsnSummary">전체</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">폐업유형 <span class="summary" id="typeSummary">전체</span></p>
+				</div>
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 접기 영역 -->
+		
+		<!-- 검색어 영역 -->
+		<!-- 검색 버튼 영역 -->
+		<div class="search-control">
+			<div class="search-control-btns">
+				<div class="search-toggle">
+					요약보기<span class="icon material-symbols-outlined">Add</span>
+				</div>
+				<div class="search-reset">
+					초기화<span class="icon material-symbols-outlined">restart_alt</span>
+				</div>
+				<div>
+					<button class="btn btn-default search" id="searchBtn">검색 <span class="icon material-symbols-outlined">search</span></button>
+				</div>		
+			</div>
+		</div>
+		<!-- /.search-section: 검색어 영역 -->
+	</div>
+	<!-- /.search-section -->
+	
+	
+		<!-- 테이블 디자인 1 -->
+		<div class="cont">
+			<div class="table-wrap">
+			<!-- 테이블 분류 시작 -->
+				<div class="tap-btn-wrap">
+					<div class="tap-wrap">
+						<div data-type='' class="tap-cont active">
+							<span class="tap-title">전체</span>
+							<span class="bge bge-default" id="tap-all"></span>
+						</div>
+						<div data-type='CLS01' class="tap-cont">
+							<span class="tap-title">폐업예정</span>
+							<span class="bge bge-info" id="tap-pre"></span>
+						</div>
+						<div data-type='CLS02' class="tap-cont">
+							<span class="tap-title">폐업미납</span>
+							<span class="bge bge-danger" id="tap-noCln"></span>
+						</div>
+						<div data-type='CLS03' class="tap-cont">
+							<span class="tap-title">폐업대기</span>
+							<span class="bge bge-warning" id="tap-cln"></span>
+						</div>
+						<div data-type='CLS04' class="tap-cont">
+							<span class="tap-title">폐업완료</span>
+							<span class="bge bge-active" id="tap-aprv"></span>
+						</div>
+					</div>
+					<div class="btn-wrap">
+						<button class="btn-active" id="updateClcln">정산 확인 <span class="icon material-symbols-outlined">East</span></button>
+					</div>
+				</div>
+			<!-- 테이블 분류 끝 -->
+			
+				<table class="table-default">
+					<thead>
+						<tr>
+							<th class="center" style="width: 5%">번호</th>
+							<th class="center sort sort-frcs" style="width: 20%" data-sort="bzentNm">가맹점명
+							<div class="sort-icon" >
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="mbrNm">가맹점주명
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="mngrNm">관리자명
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs active" style="width: 10%" data-sort="clsbizYmd">폐업일자
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc active">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="aprvYmd">승인일자
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="rgnNo">지역
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="clsType">사유유형
+							<div class="sort-icon" >
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+							<th class="center sort sort-frcs" style="width: 10%" data-sort="clsbiz">폐업유형
+							<div class="sort-icon">
+								<div class="sort-arrow">
+								  <span class="sort-asc">▲</span>
+								  <span class="sort-desc">▼</span>
+								</div>
+							</div>
+							</th>
+						</tr>
+					</thead>
+					<tbody id="table-body" class="table-error">
+					</tbody>
+				</table>
+				<div class="pagination-wrap">
+					<div class="pagination">
+					</div>
+			</div>
+		<!-- table-wrap -->
+		</div>
+	<!-- /테이블 디자인 1 -->
+	</div>
+	<!-- cont 끝 -->
+</div>
+<!-- wrap 끝 -->	
+
+<!-- 가맹점 폐업 상세 모달 창 -->
+<jsp:include page="/WEB-INF/views/hdofc/modal/frcsInfoModal.jsp" />
+    
+    

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustMyPageMapper">
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 마이페이지 회원 기본 정보 조회
+	-->
+	
+	<resultMap type="ordrVO" id="ordrMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="ordrType" column="ORDR_TYPE"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		<association property="couponVO" resultMap="couponMap" />
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+ 		<result property="totalOrdrAtm" column="TOTAL_ORDR_AMT"/>  <!-- 만든거 -->
+		<association property="bzentVO" resultMap="bzentMap" />
+	</resultMap>
+	
+	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+	</resultMap>
+
+	
+	<resultMap type="couponVO" id="couponMap">
+		<result property="issuSn" column="ISSU_SN"/>
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="useYmd" column="USE_YMD"/>
+	</resultMap>
+	
+	<!-- 
+	couponGroupVO : menuVO = 1 : 1
+	couponGroupVO : eventVO = 1 : 1
+	couponGroupVO : couponVOList = 1 : N
+	
+	한 이벤트에 여러개의 쿠폰그룹
+	한 쿠폰그룹에 한 메뉴
+	한 쿠폰그룹에 여러개의 쿠폰
+	 -->
+	
+	<!-- 이벤트 : 쿠폰그룹 : 1 : N -->
+	<resultMap type="eventVO" id="eventMap">
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="eventType" column="EVENT_TYPE"/>
+		<result property="eventTtl" column="EVENT_TTL"/>
+		<result property="eventCn" column="EVENT_CN"/>
+		<result property="wrtrYmd" column="WRTR_YMD"/>
+		<result property="bgngYmd" column="BGNG_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+		<result property="remainDay" column="REMAIN_DAY"/>
+		<result property="aprvYn" column="APRV_YN"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<collection property="couponGroupVOList" resultMap="couponGroupMap"/>
+	</resultMap>
+	
+	<!-- 
+	쿠폰그룹 : 메뉴 = 1 : 1
+	쿠폰그룹 : 쿠폰 = 1 : N
+	 -->
+	<resultMap type="couponGroupVO" id="couponGroupMap">
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="couponNm" column="COUPON_NM"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="issuQty" column="ISSU_QTY"/>
+		<association property="menuVO" resultMap="menuMap" />
+		<collection property="couponVOList" resultMap="couponMap"></collection>
+	</resultMap>
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+	</resultMap>
+	
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 마이페이지 _ 문의 내역 조회
+	-->
+	<select id="myQs" parameterType="String" resultType="qsVO">
+	    SELECT  QS_TYPE 
+	           , QS_TTL
+	           , QS_CN
+	           , QS_SEQ
+	           , TO_CHAR(WRTR_DT, 'YYYY-MM-DD HH24:MI:SS') AS WRTR_DT
+	           , NVL(ANS_CN, 'N') AS ANS_CN
+	      FROM QS
+	     WHERE MBR_ID = #{mbrId}
+	     ORDER BY WRTR_DT DESC
+	</select>
+	
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 가맹점 신청
+	-->
+	<select id="myDscsn" parameterType="String" resultType="frcsDscsnVO">
+		SELECT DSCSN_PLAN_YMD
+             , RGN_NO
+             , DSCSN_TYPE
+   		  FROM FRCS_DSCSN
+	     WHERE MBR_ID = #{mbrId}
+	     ORDER BY DSCSN_PLAN_YMD DESC
+	</select>
+	
+	
+	
+			<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 마이페이지 _ 주문 내역 조회
+	-->
+	<select id="myOrdr" parameterType="String" resultMap="ordrMap">
+		SELECT O.ORDR_NO,
+		       O.ORDR_DT,
+		       O.ORDR_TYPE,
+		       O.ISSU_SN,
+		       SUM(ORDR_AMT * ORDR_QTY) AS TOTAL_ORDR_AMT,  
+		       B.BZENT_TELNO,
+		       B.BZENT_NM
+		 FROM ORDR O
+				INNER JOIN ORDR_DTL D ON O.ORDR_NO = D.ORDR_NO
+				INNER JOIN BZENT B ON D.FRCS_NO = B.BZENT_NO
+				WHERE O.MBR_ID = #{mbrId}
+				  AND O.ORDR_DT >= ADD_MONTHS(SYSDATE, -6)
+		GROUP BY O.ORDR_NO,
+				         O.ORDR_DT,
+				         O.ORDR_TYPE,
+				         O.ISSU_SN,
+				         D.FRCS_NO,
+				         B.BZENT_TELNO,
+				         B.BZENT_NM
+	   ORDER BY O.ORDR_DT DESC
+
+	</select>
+	
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.28
+		@description  : 마이페이지 _보유 쿠폰 조회
+	-->
+	<select id="myCoupon" parameterType="String" resultMap="eventMap">
+	 SELECT E.EVENT_NO 
+		 , E.EVENT_TTL 
+		 , E.BGNG_YMD 
+		 , E.EXP_YMD 
+		 , TO_DATE(E.EXP_YMD,'YYYYMMDD') - TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD'),'YYYYMMDD') REMAIN_DAY 
+		 , G.MENU_NO 
+		 , G.COUPON_NM 
+		 , G.DSCNT_AMT 
+		 , G.COUPON_CODE 
+		 , M.MENU_NO 
+		 , M.MENU_NM 
+		 , C.ISSU_SN 
+	 FROM EVENT E INNER JOIN COUPON_GROUP G ON(G.EVENT_NO=E.EVENT_NO) 
+		 INNER JOIN MENU M ON(G.MENU_NO = M.MENU_NO) 
+		 INNER JOIN COUPON C ON(G.COUPON_CODE = C.COUPON_CODE) 
+		 WHERE C.MBR_ID = #{mbrId} AND C.USE_YN ='N'
+	 </select>
+	
+			<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.01
+		@description  : 이벤트  상세 조회 (쿠폰을 발급 받는 페이지)// 페이지명이 insertEventCoupon
+	-->
+	<select id="insertEventCoupon" parameterType="String" resultMap="eventMap">
+		SELECT E.EVENT_TTL
+	           , E.BGNG_YMD
+	           , E.EXP_YMD
+	           , E.EVENT_CN
+	           , G.MENU_NO
+	           , G.COUPON_NM
+	           , G.DSCNT_AMT
+	           , G.COUPON_CODE
+	           , M.MENU_NM
+	           , C.ISSU_SN
+	      FROM EVENT E
+	           LEFT OUTER JOIN COUPON_GROUP G ON G.EVENT_NO = E.EVENT_NO
+	           LEFT OUTER JOIN MENU M ON G.MENU_NO = M.MENU_NO
+	           LEFT OUTER JOIN COUPON C ON G.COUPON_CODE = C.COUPON_CODE
+	     WHERE E.EVENT_NO = #{eventNo}
+	
+	</select>
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.01
+		@description  : 이벤트 페이지에서 쿠폰 발급
+	-->
+	 
+	 <insert id="insertEventCouponPost" parameterType="HashMap">
+	 
+	 	<selectKey keyProperty="issuSn" order="BEFORE" resultType="String">
+			SELECT #{couponCode} || NVL(LPAD(TO_NUMBER(SUBSTR(MAX(ISSU_SN), 8)) + 1, 4, '0'),'0001') AS NEXT_ISSU_SN 
+			  FROM COUPON
+			 WHERE COUPON_CODE = #{couponCode}
+		</selectKey>
+         
+         INSERT INTO COUPON(ISSU_SN, COUPON_CODE, MBR_ID)
+         VALUES (#{issuSn}, #{couponCode} , #{mbrId} )
+	 </insert>
+	
+	
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.07
+		@description  : 마이페이지 _ 관심 매장 조회
+	-->
+	
+	<!-- 
+	MEMBER : FAV_FRCS = 1 : N
+	FAV_FRCS : BZENT = 1 : 1
+	 -->
+	<resultMap type="memberVO" id="memberMap2">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<collection property="favFrcsVOList" resultMap="favFrcsMap2" />
+	</resultMap>
+	
+	<resultMap type="favFrcsVO" id="favFrcsMap2">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<association property="bzentVO" resultMap="bzentMap" />
+		<collection property="frcsVOList" resultMap="frcsMap" />
+	</resultMap>
+	 
+	 
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+	</resultMap>
+	
+	
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+	</resultMap>
+	 
+	 
+	 <select id="selectCustInfo" parameterType="String" resultType="memberVO">
+	 	
+	 </select>
+	 
+	 
+	 <!-- 
+		@author       : 서윤정
+		@date         : 2024.10.07
+		@description  : 마이페이지 _ 관심 매장 조회
+	-->
+	<select id="myStore" parameterType="String" resultMap="memberMap2">
+		SELECT M.MBR_ID
+		     , M.MBR_NM
+		     , M.MBR_ZIP
+		     , M.MBR_ADDR
+		     , M.MBR_DADDR
+		     , M.MBR_TELNO
+		     , M.MBR_BRDT
+		     , M.MBR_EML_ADDR
+		     , M.ENABLED
+		     , M.DEL_YN
+		     , M.JOIN_YMD
+		     , M.MBR_TYPE
+		     , M.MBR_APRV_YN
+		     , M.MBR_IMG_PATH
+		     , M.RGN_NO
+		     , F.FRCS_NO 
+		     , SUBSTR(FR.OPEN_TM, 1, 2) || ':' || SUBSTR(FR.OPEN_TM, 3, 2) AS OPEN_TM
+		     , SUBSTR(FR.DDLN_TM, 1, 2) || ':' || SUBSTR(FR.DDLN_TM, 3, 2) AS DDLN_TM
+		     , B.BZENT_NM
+		     , B.BZENT_TELNO
+		     , B.BZENT_ADDR
+		     , B.BZENT_DADDR 
+		FROM MEMBER M 
+						LEFT JOIN FAV_FRCS F ON M.MBR_ID = F.MBR_ID
+						LEFT JOIN FRCS FR ON F.FRCS_NO = FR.FRCS_NO  
+						LEFT JOIN BZENT B ON FR.FRCS_NO = B.BZENT_NO
+	   WHERE M.MBR_ID = #{mbrId}
+	   ORDER BY B.BZENT_NM ASC
+	</select>
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 마이페이지 - 회원 탈퇴
+	-->
+	<update id="updateMbrAjax" parameterType="String">
+		UPDATE MEMBER 
+		   SET DEL_YN = 'Y'
+		 WHERE MBR_ID = #{mbrId}
+	</update>	
+
+	 
+	 <!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 마이페이지 - 회원 정보 수정
+	-->
+	<update id="changeCustInfoAjax" parameterType="memberVO">
+	    UPDATE MEMBER
+	    <set>
+	        <if test="mbrPswd != null and mbrPswd != ''">
+	            MBR_PSWD = #{mbrPswd},
+	        </if>
+	        <if test="mbrZip != null and mbrZip != '' 
+	              and mbrAddr != null and mbrAddr != '' 
+	              and mbrDaddr != null and mbrDaddr != ''">
+	            MBR_ZIP = #{mbrZip},
+	            MBR_ADDR = #{mbrAddr},
+	            MBR_DADDR = #{mbrDaddr},
+	        </if>
+	        <if test="mbrTelno != null and mbrTelno != ''">
+	            MBR_TELNO = #{mbrTelno},
+	        </if>
+	        <if test="mbrEmlAddr != null and mbrEmlAddr != ''">
+	            MBR_EML_ADDR = #{mbrEmlAddr},
+	        </if>
+	    </set>
+	    WHERE MBR_ID = #{mbrId}
+	    <if test="mbrPswd == null and mbrZip == null and mbrTelno == null and mbrEmlAddr == null">
+	    </if>
+	</update>
+
+
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.20
+		@description  : 마이페이지 - 관심 매장 삭제
+	-->
+	<delete id="deleteLikeStoreAjax" parameterType="String"> 
+		DELETE 
+		  FROM FAV_FRCS 
+		 WHERE FRCS_NO = #{frcsNo} AND MBR_ID = #{mbrId}
+		
+	</delete>
+	
+	
+</mapper>

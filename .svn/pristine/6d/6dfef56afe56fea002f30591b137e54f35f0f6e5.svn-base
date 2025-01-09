@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.09.18
+@description  : 은행 정보 
+-->
+<mapper namespace="com.buff.com.mapper.BankMapper">
+	<!-- 은행 명과 이름 select -->
+	<select id="selectBank" resultType="bankVO">
+		SELECT COM_NO AS BANK_NO
+			  , COM_NM AS BANK_NM
+		  FROM COM_CODE
+		 WHERE COM_GROUP_NO= 'BK'	 
+	</select>
+
+
+
+</mapper>

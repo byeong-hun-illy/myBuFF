@@ -1,0 +1,30 @@
+package com.buff.cust.service.impl;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.cust.mapper.CustMyPageMapper;
+import com.buff.cust.service.CustMyPageService;
+
+@Service
+public class CustMyPageServiceImpl implements CustMyPageService {
+
+	@Inject
+	CustMyPageMapper myPageMapper;
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 고객 마이페이지 화면
+	
+	@Override
+	public List<MemberVO> myPageMain() {
+		return this.myPageMapper.myPageMain();
+	}
+
+	*/
+		
+}

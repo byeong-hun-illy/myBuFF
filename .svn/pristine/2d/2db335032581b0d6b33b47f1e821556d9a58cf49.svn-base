@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustMyPageMapper">
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 마이페이지 회원 기본 정보 조회
+	-->
+	
+	
+	<select id="myQs" parameterType="String" resultType="qsVO">
+		SELECT  QS_TYPE 
+               , QS_TTL
+               , QS_CN
+               , WRTR_DT
+               , NVL(ANS_CN, 'N') AS ANS_CN
+    	  FROM QS
+	     WHERE MBR_ID = #{mbrId}
+	     ORDER BY WRTR_DT DESC
+	</select>
+	
+	
+	<select id="myDscsn" parameterType="String" resultType="frcsDscsnVO">
+		SELECT DSCSN_PLAN_YMD
+             , RGN_NO
+             , DSCSN_TYPE
+   		  FROM FRCS_DSCSN
+	     WHERE MBR_ID = #{mbrId}
+	     ORDER BY DSCSN_PLAN_YMD DESC
+	</select>
+	
+	
+
+	
+</mapper>

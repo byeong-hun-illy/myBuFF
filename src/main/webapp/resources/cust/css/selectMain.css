@@ -1,0 +1,282 @@
+/* 공통 레이아웃 */
+.section-cont {
+	display: flex;
+	position: relative;
+	justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.section-title {
+	font-size: 2rem;
+	font-weight: bold;
+	font-family: 'KIMM';
+}
+
+/* 이벤트 이미지 슬라이드 배너 스타일 */
+#carouselMain {
+    position: relative;
+    padding-top: 163px;
+}
+
+.main-img {
+    width: -webkit-fill-available;
+}
+
+.wrap-main {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+/* 주문바로가기 */
+.order-wrap {
+	display: flex;
+	gap: 20px;
+    width: 1170px;
+}
+
+.order-cont {
+    width: 100%;
+    border-radius: 12px;
+    padding: 30px 0 0 0;
+    line-height: 70px;
+    font-size: 1.2rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.order-title {
+	font-family: 'KIMM';
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.go-icon {
+    font-size: 2rem;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* 메뉴 영역 */
+.menu-section {
+    padding: 100px 0;
+    background: var(--bg--blue);
+}
+
+.menu-wrap {
+	display: flex;
+	gap: 20px;
+}
+
+.menu-cont {
+    background: white;
+    padding: 0 40px 40px 40px;
+    border-radius: 12px;
+}
+
+.menu-cont .img-box {
+    height: 300px;
+    width: 290px;
+	background-size: 120% !important;
+}
+
+.carouselMenu-btn {
+	display: flex;
+	gap: 5px;
+}
+
+.carouselMenu-prev, .carouselMenu-next {
+    position: inherit;
+    display: block;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #fff;
+    text-align: center;
+    background: 0 0;
+    border: 0;
+    opacity: .5;
+    transition: opacity .15s ease;
+    width: 100%;
+    border: 2px solid var(--blue--5);
+    background: white;
+}
+
+.menu-move-icon {
+	font-size: 2.5rem;
+	color: var(--blue--5);
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    height: 100%;
+}
+
+.menu-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.menu-price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: orange;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.paid-icon {
+    color: orange;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+#menuPageBtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--brand--primary);
+    width: fit-content;
+    padding: 15px 40px;
+    border-radius: 50px;
+    margin: auto;
+    margin-top: 70px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'KIMM';
+}
+
+#menuPageBtn .go-icon {
+	color: white;
+}
+
+.move-icon {
+	color: white;
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* 매장 소개 */
+.store-inner {
+	display: flex;	
+	gap: 20px;
+	height: 300px;
+}
+
+.store-section {
+    padding: 100px 0;
+    margin-bottom: 40px;
+}
+
+.store-item {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.store-cont {
+    border: 1px solid var(--gray--4);
+    border-radius: 12px;
+    padding: 20px;	
+   	display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 500px;
+}
+
+.store-cont .store-nm {
+	font-size: 1.3rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.location-icon {
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.store-addr {
+	padding-left: 20px;
+}
+
+#carouselStore {
+	width: 500px;
+}
+
+.store-info {
+	width: -webkit-fill-available;
+	background: url(/resources/images/store-img.png) no-repeat center;
+	border-radius: 12px;
+    position: relative;
+/*     cursor: pointer; */
+}
+
+.store-title {
+	font-family: 'KIMM';
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    gap: 10px;
+    position: absolute;
+    left: 30px;
+    top: 200px;
+    background: #44c962;
+    padding: 15px 35px;
+    border-radius: 50px;
+    color: white;
+}
+
+.store-title span {
+ 	color: white;
+}
+
+/* 카드 컨테이너 스타일 */
+.cont {
+    padding: var(--pd--m);
+    background-color: var(--gray--0);
+    border-radius: var(--radius--m);
+}
+
+.card-cont {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap--m); /* 카드 간격 */
+}
+
+/* 카드 스타일 */
+.card {
+    background-color: var(--gray--0);
+    border: 1px solid var(--border--primary);
+    border-radius: var(--radius--s);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: var(--pd--s);
+    width: calc(33.333% - var(--gap--m)); /* 3개씩 배치, 카드 간격을 고려 */
+    box-sizing: border-box;
+    text-align: center; /* 카드 내 텍스트 중앙 정렬 */
+}
+
+/* 카드 제목 스타일 */
+.card h2 {
+    margin-top: 0;
+    font-size: var(--accent--size);
+    font-weight: var(--accent--weight);
+    color: var(--text--primary);
+}
+
+/* 카드 내용 스타일 */
+.card p {
+    margin: var(--gap--s) 0;
+    color: var(--text--secondary);
+}
+
+/* 카드 영역 스타일 */
+.cont-wrap {
+    display: flex;
+    justify-content: center; /* 카드 컨테이너 중앙 정렬 */
+}

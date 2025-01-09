@@ -1,0 +1,37 @@
+/* selectFrcsMenuList.css */
+.menu-table tbody {
+    display: block; /* 가로세로 조절 가능 */
+    max-height: 600px; /* 보여주고 싶은 만큼 세로값 입력 */
+    overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.menu-table thead, .menu-table tbody tr {
+    display: table;
+    width: 100%;
+}
+
+.cont.table {
+    width: 50%; /* 원하는 너비 설정 */
+    height: 600px; /* 높이를 auto로 설정하여 내용에 맞게 자동 조정 */
+    overflow: hidden; /* 스크롤 숨기기 */
+    display: block; /* 블록 요소로 설정 */
+}
+
+.table-wrap {
+	width: 100%;
+    max-height: 724px; /* 최대 높이 설정 (필요시) */
+    overflow-y: hidden; /* 수직 스크롤 숨기기 */
+}
+
+.cont.chart {
+    display: flex; /* Flexbox 사용 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    width: 50%; /* 원하는 너비 설정 */
+    height: 600px; /* 원하는 높이 설정 */
+}
+
+#myChart {
+    width: 50%; 
+    height: 100%;
+}

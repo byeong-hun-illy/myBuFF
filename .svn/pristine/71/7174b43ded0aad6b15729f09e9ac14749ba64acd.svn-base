@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.com.mapper.FrcsClclnMapper">
+	<!-- 
+	 기존에 있던 가맹점 정산 넣기
+	 
+				INSERT INTO FRCS_CLCLN(CLCLN_YM, FRCS_NO, CLCLN_YMD, CLCLN_YN, SLS_GRAMT, ROYALTY, DSCNT_AMT, REG_YMD)
+				SELECT TO_CHAR(O.ORDR_DT, 'YYYYMM')
+				    , D.FRCS_NO
+                    , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD') AS CLCLN_YMD
+                    , 'Y'
+				    , SUM(D.ORDR_QTY * D.ORDR_AMT) AS SLS_GRAMT
+				    , SUM(D.ORDR_QTY * D.ORDR_AMT) * 0.05 AS ROYALTY
+				    , COALESCE(SUM(G.DSCNT_AMT),0) AS DSCNT_AMT
+				    , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD') AS REG_YMD
+				FROM ORDR O
+				JOIN ORDR_DTL D ON O.ORDR_NO=D.ORDR_NO
+				LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+				LEFT JOIN COUPON_GROUP G ON G.COUPON_CODE=C.COUPON_CODE
+				GROUP BY D.FRCS_NO
+				        , TO_CHAR(O.ORDR_DT, 'YYYYMM')
+				        , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD')
+	 -->
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="actno" column="FRCS_ACTNO"/>
+		<result property="bankType" column="FRCS_BANK_TYPE"/>
+		<result property="bankTypeNm" column="FRCS_BANK_TYPE_NM"/>
+	</resultMap>
+	
+	<resultMap type="frcsClclnVO" id="frcsClclnMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="clclnYm" column="CLCLN_YM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="slsGramt" column="SLS_GRAMT"/>
+		<result property="royalty" column="ROYALTY"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		<result property="bankTypeNm" column="BANK_TYPE_NM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+	</resultMap>
+	 
+	<!-- 월간 정산 년과 월을 넣으면 그날의 년 월 정산 -->
+	<!-- 매출 내역이 있는 가맹점만 대상으로 insert -->
+	<insert id="insertFrcsClcln" parameterType="String">
+		INSERT INTO FRCS_CLCLN(CLCLN_YM, FRCS_NO, SLS_GRAMT, ROYALTY, DSCNT_AMT, REG_YMD)
+		SELECT TO_CHAR(O.ORDR_DT, 'YYYYMM')
+		    , D.FRCS_NO
+		    , SUM(D.ORDR_QTY * D.ORDR_AMT) AS SLS_GRAMT
+		    , SUM(D.ORDR_QTY * D.ORDR_AMT) * 0.05 AS ROYALTY
+		    , COALESCE(SUM(G.DSCNT_AMT),0) AS DSCNT_AMT
+		    , TO_CHAR(SYSDATE, 'YYYYMMDD') AS REG_YMD
+		FROM ORDR O
+		JOIN ORDR_DTL D ON O.ORDR_NO=D.ORDR_NO
+		LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+		LEFT JOIN COUPON_GROUP G ON G.COUPON_CODE=C.COUPON_CODE
+              WHERE TO_CHAR(O.ORDR_DT, 'YYYYMM')=#{clclnYm}
+		GROUP BY D.FRCS_NO
+		        , TO_CHAR(O.ORDR_DT, 'YYYYMM')
+		        , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD')
+	</insert>
+	
+	<!-- 정산현황 조건(검색 조건) -->
+	<select id="selectFrcsClcln" parameterType="hashMap" resultMap="frcsClclnMap">
+		SELECT * FROM(
+			SELECT ROW_NUMBER() OVER (<include refid="sort_frcs"/> <include refid="orderby"/>) AS RNUM
+					, C.CLCLN_YM
+					, C.FRCS_NO
+					, C.SLS_GRAMT
+		            , C.ROYALTY
+					, C.DSCNT_AMT
+					, C.REG_YMD
+					, CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND((C.ROYALTY - C.DSCNT_AMT) * (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_AMT
+		            , C.CLCLN_YN
+		            , C.CLCLN_YMD
+		            , B.BZENT_NM
+		            , B.RGN_NO
+		            , R.COM_NM AS RGN_NM
+                    , M.MBR_NM
+			FROM FRCS_CLCLN C
+			JOIN BZENT B ON B.BZENT_NO=C.FRCS_NO
+			JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+            JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+			WHERE 1=1
+			<include refid="frcs_search"/>
+		) WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>	
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_frcs">
+		<!-- 운영 상태 순 -->
+		<if test="sort == 'frcsType'">
+			ORDER BY F.FRCS_TYPE
+		</if>
+		<!-- 년월 순 -->
+		<if test="sort == 'clclnYm'">
+			ORDER BY C.CLCLN_YM
+		</if>
+		<!-- 가맹점 이름 순 -->
+		<if test="sort == 'bzentNm'">
+			ORDER BY B.BZENT_NM
+		</if>
+		<!-- 정산 일자 순 -->
+		<if test="sort == 'clclnYmd'">
+			ORDER BY C.CLCLN_YMD
+		</if>
+		<!-- 등록일자순 -->
+		<if test="sort == 'regYmd'">
+			ORDER BY C.REG_YMD
+		</if>
+		<!-- 로열티순 -->
+		<if test="sort == 'royalty'">
+			ORDER BY C.ROYALTY
+		</if>
+		<!-- 할인금액순 -->
+		<if test="sort == 'dscntAmt'">
+			ORDER BY C.DSCNT_AMT
+		</if>
+		<!-- 정산 여부순 -->
+		<if test="sort == 'clclnYn'">
+			ORDER BY C.CLCLN_YN
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="frcs_search">
+		<if test="frcsNo != null and frcsNo != ''">
+			AND C.FRCS_NO = #{frcsNo}
+		</if>
+		<!-- 가맹점 이름 검색 -->
+		<if test="clclnYn != null and clclnYn != ''">
+			AND C.CLCLN_YN = #{clclnYn}
+		</if>
+		<!-- 가맹점 이름 검색 -->
+		<if test="bzentNm != null">
+			AND B.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+		</if>
+		<!-- 정산일자 검색 -->
+		<if test="bgngYmd != null">
+		<![CDATA[
+			AND C.CLCLN_YMD >= #{bgngYmd}
+		]]>
+		</if>
+		<if test="endYmd != null">
+		<![CDATA[
+			AND C.CLCLN_YMD <= #{endYmd}
+		]]>
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND C.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND C.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+	</sql>
+	<sql id="frcsType_search">
+		<!-- 운영 -->
+		<if test="frcsType != null and frcsType != ''">
+			AND F.FRCS_TYPE = #{frcsType}
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--  정산 조회 현황 갯수 -->
+	<select id="selectTotalFrcsClcln" parameterType="hashMap" resultType="int">
+			SELECT COUNT(1)
+			FROM FRCS_CLCLN C
+			JOIN BZENT B ON B.BZENT_NO=C.FRCS_NO
+			JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+            JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+            WHERE 1=1
+			<include refid="frcs_search"/>
+	</select>	
+	
+	<!-- 정산 상세 -->
+	<select id="selectFrcsClclnDtl" parameterType="frcsClclnVO" resultMap="frcsClclnMap">
+		-- com.buff.hdofc.mapper.HdofcFrcsClclnMapper.selectFrcsClclnDtl
+		SELECT C.CLCLN_YM
+					, C.FRCS_NO
+					, C.ROYALTY
+					, C.DSCNT_AMT
+					, C.REG_YMD
+					, CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND((C.ROYALTY - C.DSCNT_AMT) * (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_AMT
+		            , C.CLCLN_YN
+		            , C.CLCLN_YMD
+		            , C.ACTNO
+		            , C.BANK_TYPE
+		            , FN_GET_COM_NM(C.BANK_TYPE) AS BANK_TYPE_NM
+		            , B.BZENT_NM
+		            , B.RGN_NO
+		            , FN_GET_COM_NM(B.RGN_NO) AS RGN_NM
+                    , M.MBR_NM
+                    , B.ACTNO AS FRCS_ACTNO
+                    , B.BANK_TYPE AS FRCS_BANK_TYPE
+                    , FN_GET_COM_NM(B.BANK_TYPE) AS FRCS_BANK_TYPE_NM
+                    , B.BZENT_TELNO
+                    , B.BZENT_ZIP
+                    , B.BZENT_ADDR
+                    , B.BZENT_DADDR
+			FROM FRCS_CLCLN C
+			JOIN BZENT B ON B.BZENT_NO=C.FRCS_NO
+            JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+            WHERE C.CLCLN_YM=#{clclnYm}
+            AND C.FRCS_NO=#{frcsNo}
+	</select>
+	
+	<!-- 정산 조회시 최근 정산을 받은 내역에 대해서 전체 정산과 받은 정산 내역 조회 -->
+	<select id="selectFrceClclnMonth" resultType="frcsClclnMaxVO">
+		SELECT TO_CHAR(TO_DATE(FC.CLCLN_YM, 'YYYYMM'),'YYYY-MM-DD') AS ST_DAY
+				, TO_CHAR(LAST_DAY(TO_DATE(FC.CLCLN_YM, 'YYYYMM')),'YYYY-MM-DD') AS EN_DAY
+				, SUM(FC.ROYALTY - FC.DSCNT_AMT) AS TOTAL
+				, CL.TOTAL_CL AS CLCLN_Y
+		FROM FRCS_CLCLN FC
+		LEFT JOIN (SELECT CLCLN_YM, SUM(ROYALTY - DSCNT_AMT) AS TOTAL_CL
+		    FROM FRCS_CLCLN
+		    WHERE CLCLN_YM = (SELECT MAX(CLCLN_YM) FROM FRCS_CLCLN)
+		    AND CLCLN_YN = 'Y'
+		    GROUP BY CLCLN_YM) CL ON FC.CLCLN_YM=CL.CLCLN_YM
+		WHERE FC.CLCLN_YM = (SELECT MAX(CLCLN_YM) FROM FRCS_CLCLN)
+		GROUP BY FC.CLCLN_YM
+				, CL.TOTAL_CL
+	</select>
+	
+	<!-- 가맹점이 정산 -->
+	<update id="updateFrcsClcln" parameterType="frcsClclnVO">
+			 	UPDATE FRCS_CLCLN C
+	 	SET C.CLCLN_YN = 'Y'
+	 		, C.CLCLN_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	 		, C.NPMNT_AMT = #{npmntAmt}
+	 		, C.ACTNO = (
+			    SELECT B.ACTNO
+			    FROM BZENT B
+			    WHERE C.FRCS_NO=B.BZENT_NO
+			)
+			, C.BANK_TYPE = (
+			    SELECT B.BANK_TYPE
+			    FROM BZENT B
+			    WHERE C.FRCS_NO=B.BZENT_NO
+			)
+	 	WHERE C.FRCS_NO=#{frcsNo}
+        AND C.CLCLN_YM=#{clclnYm}
+	</update>
+	
+	<!-- 정산 등록시 만약에  cls01인 폐업일이 지난 가맹점이있다면 수정 -->
+	<update id="updateClsbizType">
+		UPDATE FRCS_CLSBIZ
+		SET CLSBIZ_TYPE = 'CLS02'
+		WHERE FRCS_NO IN (
+		    SELECT F.FRCS_NO
+		    FROM FRCS F
+		    JOIN FRCS_CLSBIZ C ON C.FRCS_NO=F.FRCS_NO
+		    WHERE F.CLSBIZ_YMD IS NOT NULL
+		    <![CDATA[
+		    AND F.CLSBIZ_YMD < TO_CHAR(SYSDATE,'YYYYMMDD')
+		    ]]>
+		    AND CLSBIZ_TYPE = 'CLS01' 
+		    ) 
+	</update>
+</mapper>

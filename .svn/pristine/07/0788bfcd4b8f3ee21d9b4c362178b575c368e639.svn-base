@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	@author       : 김현빈
+	@date         : 2024.10.11
+	@description  : 가맹점 메인페이지
+-->
+<mapper namespace="com.buff.frcs.mapper.FrcsMainMapper">
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="menuTypeNm" column="MENU_TYPE_NM"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="sumOrdrAmt" column="SUM_ORDR_AMT"/>
+		<result property="orderHour" column="ORDER_HOUR"/>
+		<result property="orderDate" column="ORDER_DATE"/>
+		<result property="orderMonth" column="ORDER_MONTH"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+	</resultMap>
+	
+	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+ 		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+		<result property="ordrQtySum" column="ORDR_QTY_SUM"/>
+		<result property="ordrAmtSum" column="ORDR_AMT_SUM"/>
+		
+		<association property="ordrVO" resultMap="ordrMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="ordrVO" id="ordrMap">
+ 		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="bestDay" column="BEST_DAY"/>
+		<result property="bestTime" column="BEST_TIME"/>
+		<result property="ordrType" column="ORDR_TYPE"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		
+		<result property="dailysales" column="DAILYSALES"/>
+		<result property="dailysalesCnt" column="DAILYSALESCNT"/>
+		
+ 	</resultMap>
+	
+	<resultMap type="eventVO" id="eventMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="eventType" column="EVENT_TYPE"/>
+		<result property="eventTtl" column="EVENT_TTL"/>
+		<result property="eventCn" column="EVENT_CN"/>
+		<result property="wrtrYmd" column="WRTR_YMD"/>
+		<result property="bgngYmd" column="BGNG_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+		<result property="aprvYn" column="APRV_YN"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	</resultMap> 
+	
+	<resultMap type="noticeVO" id="noticeMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="ntcSeq" column="NTC_SEQ"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="ntcTtl" column="NTC_TTL"/>
+		<result property="ntcCn" column="NTC_CN"/>
+		<result property="wrtrDt" column="WRTR_DT"/>
+		<result property="inqCnt" column="INQ_CNT"/>
+		<result property="fixdSeq" column="FIXD_SEQ"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	</resultMap>	
+ 	
+ 	<resultMap type="frcsCheckVO" id="frcsCheckMap">
+ 		<result property="chckCn" column="CHCK_CN"/>
+		<result property="chckSeq" column="CHCK_SEQ"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="chckYmd" column="CHCK_YMD"/>
+		<result property="clenScr" column="CLEN_SCR"/>
+		<result property="srvcScr" column="SRVC_SCR"/>
+
+		<result property="totScr" column="TOT_SCR"/>
+ 	</resultMap>
+ 	
+	<!--
+ 		@programName : 메인 페이지 best메뉴 top3
+ 		@description : 메인 페이지 best메뉴 top3
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+ 	<select id="selectMenuQtyDesc" resultMap="menuMap" parameterType="String">
+ 		<![CDATA[
+ 		SELECT * 
+		FROM (
+		    SELECT M.MENU_NM 
+		         , M.MENU_AMT 
+		         , M.MENU_IMG_PATH
+		         , SUM(OD.ORDR_QTY) AS ORDR_QTY_SUM 
+		         , SUM(OD.ORDR_AMT * OD.ORDR_QTY) AS ORDR_AMT_SUM 
+		    FROM   MENU M
+		    INNER  JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO 
+		    INNER  JOIN ORDR_DTL OD ON FM.MENU_NO = OD.MENU_NO AND FM.FRCS_NO = OD.FRCS_NO 
+		    INNER  JOIN ORDR O ON OD.ORDR_NO = O.ORDR_NO 
+		    WHERE  OD.FRCS_NO = #{bzentNo}
+		    AND    EXTRACT(YEAR FROM O.ORDR_DT) = EXTRACT(YEAR FROM SYSDATE) 
+		    AND    EXTRACT(MONTH FROM O.ORDR_DT) = EXTRACT(MONTH FROM SYSDATE)
+		    GROUP  BY M.MENU_NO, M.MENU_NM, M.MENU_IMG_PATH, M.MENU_AMT
+		    ORDER  BY ORDR_QTY_SUM DESC
+		)
+		WHERE ROWNUM <= 3
+		]]>
+ 	</select>
+ 	
+	<!--
+ 		@programName : 메인 페이지 worst메뉴 top3
+ 		@description : 메인 페이지 worst메뉴 top3
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectMenuQtyAsc" resultMap="menuMap" parameterType="String">
+ 		<![CDATA[
+ 		SELECT * 
+		FROM (
+		    SELECT M.MENU_NM 
+		         , M.MENU_AMT 
+		         , M.MENU_IMG_PATH
+		         , SUM(OD.ORDR_QTY) AS ORDR_QTY_SUM 
+		         , SUM(OD.ORDR_AMT * OD.ORDR_QTY) AS ORDR_AMT_SUM 
+		    FROM   MENU M
+		    INNER  JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO 
+		    INNER  JOIN ORDR_DTL OD ON FM.MENU_NO = OD.MENU_NO AND FM.FRCS_NO = OD.FRCS_NO 
+		    INNER  JOIN ORDR O ON OD.ORDR_NO = O.ORDR_NO 
+		    WHERE  OD.FRCS_NO = #{bzentNo}
+		    AND    EXTRACT(YEAR FROM O.ORDR_DT) = EXTRACT(YEAR FROM SYSDATE) 
+		    AND    EXTRACT(MONTH FROM O.ORDR_DT) = EXTRACT(MONTH FROM SYSDATE)
+		    GROUP  BY M.MENU_NO, M.MENU_NM, M.MENU_IMG_PATH, M.MENU_AMT
+		    ORDER  BY ORDR_QTY_SUM ASC
+		)
+		WHERE ROWNUM <= 3
+		]]>
+ 	</select>
+	
+	<!--
+ 		@programName : 당일 매출액 출력
+ 		@description : 당일 매출액 출력
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectDailysales" parameterType="String" resultType="long">
+		<![CDATA[ 
+		SELECT NVL(SUM(OD.ORDR_QTY * OD.ORDR_AMT),0) AS DAILYSALES
+		FROM   ORDR O
+		INNER JOIN ORDR_DTL OD ON(O.ORDR_NO = OD.ORDR_NO)
+		WHERE  O.ORDR_DT >= TRUNC(SYSDATE) 
+		AND    O.ORDR_DT < TRUNC(SYSDATE) + 1 
+		AND    OD.FRCS_NO = #{bzentNo}
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 당일 판매량 출력
+ 		@description : 당일 판매량 출력
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectDailysalesCnt" parameterType="String" resultType="long">
+		<![CDATA[ 
+		SELECT NVL(SUM(OD.ORDR_QTY),0) AS DAILYSALESCNT
+		FROM   ORDR O
+		INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO)
+		WHERE  O.ORDR_DT >= TRUNC(SYSDATE) 
+		AND    O.ORDR_DT < TRUNC(SYSDATE) + 1 
+		AND    OD.FRCS_NO = #{bzentNo}
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 현재 진행중인 이벤트 출력
+ 		@description : 현재 진행중인 이벤트 출력
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+    <select id="selectIngEvent" resultMap="eventMap">
+		<![CDATA[ 
+	        SELECT ROW_NUMBER() OVER(ORDER BY TO_DATE(BGNG_YMD, 'YYYYMMDD') DESC) AS RNUM,
+	               EVENT_TYPE,
+	               BGNG_YMD,
+	               EXP_YMD,
+	               EVENT_NO,
+	               EVENT_TTL
+	        FROM   EVENT
+	        WHERE  TO_DATE(BGNG_YMD, 'YYYYMMDD') <= SYSDATE
+	        AND    TO_DATE(EXP_YMD, 'YYYYMMDD') >= SYSDATE
+	        AND    EVENT_TYPE = 'EVT04'
+		]]>
+    </select>
+    
+   	<!--
+ 		@programName : 문의사항 출력
+ 		@description : 문의사항 출력
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 14
+	-->
+    <select id="selectIngNotice" resultMap="noticeMap">
+		<![CDATA[ 
+		SELECT *
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY WRTR_DT DESC) AS RNUM,
+				   NTC_SEQ,
+				   NTC_TTL,
+				   WRTR_DT
+			FROM NOTICE
+		) NumberedNotice
+		WHERE RNUM <= 5
+        ]]>
+    </select>
+    
+    <!--
+ 		@programName : 최근 매장점검 등급 출력
+ 		@description : 최근 매장점검 등급 출력
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+    <select id="selectStoreGrade" parameterType="String" resultType="int">
+	    SELECT COALESCE(
+		    (SELECT CLEN_SCR + SRVC_SCR
+		     FROM FRCS_CHECK 
+		     WHERE FRCS_NO = 'FR0030'
+		     AND CHCK_YMD = (SELECT MAX(CHCK_YMD) FROM FRCS_CHECK WHERE FRCS_NO = 'FR0030')
+		     AND ROWNUM = 1  -- 가장 최근의 1개 점검만 선택
+		    ), 0)
+		FROM DUAL
+	</select>
+	
+	<!--
+ 		@programName : 매장점검 경고 횟수
+ 		@description : 매장점검 경고 횟수
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectStoreWarningCnt" parameterType="String" resultType="int">
+		SELECT WARN_CNT
+		FROM   FRCS
+		WHERE  FRCS_NO = #{bzentNo}
+	</select>
+	
+	<!--
+ 		@programName : 발주관리 유형별 갯수
+ 		@description : 발주관리 유형별 갯수
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectOrderStatusCnt" parameterType="String" resultType="hashMap">
+		SELECT MAX(T.tapAll) tapAll
+           , MAX(T.tapWaiting) tapWaiting
+           , MAX(T.tapProgress) tapProgress
+           , MAX(T.tapScheduled) tapScheduled
+           , MAX(T.tapCompleted) tapCompleted
+      FROM
+      (
+          SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress,0 tapScheduled,0 tapCompleted
+          FROM   PO P 
+          INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+          WHERE  B.MBR_ID = #{mbrId}
+          UNION ALL
+          SELECT 0,COUNT(*),0,0,0
+          FROM   PO P 
+          INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+          WHERE  B.MBR_ID = #{mbrId}
+          AND P.DELI_TYPE = 'DELI01'
+          UNION ALL
+          SELECT 0,0,COUNT(*),0,0
+          FROM   PO P 
+          INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+          WHERE  B.MBR_ID = #{mbrId}
+          AND P.DELI_TYPE = 'DELI02'
+          UNION ALL
+          SELECT 0,0,0,COUNT(*),0
+          FROM   PO P 
+          INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+          WHERE  B.MBR_ID = #{mbrId}
+          AND P.DELI_TYPE = 'DELI03'
+          UNION ALL
+          SELECT 0,0,0,0,COUNT(*) 
+          FROM   PO P 
+          INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+          WHERE  B.MBR_ID = #{mbrId}
+          AND P.DELI_TYPE = 'DELI04'
+      ) T
+	</select>
+	
+	<!--
+ 		@programName : 점검내역 리스트
+ 		@description : 점검내역 리스트
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 11
+	-->
+	<select id="selectStoreCheckList" parameterType="String" resultMap="frcsCheckMap">
+		SELECT CHCK_YMD
+		     , CLEN_SCR
+		     , SRVC_SCR
+		     , (CLEN_SCR + SRVC_SCR) AS TOT_SCR
+		FROM FRCS_CHECK
+		WHERE FRCS_NO = #{bzentNo}
+		ORDER BY CHCK_YMD DESC
+	</select>
+	
+	<!--
+ 		@programName : 일간 매출액
+ 		@description : 일간 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 14
+	-->
+	<select id="selectDayAmt" resultType="long" parameterType="String">
+		<![CDATA[
+		SELECT COALESCE(SUM(OD.ORDR_QTY * OD.ORDR_AMT), 0) AS SUM_ORDR_AMT
+		FROM   MENU M
+		INNER  JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER  JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER  JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE  FM.FRCS_NO = #{frcsNo}
+		AND    O.ORDR_DT >= TRUNC(SYSDATE) -- 오늘부터
+		AND    O.ORDR_DT <  TRUNC(SYSDATE + 1) -- 오늘까지
+		ORDER  BY M.MENU_TYPE
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 월간 매출액
+ 		@description : 월간 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 14
+	-->
+	<select id="selectMonthAmt" resultType="long" parameterType="String">
+		<![CDATA[
+		SELECT COALESCE(SUM(OD.ORDR_QTY * OD.ORDR_AMT), 0) AS SUM_ORDR_AMT
+		FROM   MENU M
+		INNER  JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER  JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER  JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE  FM.FRCS_NO = #{frcsNo}
+		AND    O.ORDR_DT >= TRUNC(SYSDATE, 'MM') -- 현재 월 1일
+		AND    O.ORDR_DT <  ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1) -- 현재 월 마지막 날 (다음 달 1일 바로 직전)
+		ORDER  BY M.MENU_TYPE
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 연간 매출액
+ 		@description : 연간 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 14
+	-->
+	<select id="selectYearAmt" resultType="long" parameterType="String">
+		<![CDATA[
+		SELECT COALESCE(SUM(OD.ORDR_QTY * OD.ORDR_AMT), 0) AS SUM_ORDR_AMT
+		FROM   MENU M
+		INNER  JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER  JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER  JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE  FM.FRCS_NO = #{frcsNo}
+		AND    O.ORDR_DT >= TRUNC(SYSDATE, 'YYYY') -- 현재 연도 1월 1일
+		AND    O.ORDR_DT <  ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), 12) -- 현재 연도 12월 31일 (다음 연도 1월 1일 바로 직전)
+		ORDER  BY M.MENU_TYPE
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 당일 시간당 매출액
+ 		@description : 당일 시간당 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 15
+	-->
+	<select id="selectHourOrderAmt" parameterType="String" resultMap="menuMap">
+		<![CDATA[
+		WITH all_hours AS (
+		    SELECT TO_CHAR(LEVEL - 1, 'FM00') AS ORDER_HOUR
+		    FROM dual
+		    CONNECT BY LEVEL <= 24
+		),
+		sales_data AS (
+		    SELECT 
+		        TO_CHAR(O.ORDR_DT, 'HH24') AS ORDER_HOUR,
+		        SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT
+		    FROM 
+		        MENU M
+		    INNER JOIN 
+		        FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		    INNER JOIN 
+		        ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		    INNER JOIN 
+		        ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		    WHERE 
+		        FM.FRCS_NO = #{frcsNo} -- 특정 가맹점 번호
+		        AND O.ORDR_DT >= TRUNC(SYSDATE) -- 오늘 날짜의 시작 시점 (00:00:00)
+		        AND O.ORDR_DT < TRUNC(SYSDATE) + 1 -- 오늘 날짜의 다음 시점 (내일 00:00:00)
+		    GROUP BY 
+		        TO_CHAR(O.ORDR_DT, 'HH24') -- 시간별로 그룹화
+		)
+		SELECT 
+		    h.ORDER_HOUR,
+		    NVL(sd.SUM_ORDR_AMT, 0) AS SUM_ORDR_AMT
+		FROM 
+		    all_hours h
+		LEFT JOIN 
+		    sales_data sd ON h.ORDER_HOUR = sd.ORDER_HOUR
+		ORDER BY 
+		    h.ORDER_HOUR
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 현재월 일간 매출액
+ 		@description : 현재월 일간 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 15
+	-->
+	<select id="selectDayOrderAmt" parameterType="String" resultMap="menuMap">
+		<![CDATA[
+		WITH all_dates AS (
+		    SELECT TO_CHAR(TRUNC(SYSDATE, 'MM') + LEVEL - 1, 'DD') AS ORDER_DATE
+		    FROM dual
+		    CONNECT BY LEVEL <= LEAST(LAST_DAY(TRUNC(SYSDATE, 'MM')) - TRUNC(SYSDATE, 'MM') + 1, TO_CHAR(SYSDATE, 'DD'))
+		),
+		sales_data AS (
+		    SELECT 
+		        TO_CHAR(O.ORDR_DT, 'DD') AS ORDER_DATE,
+		        SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT
+		    FROM 
+		        MENU M
+		    INNER JOIN 
+		        FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		    INNER JOIN 
+		        ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		    INNER JOIN 
+		        ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		    WHERE 
+		        FM.FRCS_NO = #{frcsNo}
+		        AND O.ORDR_DT >= TRUNC(SYSDATE, 'MM') -- 현재 월 1일
+		        AND O.ORDR_DT <= SYSDATE -- 오늘 날짜까지
+		    GROUP BY 
+		        TO_CHAR(O.ORDR_DT, 'DD')
+		)
+		SELECT 
+		    d.ORDER_DATE,
+		    NVL(sd.SUM_ORDR_AMT, 0) AS SUM_ORDR_AMT
+		FROM 
+		    all_dates d
+		LEFT JOIN 
+		    sales_data sd ON d.ORDER_DATE = sd.ORDER_DATE
+		ORDER BY 
+		    d.ORDER_DATE
+		]]>
+	</select>
+	
+	<!--
+ 		@programName : 현재년도 월간 매출액
+ 		@description : 현재년도 월간 매출액
+ 		@author      : 김현빈, 정현종
+ 		@date        : 2024. 10. 15
+	-->
+	<select id="selectMonthOrderAmt" parameterType="String" resultMap="menuMap">
+		<![CDATA[
+		SELECT 
+		    TO_CHAR(O.ORDR_DT, 'MM') AS ORDER_MONTH,
+		    SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT
+		FROM 
+		    MENU M
+		INNER JOIN 
+		    FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER JOIN 
+		    ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER JOIN 
+		    ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE 
+		    FM.FRCS_NO = #{frcsNo}
+		    AND O.ORDR_DT >= TRUNC(SYSDATE, 'YYYY') -- 현재 연도 1월 1일
+		    AND O.ORDR_DT < ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), 12) -- 다음 연도 1월 1일 직전
+		GROUP BY 
+		    TO_CHAR(O.ORDR_DT, 'MM')
+		ORDER BY 
+		    TO_CHAR(O.ORDR_DT, 'MM')
+		]]>
+	</select>
+	
+	<!-- 
+		알림 시작
+	-->
+	<select id="selectSfStockDown" parameterType="String" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+			FROM GDS G
+			JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+			LEFT JOIN (
+			    SELECT SP.GDS_CODE, SUM(SP.QTY) AS TOTAL_PO_QTY
+			    FROM PO P
+			    JOIN STOCK_PO SP ON P.PO_NO = SP.PO_NO
+			    WHERE P.DELI_TYPE = 'DELI01'
+			    GROUP BY SP.GDS_CODE
+			) PO_SUM ON S.GDS_CODE = PO_SUM.GDS_CODE
+			WHERE S.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+			AND (S.QTY + COALESCE(PO_SUM.TOTAL_PO_QTY, 0)) < S.SF_STOCK_QTY
+		]]>
+	</select>
+	
+	<!-- 
+		알림으로 띄울 내용 추가 
+		@Author : 송예진 
+	-->
+	<!-- 월간 정산 해야되는 건 수 -->
+	<select id="selectFrcsClcln" parameterType="String" resultType="int">
+		SELECT COUNT(1)
+		FROM FRCS_CLCLN
+		WHERE FRCS_NO=(
+			SELECT BZENT_NO 
+			FROM BZENT
+			WHERE MBR_ID=#{mbrId})
+		AND CLCLN_YN='N'
+	</select>
+	
+	<!-- 발주 정산해야되는 건 수  -->
+	<select id="selectPoClcln" parameterType="String" resultType="int">
+		SELECT COUNT(1)
+		FROM PO P
+		JOIN PO_CLCLN C ON P.PO_NO=C.PO_NO
+		WHERE P.BZENT_NO = (
+			SELECT BZENT_NO 
+			FROM BZENT
+			WHERE MBR_ID=#{mbrId})
+		AND CLCLN_YN = 'N'
+	</select>
+	
+	<!-- 폐업일 -->
+	<select id="selectFrcsClsbiz" parameterType="String" resultType="String">
+		SELECT TO_CHAR(TO_DATE(CLSBIZ_YMD,'YYYYMMDD'),'YYYY-MM-DD')
+		FROM FRCS
+		WHERE FRCS_NO = (
+		    SELECT BZENT_NO 
+		    FROM BZENT
+		    WHERE MBR_ID = #{mbrId}
+		)
+	</select>
+</mapper>

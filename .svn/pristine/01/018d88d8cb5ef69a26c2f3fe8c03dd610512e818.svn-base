@@ -1,0 +1,135 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+	
+<%--
+	@fileName    : selectNotice.jsp
+	@programName : 고객센터_ 공지사항 화면
+	@description : 모든 회원이   buff 공지사항을 조회할 수 있음
+	@author      : 서윤정
+	@date        : 2024.09.13
+--%>	
+	
+<style>
+/* 고객센터 제목 */
+h1 {
+    font-size: 2.2rem; /* 더 큰 사이즈로 설정 */
+    font-weight: 700;
+    color: var(--text--primary); /* 강조된 텍스트 색상 */
+    text-align: center; /* 중앙 정렬 */
+    margin-bottom: 20px;
+}
+
+/* 상단 메뉴 (공지사항 등) */
+.menu {
+    display: flex;
+    justify-content: center;
+    gap: var(--gap--m);
+    padding: 10px 0;
+}
+
+/* 상단 메뉴 (공지사항 등) */
+.page-menu {
+    display: flex;
+    justify-content: right;
+    gap: var(--gap--m);
+    padding: 10px 0;
+}
+.menu-item {
+    font-size: var(--accent--size); /* 강조된 메뉴 사이즈 */
+    font-weight: var(--container--title--weight);
+    padding: 10px 20px;
+    color: var(--text--primary);
+}
+
+.menu-item.active {
+    border-bottom: 3px solid var(--red--5); /* 활성화된 메뉴 밑줄 */
+    color: var(--red--5); /* 활성화된 메뉴 색상 */
+}
+
+.menu-item:hover {
+    color: var(--red--5); /* 마우스 오버 시 색상 */
+}
+
+/* 검색 영역 스타일 */
+.search-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--gap--m);
+    padding: var(--pd--m);
+    background-color: var(--gray--05); /* 배경색 추가 */
+    border-radius: var(--radius--m);
+}
+
+.search-input-btn {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* 검색창의 적당한 너비 */
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border--primary);
+    border-radius: var(--radius--m);
+    font-size: var(--primary--size);
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* 약간의 그림자 */
+}
+
+.search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    background: url('/resources/images/common/search.png') no-repeat center;
+    background-size: 20px 20px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
+
+</style>
+
+<div class="location-wrap">
+
+	<div class="location-container">
+		<div class="page_navi">
+			<a href="/cust/home"><span>HOME</span></a> > <span>고객센터</span> > <span>공지사항</span>
+		</div>
+		<div class="page-menu">
+			<div class="menu-item active"><a href ="/cust/custCenter/selectNotice"><span>공지사항</span></a></div>
+			<div class="menu-item"><a href ="/cust/custCenter/selectFaq"><span>FAQ</span></a></div>
+			<div class="menu-item"><a href ="/cust/custCenter/insertQs"><span>문의</span></a></div>
+		</div>
+	</div>
+</div>
+
+<div class="cont">
+	<div class="menu">
+		<div class="menu-item active">구매</div>
+		<div class="menu-item">매장이용</div>
+		<div class="menu-item">채용</div>
+		<div class="menu-item">가맹점</div>
+		<div class="menu-item">기타</div>
+	</div>
+	<div class="cont-wrap">
+		<form id="frm" name="frm" method="get" action="selectNotice.jsp">
+			<div class="search-wrap">
+				<div class="search-cont">
+					<div class="search-input-btn">
+						<input type="text" placeholder="제목과 내용을 입력해주세요" class="search-input"  style="width: 500px;" />
+						<button type="submit" class="search-btn"></button>
+					</div>
+				</div>
+			</div>
+		</form>
+		
+		<table>
+			
+		</table>
+		
+	</div>
+</div>

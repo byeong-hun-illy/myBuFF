@@ -1,0 +1,174 @@
+package com.buff.cust.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustHomeService;
+import com.buff.vo.BzentVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.MenuVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+
+/**
+* @packageName  : com.buff.controller.cust
+* @fileName     : CustController.java
+* @author       : 
+* @date         : 2024.09.13
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     	  			최초 생성
+*/
+@Slf4j
+@RequestMapping("/buff")
+@Controller
+public class CustController {
+	
+	
+	
+	@Autowired
+	CustHomeService HomeServcie;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 메인화면에 가맹점 카드 조회
+	*/
+	
+	@GetMapping("/home")
+	public String home(Model model) {
+		List<BzentVO> bzentVOList = HomeServcie.home();
+		
+		model.addAttribute("bzentVOList", bzentVOList);
+		
+		return "cust/main/home";
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 가맹지점 조회
+	*/
+	@GetMapping("/selectStore")
+	public String selectStore(@RequestParam Map<String, Object> map, Model model) {
+
+	   // int total = HomeServcie.getTotal(map);
+	    
+	   // log.info("selectStore -> total :" + total);
+	    
+	    List<BzentVO> bzentVOList = HomeServcie.selectStore(map);
+	    
+	    model.addAttribute("bzentVOList", bzentVOList);
+	    log.info("selectStore ->bzentVOList" + bzentVOList );
+	    return "cust/main/selectStore";
+
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 본사 메뉴 조회
+	*/
+	@GetMapping("/selectMenu")
+	public String selectMenu(Model model, @RequestParam(value = "menuGubun", defaultValue = "MENU01") String menuGubun){
+		List<MenuVO> menuVOList = this.HomeServcie.selectMenu(menuGubun);
+		
+		model.addAttribute("menuGubun", menuGubun);
+		model.addAttribute("menuVOList", menuVOList);
+		
+		
+		return "cust/main/selectMenu";
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 가맹점 문의 화면
+	*/
+	
+	@GetMapping("/insertDscsn")
+	public String insertDscsn() {
+		
+		return "cust/main/insertDscsn";
+	}
+	
+	/**
+	 * @methodName  : insertDscsn
+	 * @author      : 정기쁨
+	 * @date        : 2024.10.08
+	 * @param : mbrId
+	 * @return 가맹점 문의 조회 결과 (신청날짜, 지역번호, 지역이름)
+	 */
+	@ResponseBody
+	@GetMapping("/selectDscsn")
+	public Map<String, Object> selectDscsn(
+		@RequestParam(value = "mbrId", required = false, defaultValue = "") String mbrId
+	){
+		Map<String, Object> map = this.HomeServcie.selectFrcsDscsn(mbrId);
+		return map;
+	}
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 이벤트 조회
+	*/
+	
+	@GetMapping("/selectEvent")
+	public String selectEvent(Model model) {
+		List<EventVO> eventVOList = HomeServcie.selectEvent();
+		
+		model.addAttribute("eventVOList", eventVOList);
+		
+		return "cust/main/selectEvent";
+	}
+	
+	
+	  /*
+	   selectEvent.jsp의 이벤트를 선택 시 이벤트 상세(insertEventCoupon.jsp)로 이동
+	   
+	   /cust/insertEventCoupon?eventNo=E00001
+	   */
+	  @GetMapping("/insertEventCoupon")
+	  public String insertEventCoupon(@RequestParam(value="eventNo") String eventNo, Model model) {
+	      log.info("insertEventCoupon -> eventNo: {}", eventNo);
+	      
+	      EventVO eventVO = HomeServcie.insertEventCoupon(eventNo);
+	      log.info("insertEventCoupon -> eventVO: {}", eventVO);
+	      
+	      model.addAttribute("eventVO", eventVO);
+	      
+	      return "cust/main/insertEventCoupon";
+	  }
+
+	
+}

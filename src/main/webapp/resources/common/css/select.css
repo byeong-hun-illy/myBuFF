@@ -1,0 +1,129 @@
+@charset "UTF-8";
+
+@font-face {
+    font-family: 'KIMM_Bold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2212@1.0/KIMM_Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+.hme-wrap {
+	display: flex;
+    height: 100vh;
+}
+
+.wrap-cont {
+	width: 100%;
+}
+
+.cust .bg {
+    background-color: #3CB371;
+    transition: background 2s ease;
+    /* background-position: left; */
+	width: 100%;
+	height: 100%;	
+}
+
+.cust .bg:hover {
+    background: url(/resources/images/hme-cust.png) no-repeat center;
+    transition: background 1s ease;
+    background-color: #0e763c;
+    /* background-position: center; */
+    filter:brightness(50%);
+}
+
+.cust .bg.cust-effect {
+    background: url(/resources/images/hme-cust.png) no-repeat center;
+    transition: background 1s ease;
+    background-color: #0e763c;
+    /* background-position: center; */
+    filter:brightness(50%);
+}
+
+.bzent .bg {
+	background-color: #3799cf;
+	transition: background 2s ease;
+	/* background-position: right; */
+	width: 100%;
+	height: 100%;	
+}
+
+.bzent .bg:hover {
+	background: url(/resources/images/hme-bzent.png) no-repeat center;
+    filter:brightness(50%);
+    transition: background 1s ease;
+    background-color: #1d6891;		
+    /* background-position: center; */
+}
+
+.bzent .bg.bzent-effect {
+	background: url(/resources/images/hme-bzent.png) no-repeat center;
+    filter:brightness(50%);
+    transition: background 1s ease;
+    background-color: #1d6891;		
+    /* background-position: center; */
+}
+
+/* 내용 */
+.title-sub {
+	color: white;
+	font-size: 2rem;
+}
+.title-main {
+	color: white;
+	font-size: 5rem;
+    font-family: 'KIMM_Bold';
+     margin-top: 10px;
+}
+.line {
+	width: 75px;
+    border: 4px solid white;
+    margin: 20px 0;
+}
+.site-info {
+    font-size: 1.5rem;
+	color: white;
+	margin-bottom: 15px;
+}
+.site-cn {
+	color: white;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+.go-btn {
+	padding: 15px 60px;
+    border-radius: 50px;
+    display: inline-block;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'KIMM_Bold';
+   	margin-top: 25px;
+   	cursor: pointer;
+}
+
+.cust .go-btn {
+    background-color: #3799cf;
+    border: 3px solid #21688f;
+}
+
+.bzent .go-btn {
+	background-color: #3bb371;
+    border: 3px solid #197040;
+}
+
+.cust .cont-inner {
+	position: absolute;
+    z-index: 100;
+    top: 25%;
+    left: 5%;
+}
+
+.bzent .cont-inner {
+	position: absolute;
+    z-index: 100;
+    top: 25%;
+	right: 30%;
+}
+
+

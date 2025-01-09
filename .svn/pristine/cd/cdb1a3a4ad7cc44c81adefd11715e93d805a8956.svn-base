@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.09.16
+@description  : 거래처 관련 처리 sql
+ -->
+
+<mapper namespace="com.buff.cnpt.mapper.CnptMapper">
+
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrVO" resultMap="mbrMap" />
+		<association property="mngrVO" resultMap="mngrMap"/>
+		
+	</resultMap>
+		
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+	</resultMap>
+	
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+	</resultMap>
+		
+	<!--
+ 		@programName : 거래처 조회
+ 		@description : 거래처 조회를 위한 화면
+ 		@author      : 이병훈
+ 		@date        : 2024. 09. 16
+	-->
+	<select id="selectCnpt" resultMap="bzentMap" parameterType="String">
+		SELECT 
+			C.COM_NM AS CNPT_TYPE_NM
+			, O.COM_NM AS RGN_NM
+	        , B.BZENT_NO
+	        , B.MBR_ID
+	        , B.MNGR_ID
+	        , B.BZENT_TELNO
+	        , B.BZENT_NM
+	        , B.RGN_NO
+	        , B.BZENT_ZIP
+	        , B.BZENT_ADDR
+	        , B.BZENT_DADDR
+	        , B.BZENT_TYPE
+	        , B.ACTNO
+	        , B.BANK_TYPE
+	       	, M.MBR_NM
+			, M.MBR_ZIP
+			, M.MBR_ADDR
+			, M.MBR_DADDR
+			, M.MBR_TELNO
+			, M.MBR_BRDT
+			, M.MBR_EML_ADDR
+			, M.MBR_IMG_PATH
+			, N.MBR_NM AS MNGR_NM
+			, N.MBR_ZIP AS MNGR_ZIP
+			, N.MBR_ADDR AS MNGR_ADDR
+			, N.MBR_DADDR AS MNGR_DADDR
+			, N.MBR_TELNO AS MNGR_TELNO
+			, N.MBR_BRDT AS MNGR_BRDT
+			, N.MBR_EML_ADDR AS MNGR_EML_ADDR
+			, N.MBR_IMG_PATH AS MNGR_IMG_PATH
+		FROM BZENT B
+		JOIN COM_CODE C ON B.BZENT_TYPE=C.COM_NO
+		JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+		LEFT JOIN MEMBER M ON B.MBR_ID = M.MBR_ID
+		LEFT JOIN MEMBER N ON B.MNGR_ID = N.MBR_ID
+		WHERE B.BZENT_NO = #{bzentNo}
+	</select>
+	
+	<!--
+ 		@programName : 거래처 정보 수정
+ 		@description : 거래처 정보 수정를 위한 화면
+ 		@author      : 이병훈
+ 		@date        : 2024. 09. 18
+	-->
+	<update id="updateCnpt" parameterType="bzentVO">
+		UPDATE BZENT
+		   SET BZENT_NM = #{bzentNm}
+			 , BZENT_ZIP = #{bzentZip}
+			 , BZENT_ADDR = #{bzentAddr}
+			 , BZENT_DADDR = #{bzentDaddr}
+		     , BZENT_TELNO = #{bzentTelno}
+			 , BANK_TYPE = #{bankType}
+			 , ACTNO = #{actno}
+		WHERE BZENT_NO = #{bzentNo}	 
+	</update>
+	
+	<!--
+ 		@programName : 거래처 담당자 정보 수정
+ 		@description : 거래처 담당자 정보 수정를 위한 화면
+ 		@author      : 이병훈
+ 		@date        : 2024. 09. 18
+	-->
+	<update id="updateMngr" parameterType="memberVO">
+		UPDATE MEMBER
+		SET    MBR_NM = #{mbrNm}
+			 , MBR_ZIP = #{mbrZip}
+			 , MBR_ADDR = #{mbrAddr}
+			 , MBR_DADDR = #{mbrDaddr}
+			 , MBR_TELNO = #{mbrTelno}
+			 , MBR_EML_ADDR = #{mbrEmlAddr}
+			 <if test="mbrPswd != null and mbrPswd != ''">
+			 , MBR_PSWD = #{mbrPswd}
+			 </if>
+		WHERE MBR_ID = #{mbrId}	 
+	</update>
+	
+
+</mapper>

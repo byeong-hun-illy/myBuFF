@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustCenterMapper">
+	
+	<select id="selectFaq" resultType="faqVO">
+		SELECT FAQ_SEQ, FAQ_TTL, FAQ_CN, QS_TYPE
+		  FROM  FAQ
+		 ORDER BY 1 DESC
+	</select>
+	
+</mapper>

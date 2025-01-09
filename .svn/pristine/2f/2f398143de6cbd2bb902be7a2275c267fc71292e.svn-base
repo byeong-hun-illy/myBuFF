@@ -1,0 +1,172 @@
+@charset "UTF-8";
+
+/* 가맹점 상담 신청 폼 */
+.inquiry-wrap {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    background: var(--brand--primary);
+    padding: 20px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.inquiry-cont {
+	display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.inquiry-cont.txt {
+	font-size: 1.3rem;
+	color: white;
+	font-weight: bold;
+}
+
+.select-label {
+	color: white;
+    width: -webkit-fill-available;
+}
+
+.insert-btn {
+	background: var(--green--7);
+    padding: 14px 30px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.confirm-btn {
+	background: #aaa;
+    padding: 14px 30px;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: not-allowed;
+}
+
+.move-login {
+    color: white;
+    font-size: 1.3rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.move-login:hover {
+	color: #f2fef9 !important;
+}
+
+.move-login:hover .go-icon {
+	color: #f2fef9 !important;
+}
+
+.go-icon {
+    font-size: 2rem;
+    color: white;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-rgnNo-container"] { 
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-rgnNo-container"] .select2-dropdown {
+	width: 198px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #444;
+    line-height: 22px;
+}
+
+/* 가맹점 안내 영역 */
+.triangle{
+	width: 0px;
+    height: 0px;
+    border-top: 10px solid transparent;
+    border-left: 20px solid var(--gray--9);
+    border-bottom: 10px solid transparent;
+}
+
+.dscsn-info {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    align-items: center;
+}
+
+.info-box {
+	display: flex;
+    flex-direction: column;
+    text-align: center;
+    gap: 30px;
+}
+
+.info-icon {
+	background: var(--bge--active);
+    border-radius: 100%;
+    height: 200px;
+    width: 200px;
+    line-height: 15;
+    margin: auto;
+}
+
+.info-icon span {
+	font-size: 4rem;
+}
+
+.info-txt {
+	font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.chk-wrap {
+    border: 1px solid var(--gray--4);
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 60px;
+    background: var(--gray--05);
+    display: flex;
+    gap: 40px;
+}
+
+.chk-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    width: 180px;
+}
+
+.chk-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chk-txt strong {
+	font-weight: bold;
+}
+
+.chk-radio {
+	border-top: 1px solid var(--gray--5);
+    padding-top: 20px;
+    text-align: right;
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+

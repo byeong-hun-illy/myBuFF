@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC 
+"-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" 
+"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<!-- 
+[tiles 설정] 
+1. name="*" : body의 value에서 1에 해당 ==> mav.setViewName("book"); 
+			  controller에서 forwarding 시 return "1";
+			 
+2. name="*/*" : body의 value에서 1과 2에 해당 ==> mav.setViewName("book/create");
+			    controller에서 forwarding 시 return "1/2";
+			   
+3. name="cust/*/*" : body의 value에서 지정된 폴더 안에 1과 2에 해당 ==>	mav.setViewName("cust/book/create");	  
+					 controller에서 forwarding 시 return "cust/1/2";
+-->    
+<tiles-definitions>
+	
+	<!--
+ 	@programName : tiles-layout
+ 	@description : 관리자 페이지를 관리하는 tiles 레이아웃 설정
+ 	@author      : 정기쁨
+ 	@date        : 2024. 10. 02
+	-->
+	<definition name="tiles-layout" template="/WEB-INF/views/tiles/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/tiles/header.jsp" />
+		<put-attribute name="aside" value="/WEB-INF/views/tiles/aside.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="*/*" extends="tiles-layout"> 
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="hdofc/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/hdofc/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="frcs/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/frcs/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="cnpt/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/cnpt/{1}/{2}.jsp" />
+	</definition>
+	
+	<!--
+ 	@programName : tiles-layout2
+ 	@description : 공통으로 관리하는 tiles 레이아웃 설정 
+ 				   첫화면(고객/관리자 선택)
+ 	@author      : 정기쁨
+ 	@date        : 2024. 10. 02
+	-->
+	<definition name="tiles-layout2" template="/WEB-INF/views/hmeSelect/index.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<!-- HomeController의 hme()로 맵핑. return "select"; -->
+	<definition name="*" extends="tiles-layout2"> 
+		<put-attribute name="body" value="/WEB-INF/views/select.jsp" /> 
+	</definition>
+	
+	<!--
+ 	@programName : login-layout1
+ 	@description : 고객 로그인을 관리하는 tiles 레이아웃 설정 
+ 	@author      : 정기쁨
+ 	@date        : 2024. 10. 09
+	-->
+	<definition name="login-layout1" template="/WEB-INF/views/custLogin/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/custLogin/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/custLogin/footer.jsp" />
+	</definition>
+	
+	<!-- LoginController의 loginForm()로 맵핑. return "login"; -->
+	<definition name="login" extends="login-layout1"> 
+		<put-attribute name="body" value="/WEB-INF/views/login.jsp" /> 
+	</definition>
+	
+	<!-- JoinController의 insertMember()로 맵핑. return "redirect:/login"; -->
+	<definition name="join" extends="login-layout1"> 
+		<put-attribute name="body" value="/WEB-INF/views/join.jsp" /> 
+	</definition>
+	
+	<definition name="error/admin" extends="login-layout1"> 
+		<put-attribute name="body" value="/WEB-INF/views/error/adminError.jsp" /> 
+	</definition>
+	
+	<!--
+ 	@programName : login-layout2
+ 	@description : 업체 로그인을 관리하는 tiles 레이아웃 설정 
+ 	@author      : 정기쁨
+ 	@date        : 2024. 10. 09
+	-->
+	<definition name="login-layout2" template="/WEB-INF/views/adminLogin/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/adminLogin/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/adminLogin/footer.jsp" />
+	</definition>
+	
+	<!-- LoginController의 adminLoginForm()로 맵핑. return "adminLogin"; -->
+	<definition name="adminLogin" extends="login-layout2"> 
+		<put-attribute name="body" value="/WEB-INF/views/adminLogin.jsp" /> 
+	</definition>
+	
+	<!-- JoinController의 insertMember()로 맵핑. return "redirect:/admin/login"; -->
+	<definition name="adminJoin" extends="login-layout2"> 
+		<put-attribute name="body" value="/WEB-INF/views/join.jsp" /> 
+	</definition>
+	
+	<!-- LoginController의 adminLoginForm()로 맵핑. return "adminLogin"; -->
+	<definition name="error/cust" extends="login-layout2"> 
+		<put-attribute name="body" value="/WEB-INF/views/error/custError.jsp" /> 
+	</definition>
+	<!--
+ 	@programName : tilesCust-layout
+ 	@description : 고객 페이지를 관리하는 tiles 레이아웃 설정 
+ 	@author      : 정기쁨
+ 	@date        : 2024. 10. 02
+	-->
+	<definition name="tilesCust-layout" template="/WEB-INF/views/tilesCust/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/tilesCust/header.jsp" />
+	    <put-attribute name="aside" value="/WEB-INF/views/tilesCust/aside.jsp" /> 
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/tilesCust/footer.jsp" />
+	</definition>
+	
+	<definition name="cust/*/*" extends="tilesCust-layout"> 
+		<put-attribute name="body" value="/WEB-INF/views/cust/{1}/{2}.jsp" />
+	</definition>
+	
+	
+	
+</tiles-definitions>
+
+
+
+
+
+
+
+
+
+
+

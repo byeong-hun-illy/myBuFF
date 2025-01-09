@@ -1,0 +1,160 @@
+package com.buff.cust.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.cust.service.CustMyPageService;
+import com.buff.vo.FaqVO;
+import com.buff.vo.NoticeVO;
+import com.buff.vo.QsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.controller.cust
+* @fileName     : CustCenterController.java
+* @author       : 서윤정
+* @date         : 2024.09.13
+* @description  : 고객센터 - 공지사항, FAQ 조회
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     서윤정  			최초 생성
+*/
+@Slf4j
+@RequestMapping("/center")
+@Controller
+public class CustCenterController {
+	
+	@Autowired
+	CustMyPageService myPageService;
+	
+	@Autowired
+	CustCenterService centerService;
+	
+	@Autowired
+	CustCenterMapper centerMapper;
+	
+	
+	
+
+	@GetMapping("/selectNotice")
+	public String selectNotice(Model model,
+			@RequestParam(value="noticeCategory", defaultValue="") String noticeCategory,
+			@RequestParam(value = "keyword", defaultValue = "") String keyword
+			) {
+	
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("noticeCategory", noticeCategory);
+		map.put("keyword", keyword);
+		
+		List<NoticeVO> noticeVOList = this.centerService.selectNotice(map);
+		
+		model.addAttribute("noticeVOList", noticeVOList);
+		model.addAttribute("noticeCategory", noticeCategory);
+		model.addAttribute("keyword", keyword);
+		
+		return "cust/custCenter/selectNotice";
+	}
+	
+	@GetMapping("/selectNoticeDetail")
+	public String selectNoticeDetail(@RequestParam("ntcSeq") int ntcSeq, Model model) {
+		this.centerService.inqCnt(ntcSeq);
+		NoticeVO noticeVO = this.centerService.selectNoticeDetail(ntcSeq);
+		
+		model.addAttribute("noticeVO", noticeVO);
+		
+		log.info("selectNoticeDetail-> ntcSeq" + ntcSeq); 
+		
+		return "cust/custCenter/selectNoticeDetail";
+	}
+	
+	
+	@GetMapping("/selectFaq")
+	public String selectFaq(@RequestParam(value = "faqCategory", required = false) String faqCategory , Model model) {
+		List<FaqVO> faqVOList = centerService.selectFaq(faqCategory);
+		
+		model.addAttribute("faqVOList", faqVOList);
+		
+		return "cust/custCenter/selectFaq";
+	}
+	
+	@GetMapping("/insertQs")
+	public String insertQs()  {
+		
+		return "cust/custCenter/insertQs";
+	}
+	
+	/**
+	* @methodName  : selectBoard
+	* @author      : 정기쁨
+	* @date        : 2024.10.05
+	* 고객사이트 게시판이 모아져있는 페이지 (공지사항, FAQ, 1:1)
+	*/
+	@GetMapping("/selectBoard")
+	public String selectBoard(Model model,
+			Principal principal,
+			@RequestParam(value="noticeCategory", defaultValue="") String noticeCategory,
+			@RequestParam(value= "keyword", defaultValue = "") String keyword,
+			@RequestParam(value="faqCategory", required = false) String faqCategory
+		) {
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("noticeCategory", noticeCategory);
+		map.put("keyword", keyword);
+		String mbrId = principal.getName();
+		
+		
+		
+		List<NoticeVO> noticeVOList = this.centerService.selectNotice(map);
+		List<FaqVO> faqVOList = centerService.selectFaq(faqCategory);
+		List<QsVO> qsVOList = myPageService.myQs(mbrId);
+		
+		
+		
+		model.addAttribute("qsVOList",qsVOList);
+		model.addAttribute("faqVOList", faqVOList);
+		model.addAttribute("noticeVOList", noticeVOList);
+		model.addAttribute("noticeCategory", noticeCategory);
+		model.addAttribute("keyword", keyword);
+		
+		return "cust/custCenter/selectBoard";
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

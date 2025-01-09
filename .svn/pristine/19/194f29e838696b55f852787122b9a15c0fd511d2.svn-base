@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.12
+@description  : 발주 관리
+ -->
+<mapper namespace="com.buff.frcs.mapper.FrcsPoMapper">
+
+	<resultMap type="gdsVo" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		
+		<collection property="stockVOList" resultMap="stockMap"/>
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"></collection>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+	</resultMap>
+	
+	<!-- 
+	//BZENT_NO 컬럼의 값이 bzentVO 의 bzentNo 프로퍼티로 세팅
+	 -->
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<collection property="poVOList" resultMap="poMap" />
+	</resultMap>
+	
+	<resultMap type="poVO" id="poMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE"/>
+	</resultMap>
+	
+ 	<!--
+ 		@programName : 가맹점 발주 내역 조회
+ 		@description : 가맹점 발주 내역 조회, 검색 별 내역 조회를 위한 화면
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 20
+ 		
+ 		ANSI표기
+ 		 CROSS JOIN
+ 		 INNER JOIN
+ 		 OUTER JOIN
+ 		 NATURAL JOIN
+ 		 
+ 		 public BzentVO selectFrcsPoList(String mbrId);
+ 		 
+ 		 parameter : FrcsPoMapper -> frcsPo_SQL.xml
+ 		 result :  frcsPo_SQL.xml -> FrcsPoMapper
+ 		 
+ 		 poVO{poNo=P230505372,deliYmd=20230505,deliType=DELI03}
+ 		 poVO{poNo=KHB001,deliYmd=,deliType=DELI01}
+ 		 ..
+ 		 
+ 		 map :{deli=, mbrId=3r1x9ega, bgngYmd=2024-05-01, expYmd=2024-06-08, currentPage=1}
+ 		 
+ 		 Map : 인터페이스
+ 		    ㄴ	 : hashMap(구현 클래스)
+	-->
+	<select id="selectFrcsPoList" resultType="poVO" parameterType="hashMap">
+		WITH T AS( 
+			SELECT ROW_NUMBER() OVER(ORDER BY P.PO_NO DESC) RNUM 
+				 , C.COM_NM AS DELI_TYPE_NM 
+				 , P.PO_NO 
+	     		 , P.DELI_YMD 
+	     		 , P.DELI_TYPE 
+			FROM   PO P INNER JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+			INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+			WHERE  B.MBR_ID = #{mbrId} 
+			<!-- 배송 유형 필터링 -->
+        	<if test="deli != null and deli != ''">
+            	AND P.DELI_TYPE = #{deli}
+        	</if>
+        	<!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND TO_CHAR(TO_DATE(P.DELI_YMD,'YYYYMMDD'),'YYYY-MM-DD') >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND TO_CHAR(TO_DATE(P.DELI_YMD,'YYYYMMDD'),'YYYY-MM-DD') <= #{expYmd}
+			]]>
+		</if>
+		) 
+		SELECT * 
+		FROM   T 
+		WHERE  T.RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+	</select>
+	
+ 	<!--
+ 		@programName : 가맹점 발주 내역 갯수
+ 		@description : 가맹점 발주내역의 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="poTotalCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*) 
+		FROM   PO P 
+		INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		WHERE  B.MBR_ID = #{mbrId} 
+		<!-- 배송 유형 필터링 -->
+		<if test="deli != null and deli != ''">
+			AND P.DELI_TYPE = #{deli}
+		</if>
+		<!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND TO_CHAR(TO_DATE(P.DELI_YMD,'YYYYMMDD'),'YYYY-MM-DD') >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND TO_CHAR(TO_DATE(P.DELI_YMD,'YYYYMMDD'),'YYYY-MM-DD') <= #{expYmd}
+			]]>
+			</if> 
+	</select>	
+	
+	<!-- 
+	1. hashMap은 예약어. 예약어는 id로 사용 하면 안 됨
+		<resultMap type="" id="hashMap"></resultMap> (x)
+	resultMap : <resultMap 태그가 받쳐줘야 함 => 조인에서 주로 사용
+	
+	resultType : memberVO, hashMap, String, int..
+	 -->
+	 
+	<!-- 
+	발주 내역 조회 중 통계
+	[합집합]
+	그룹 A와 그룹 B의 컬럼의 개수가 동일
+	대응되는 컬럼마다 자료형이 동일
+	UNION
+	 - 중복 데이터가 제거(5 UNION 3 = 5)
+	 - 자동 정렬
+	UNION ALL
+	 - 중복 데이터 모두(5 UNION 3 = 8)
+	 - 자동 정렬 안됨
+	 -->
+	<!--
+ 		@programName : 가맹점 발주 유형 갯수
+ 		@description : 가맹점 발주유형의 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="tapMaxTotal" parameterType="String" resultType="hashMap">
+		SELECT MAX(T.tapAll) tapAll
+		     , MAX(T.tapWaiting) tapWaiting
+		     , MAX(T.tapProgress) tapProgress
+		     , MAX(T.tapScheduled) tapScheduled
+		     , MAX(T.tapCompleted) tapCompleted
+		FROM
+		(
+		    SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress,0 tapScheduled,0 tapCompleted
+		    FROM   PO P 
+		    INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		    INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		    WHERE  B.MBR_ID = #{mbrId}
+		    UNION ALL
+		    SELECT 0,COUNT(*),0,0,0
+		    FROM   PO P 
+		    INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		    INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		    WHERE  B.MBR_ID = #{mbrId}
+		    AND P.DELI_TYPE = 'DELI01'
+		    UNION ALL
+		    SELECT 0,0,COUNT(*),0,0
+		    FROM   PO P 
+		    INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		    INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		    WHERE  B.MBR_ID = #{mbrId}
+		    AND P.DELI_TYPE = 'DELI02'
+		    UNION ALL
+		    SELECT 0,0,0,COUNT(*),0
+		    FROM   PO P 
+		    INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		    INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		    WHERE  B.MBR_ID = #{mbrId}
+		    AND P.DELI_TYPE = 'DELI03'
+		    UNION ALL
+		    SELECT 0,0,0,0,COUNT(*) 
+		    FROM   PO P 
+		    INNER  JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		    INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+		    WHERE  B.MBR_ID = #{mbrId}
+		    AND P.DELI_TYPE = 'DELI04'
+		) T
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 발주 내역 상세 보기
+ 		@description : 가맹점 발주 내역 상세 보기 페이지
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="selectFrcsPoDetail" parameterType="String" resultMap="gdsMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY SP.PO_SEQ ASC) RNUM 
+			 , C.COM_NM AS GDS_TYPE_NM
+		     , SP.PO_SEQ
+		     , SP.QTY
+		     , SP.GDS_AMT
+		     , SP.SPMT_YMD
+		     , G.GDS_NM
+		     , G.GDS_TYPE
+		     , G.UNIT_NM
+		FROM   STOCK_PO SP
+		INNER  JOIN GDS G ON (SP.GDS_CODE =  G.GDS_CODE)
+		INNER  JOIN COM_CODE C ON (G.GDS_TYPE = C.COM_NO)
+		LEFT   OUTER JOIN (
+		                SELECT A1.GDS_CODE
+					         , A1.BZENT_NO
+					         , A1.AMT
+		                     , A1.AMT_SEQ
+					    FROM   GDS_AMT A1
+					    JOIN (
+		                    SELECT GDS_CODE
+					             , BZENT_NO
+					             , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+					        FROM   GDS_AMT
+					        GROUP  BY GDS_CODE, BZENT_NO
+					    ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+					) A ON SP.GDS_CODE = A.GDS_CODE AND SP.BZENT_NO = A.BZENT_NO 
+		WHERE SP.PO_NO = #{poNo}
+		ORDER BY SP.PO_SEQ ASC
+	</select>
+	
+</mapper>

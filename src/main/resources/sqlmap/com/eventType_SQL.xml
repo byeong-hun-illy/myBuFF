@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 정기쁨
+@date         : 2024.10.17
+@description  : 이벤트 타입 업데이트 
+-->
+<mapper namespace="com.buff.com.mapper.EventTypeMapper">
+    
+    <!-- 매일 자정에 현재 날짜와 비교하여 EVT03(예정)로 타입 변경 -->
+    <update id="updateExpected">
+        UPDATE EVENT
+           SET EVENT_TYPE = 'EVT03'
+         WHERE TO_DATE(BGNG_YMD, 'YYYYMMDD') > SYSDATE 
+           AND APRV_YN = 'Y'
+    </update>
+    
+    <!-- 매일 자정에 현재 날짜와 비교하여 EVT04(진행)로 타입 변경 -->
+    <update id="updateProgress">
+        UPDATE EVENT
+           SET EVENT_TYPE = 'EVT04'
+         WHERE SYSDATE >= TO_DATE(BGNG_YMD, 'YYYYMMDD')
+           AND TO_DATE(EXP_YMD, 'YYYYMMDD') >= SYSDATE
+           AND APRV_YN = 'Y'
+    </update>
+    
+    <!-- 매일 자정에 현재 날짜와 비교하여 EVT05(종료)로 타입 변경 -->
+    <update id="updateEnd">
+        UPDATE EVENT
+           SET EVENT_TYPE = 'EVT05'
+         WHERE SYSDATE > TO_DATE(EXP_YMD, 'YYYYMMDD')
+           AND APRV_YN = 'Y'
+    </update>
+
+</mapper>

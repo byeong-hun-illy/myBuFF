@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustCenterMapper">
+<!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 문의 조회
+	 -->
+	<select id="selectFaq"  parameterType="String" resultType="faqVO">
+		SELECT FAQ_SEQ
+			 , FAQ_TTL
+			 , FAQ_CN
+			 , QS_TYPE
+		  FROM FAQ
+		<where>
+			<if test="faqCategory != null and faqCategory != ''">
+				AND QS_TYPE = #{faqCategory}
+			</if>
+		</where>
+		ORDER BY QS_TYPE, FAQ_SEQ DESC
+	</select>
+	
+	<!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 공지사항 조회
+	 -->
+	<select id="selectNotice" parameterType="hashMap" resultType="noticeVO">
+   
+  SELECT *
+      FROM ( 
+	    SELECT ROW_NUMBER() OVER(ORDER BY TO_NUMBER(NTC_SEQ) DESC) AS RNUM
+	       , NTC_SEQ 
+	       , NTC_TTL
+	       , NTC_CN
+	       , INQ_CNT
+	       , WRTR_DT
+	       , NVL(CAST(SUBSTR(FIXD_SEQ, 3) AS INTEGER), 0) AS FIXD_SEQ
+	    FROM NOTICE
+	   WHERE 1=1
+	    <if test="noticeCategory != null and noticeCategory != ''">
+	        <choose>
+	            <when test="noticeCategory == 'ntcTtl'">
+	                AND NTC_TTL LIKE '%' || #{keyword} || '%'
+	            </when>
+	            <when test="noticeCategory == 'ntcCn'">
+	                AND NTC_CN LIKE '%' || #{keyword} || '%'
+	            </when>
+	        </choose>
+	    </if>
+	    <if test="noticeCategory == null or noticeCategory == ''">
+	        AND (NTC_TTL LIKE '%' || #{keyword} || '%' OR NTC_CN LIKE '%' || #{keyword} || '%')
+	    </if>
+	    
+	    ORDER BY FIXD_SEQ DESC, NTC_SEQ DESC
+	    
+	    )
+      WHERE  RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+</select>
+
+
+	<select id="noticeTotalCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		  FROM NOTICE
+		  WHERE 1=1 
+		  <if test="noticeCategory != null and noticeCategory != ''">
+	        <choose>
+	            <when test="noticeCategory == 'ntcTtl'">
+	                AND NTC_TTL LIKE '%' || #{keyword} || '%'
+	            </when>
+	            <when test="noticeCategory == 'ntcCn'">
+	                AND NTC_CN LIKE '%' || #{keyword} || '%'
+	            </when>
+	        </choose>
+	    </if>
+	    <if test="noticeCategory == null or noticeCategory == ''">
+	        AND (NTC_TTL LIKE '%' || #{keyword} || '%' OR NTC_CN LIKE '%' || #{keyword} || '%')
+	    </if>
+	</select>
+
+
+<!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 공지사항 상세 조회
+	 -->
+	<select id="selectNoticeDetail" parameterType="int" resultType="noticeVO">
+		SELECT NTC_SEQ
+	         , NTC_TTL
+	         , NTC_CN
+	         , INQ_CNT
+	         , TO_CHAR(WRTR_DT, 'YYYY-MM-DD HH24:MI:SS') AS WRTR_DT
+          FROM NOTICE
+         WHERE NTC_SEQ = #{ntcSeq}
+	</select>
+
+
+	 <!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 문의  작성
+	 -->
+	<insert id="insertQsPost" parameterType="qsVO">
+		<selectKey resultType="String" order="BEFORE" keyProperty="qsSeq">
+			SELECT 
+			    MAX(QS_SEQ)+1
+			FROM QS
+		</selectKey>
+	
+        INSERT INTO QS(QS_SEQ, MBR_ID, QS_TYPE, QS_TTL, QS_CN, FILE_GROUP_NO )
+        VALUES (
+             #{qsSeq}
+            ,#{mbrId} 
+            ,#{qsType} 
+            ,#{qsTtl} 
+            ,#{qsCn}
+            ,#{fileGroupNo}
+        )
+    </insert>
+    
+    <!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 공지사항 조회수 증가
+	 -->
+    <update id="inqCnt" parameterType="int">
+    	 UPDATE NOTICE
+    		SET INQ_CNT = INQ_CNT +1
+    	  WHERE NTC_SEQ = #{ntcSeq}
+    </update>
+	
+	
+	   <!--  
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객센터 문의 상세 조회
+	 -->
+	<select id="selectQsDetail" parameterType="hashMap" resultType="qsVO">
+		SELECT QS_TYPE
+	         , QS_TTL
+	         , QS_CN
+	         , TO_CHAR(WRTR_DT, 'YYYY-MM-DD HH24:MI:SS') AS WRTR_DT
+	          , NVL(ANS_CN, 'N') AS ANS_CN
+	         , TO_CHAR(ANS_DT, 'YYYY-MM-DD HH24:MI:SS') AS ANS_DT
+	         , FILE_GROUP_NO
+	     FROM QS
+		WHERE QS_SEQ = #{qsSeq}
+		  AND MBR_ID = #{mbrId}
+	</select>
+
+		
+</mapper>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.12
+@description  : 가맹점 정보 조회 및 수정 및 폐업신청
+ -->
+<mapper namespace="com.buff.frcs.mapper.FrcsMyPageMapper">
+	
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbiz" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrInfo" resultMap="mbrMap"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+	</resultMap>
+	
+	<!--
+ 		@programName : 가맹점 마이페이지 정보조회
+ 		@description : 가맹점, 가맹점주의 정보조회를 위한 화면
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 12
+	-->
+	<select id="selectFrcsMyPage" parameterType="String" resultMap="frcsMap">
+		SELECT B.BZENT_NM			<!-- 사업체 명 -->
+			 , B.BZENT_ZIP			<!-- 사업체 우편번호 -->
+			 , B.BZENT_ADDR			<!-- 사업체 주소 -->
+			 , B.BZENT_DADDR		<!-- 사업체 상세주소 -->
+			 , B.BZENT_TELNO		<!-- 전화 번호 -->
+     		 , F.OPBIZ_YMD			<!-- 개업 일자 -->
+     		 , F.OPEN_TM			<!-- 영업 시각 -->
+     		 , F.DDLN_TM			<!-- 마감 시각 -->
+     		 , F.FRCS_TYPE			<!-- 가맹점 상태 -->
+     		 , F.WARN_CNT			<!-- 경고 횟수 -->
+     		 , M.MBR_NM				<!-- 회원 이름 -->
+     		 , M.MBR_TELNO			<!-- 전화 번호 -->
+     		 , M.MBR_EML_ADDR		<!-- 이메일 주소 -->
+     		 , B.ACTNO				<!-- 계좌 번호 -->
+     		 , B.BANK_TYPE			<!-- 은행 유형 -->
+		FROM   MEMBER M
+		JOIN   BZENT B ON M.MBR_ID = B.MBR_ID
+		JOIN   FRCS F ON B.BZENT_NO = F.FRCS_NO
+		WHERE  M.MBR_ID = #{mbrId}
+	</select>
+	
+	<!-- 가맹점 정보 수정 -->
+	<update id="updateFrcsMyPageTime" parameterType="FrcsVO">
+		UPDATE FRCS F 
+		SET    F.OPEN_TM = #{openTm},
+       		   F.DDLN_TM = #{ddlnTm}
+		WHERE  F.FRCS_NO IN (
+			 				  SELECT B.BZENT_NO 	<!-- 사업체 번호 -->
+			 				  FROM   BZENT B 
+			 				  WHERE  B.MBR_ID = #{mbrId})
+	</update>
+	<update id="updateFrcsMyPageTel" parameterType="BzentVO">
+		UPDATE BZENT
+		SET    BZENT_TELNO = #{bzentTelno}
+		WHERE  MBR_ID = #{mbrId}
+	</update>
+	
+	<!-- 가맹점주 정보 수정 -->
+	<update id="">
+		
+	</update>
+	
+</mapper>

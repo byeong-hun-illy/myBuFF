@@ -1,0 +1,117 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">이벤트 관리</h1>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- wrap -->
+<div class="wrap">
+	<!-- cont: 검색 영역 -->
+	<div class="cont">
+		<div class="search-wrap">
+			<!-- 일자 검색조건 -->
+			<div class="search-cont">
+				<p class="search-title">일자</p>
+				<div class="search-date-wrap">
+					<input type="date"> ~ <input type="date">
+				</div>
+			</div>
+			<!-- 검색어 입력 -->
+			<div class="search-cont">
+				<p class="search-title">검색어</p>
+				<div class="search-word-wrap">
+					<select class="w-150">
+						<option value="" selected disabled hidden>선택해주세요</option>
+						<option value="">옵션1</option>
+						<option value="">옵션2</option>
+						<option value="">옵션2</option>
+					</select>
+					<div class="search-input-btn">
+						<input type="text" placeholder="입력해주세요" class="search-input w-400"/>
+						<button type="submit" class="search-btn"></button>				
+					</div>
+				</div>
+			</div>
+			<!-- /.search-cont -->
+		</div>
+		<!-- /.search-wrap -->
+	</div>
+	<!-- /.cont: 검색 영역 -->
+	
+	<!-- cont: 이벤트 목록 -->
+	<div class="cont">
+		<div class="table-wrap">
+			<div class="tap-btn-wrap">
+				<div class="tap-wrap">
+					<div class="tap-cont active">
+						<span class="tap-title">전체</span>
+						<span class="bge bge-default">1021</span>
+					</div>
+					<div class="tap-cont">
+						<span class="tap-title">진행 예정</span>
+						<span class="bge bge-warning">1021</span>
+					</div>
+					<div class="tap-cont">
+						<span class="tap-title">진행 중</span>
+						<span class="bge bge-active">1021</span>
+					</div>
+					<div class="tap-cont">
+						<span class="tap-title">정산 마감</span>
+						<span class="bge bge-danger">1021</span>
+					</div>
+				</div>
+				<div class="btn-wrap">
+					<button class="btn-active">이벤트 추가 <span class="icon material-symbols-outlined">East</span></button>
+				</div>
+			</div>
+			<!-- /tap-btn-wrap -->
+			<table class="table-default">
+				<thead>
+					<tr>
+						<th class="center">번호</th>
+						<th class="center">진행상태</th>
+						<th>제목</th>
+						<th class="center">시작일자</th>
+						<th class="center">종료일자</th>
+						<th>쿠폰 이름</th>
+						<th class="center">승인여부</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="center">번호</td>
+						<td class="center">진행상태</td>
+						<td>제목</td>
+						<td class="center">시작일자</td>
+						<td class="center">종료일자</td>
+						<td>쿠폰 이름</td>
+						<td class="center">승인여부</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="pagination-wrap">
+				<div class="pagination">
+				  <a href="#none"><span class="icon material-symbols-outlined">chevron_left</span></a>
+				  <a href="#none">1</a>
+				  <a href="#none" class="active">2</a>
+				  <a href="#none">3</a>
+				  <a href="#none">4</a>
+				  <a href="#none">5</a>
+				  <a href="#none"><span class="icon material-symbols-outlined">chevron_right</span></a>
+				</div>
+			</div>
+		</div>
+		<!-- table-wrap -->
+	</div>
+	<!-- /.cont: 이벤트 목록 -->
+	
+</div>
+<!-- /.wrap -->

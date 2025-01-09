@@ -1,0 +1,32 @@
+package com.buff.cust.service.impl;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.vo.FaqVO;
+
+@Service
+public class CustCenterServiceImpl implements CustCenterService {
+	
+	@Inject
+	CustCenterMapper centerMapper;
+	
+	
+	/**
+	* @methodName  : selectFaq
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : FAQ 리스트 목록
+	*/
+	@Override
+	public List<FaqVO> selectFaq() {
+		return this.centerMapper.selectFaq();
+	}
+
+}

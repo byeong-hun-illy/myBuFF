@@ -1,0 +1,49 @@
+/* selectFrcsMenuList.css */
+.menu-table tbody {
+    display: block; /* 가로세로 조절 가능 */
+    max-height: 461px; /* 보여주고 싶은 만큼 세로값 입력 */
+    overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.menu-table thead, .menu-table tbody tr {
+    display: table;
+    width: 100%;
+}
+
+/* .menu-table thead th{ */
+/* 	padding: 0;	 */
+/* } */
+
+input[type=checkbox], input[type=radio]{
+    width: 20px;
+}
+
+.position-relative {
+    position: relative; /* 부모 요소를 relative로 설정 */
+}
+
+.ribbon-wrapper {
+    height: 70px;
+    overflow: hidden;
+    position: absolute;
+    right: 30px;
+    top: -15px;
+    width: 70px;
+    z-index: 10;
+}
+
+.ribbon-wrapper .ribbon {
+    box-shadow: 0 0 3px rgba(0, 0, 0, .3);
+    font-size: .8rem;
+    line-height: 100%;
+    padding: .0rem 0;
+    position: relative;
+    right: -2px;
+    text-align: center;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, .4);
+    text-transform: uppercase;
+    top: 10px;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    width: 90px;
+}

@@ -1,0 +1,51 @@
+package com.buff.com.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.com.service.MemberService;
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.vo.MemberVO;
+
+/**
+* @packageName  : com.buff.service
+* @fileName     : MemberServiceImpl.java
+* @author       : 
+* @date         : 2024.09.13
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     	  			최초 생성
+*/
+@Service
+public class MemberServiceImpl implements MemberService {
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	/**
+	* @methodName  : selectId
+	* @author      : 이병훈
+	* @date        : 2024.09.13
+	* @param 	   : 사용자 정보가 담긴 VO객체
+	* @return      : 해당 회원 ID
+	*/
+	@Override
+	public String selectId(MemberVO memberVO) {
+		return this.memberMapper.selectId(memberVO);
+	}
+
+	/**
+	* @methodName  : selectPswd
+	* @author      : 이병훈
+	* @date        : 2024.09.13
+	* @param 	   : 사용자 정보가 담긴 VO객체
+	* @return      : 해당 회원 Password
+	*/
+	@Override
+	public String selectPswd(MemberVO memberVO) {
+		return this.memberMapper.selectPswd(memberVO);
+	}
+
+}

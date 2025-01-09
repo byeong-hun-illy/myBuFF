@@ -1,0 +1,92 @@
+package com.buff.frcs.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.frcs.service.FrcsStockService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.GdsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.frcs.controller
+* @fileName     : FrcsStockController.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20                정현종     	  		      최초 생성
+*/
+
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsStockController {
+	
+	@Autowired
+	FrcsStockService frcsStockService;
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	@GetMapping("/stockList")
+	public String selectFrcsStockList(Model model) { 
+		
+		// 전체 재고 현황 조회
+		List<GdsVO> stockVOList = this.frcsStockService.selectFrcsStockList();
+		model.addAttribute("stockVOList", stockVOList);
+		
+		return "frcs/selectFrcsStockList";
+	}
+	
+	/**
+	* @methodName  : frcsStockListAjax
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : map - 검색 조건
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	@ResponseBody
+	@GetMapping("/stockListAjax")
+	public Map<String, Object> frcsStockListAjax(@RequestParam Map<String, Object> map) {
+		
+		// 유형별 갯수
+		int all = this.frcsStockService.selectAll(map); // 전체 재고 갯수
+		int food = this.frcsStockService.selectFood(map); // 식품 재고 갯수
+		int packing = this.frcsStockService.selectPacking(map); // 포장재 재고 갯수
+		int subMart = this.frcsStockService.selectSubMart(map); // 부자재 재고 갯수
+		
+	    // 페이징
+	    int total = this.frcsStockService.selectTotal(map); // 전체 행의 수
+	    int currentPage = Integer.parseInt((String) map.get("currentPage"));
+	    int size = 10;
+		map.put("size", size);
+		List<GdsVO> stockVOList = this.frcsStockService.selectFrcsStockList();
+		
+		// 응답
+		Map<String, Object> response = new HashMap<String, Object>();
+		response.put("articlePage", new ArticlePage<GdsVO>(total, currentPage, size, stockVOList, map));
+		response.put("all", all);
+		response.put("food", food);
+		response.put("packing", packing);
+		response.put("subMart", subMart);
+		
+		return response;
+	}
+}

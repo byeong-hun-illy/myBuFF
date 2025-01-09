@@ -1,0 +1,87 @@
+package com.buff.frcs.service;
+
+/**
+* @packageName  : com.buff.frcs.service
+* @fileName     : FrcsStockService.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 Service
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20                정현종     	  		      최초 생성
+*/
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.BzentVO;
+
+/**
+* @packageName  : com.buff.frcs.service
+* @fileName     : FrcsStockService.java
+* @author       : 
+* @date         : 2024.09.20
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20        이름     	  			최초 생성
+*/
+public interface FrcsStockService {
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	public List<BzentVO> selectFrcsStockList ();
+
+	/**
+	* @methodName  : selectAll
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 전체 상품 갯수
+	*/
+	public int selectAll(Map<String, Object> map);
+
+	/**
+	* @methodName  : selectFood
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 식품 갯수
+	*/
+	public int selectFood(Map<String, Object> map);
+
+	/**
+	* @methodName  : selectPacking
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 포장재 갯수
+	*/
+	public int selectPacking(Map<String, Object> map);
+
+	/**
+	* @methodName  : selectSubMart
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 부자재 갯수
+	*/
+	public int selectSubMart(Map<String, Object> map);
+
+	/**
+	* @methodName  : selectTotal
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 검색조건에 맞는 현재 전체 상품 갯수
+	*/
+	public int selectTotal(Map<String, Object> map);
+	
+}

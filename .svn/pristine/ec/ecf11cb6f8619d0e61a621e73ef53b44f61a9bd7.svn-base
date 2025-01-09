@@ -1,0 +1,13 @@
+/* .table-chart-container { */
+/*     display: flex; */
+/*     justify-content: space-between; */
+/* } */
+
+/* .table-wrap { */
+/*     flex: 1; */
+/*     margin-right: 20px; 테이블과 차트 사이의 간격 */
+/* } */
+
+/* .Chart-wrap { */
+/*     flex: 1; 차트의 너비를 조정 */
+/* } */

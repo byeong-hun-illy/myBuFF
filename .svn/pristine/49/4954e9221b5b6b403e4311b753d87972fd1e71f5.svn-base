@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustHomeMapper">
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 본사 메뉴 조회
+	 	-->
+	 	
+	 <resultMap type="menuVO" id="menuMap">
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+ 	</resultMap>	
+	
+	
+		<resultMap type="eventVO" id="eventMap">
+			<result property="eventNo" column="EVENT_NO"/>
+			<result property="eventType" column="EVENT_TYPE"/>
+			<result property="eventTtl" column="EVENT_TTL"/>
+			<result property="eventCn" column="EVENT_CN"/>
+			<result property="wrtrYmd" column="WRTR_YMD"/>
+			<result property="bgngYmd" column="BGNG_YMD"/>
+			<result property="expYmd" column="EXP_YMD"/>
+			<result property="aprvYn" column="APRV_YN"/>
+			<result property="mngrId" column="MNGR_ID"/>
+			<result property="rjctRsn" column="RJCT_RSN"/>
+			<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+			<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+		</resultMap>
+	
+		<resultMap type="fileDetailVO" id="fileDetailMap">
+			<result property="fileSn" column="FILE_SN"/>
+			<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+			<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+			<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+			<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+			<result property="fileSize" column="FILE_SIZE"/>
+			<result property="fileExt" column="FILE_EXT"/>
+			<result property="fileMime" column="FILE_MIME"/>
+			<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		</resultMap>
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객 주문 - 가맹점 메뉴 조회
+	 	-->
+	 	
+	
+	<select id="selectOrdrMenu" resultMap="menuMap">
+		  SELECT M.MENU_NO		     	
+		     , M.MENU_NM		  	
+		     , M.MENU_IMG_PATH	 	
+		     , M.MENU_AMT		   	
+		     , M.MENU_EXPLN			
+		     , M.MENU_TYPE			
+		     , FM.MENU_REG_YMD	
+		FROM   MENU M 
+		INNER JOIN FRCS_MENU FM  ON (M.MENU_NO = FM.MENU_NO)
+		WHERE 1=1 
+			AND FM.FRCS_NO = #{bzentNo}
+			AND  FM.NTSL_YN = 'Y'
+		
+		 <if test="menuGubun != null and menuGubun != ''">
+			AND M.MENU_TYPE = #{menuGubun}
+		</if>
+		
+	</select>
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 본사 메뉴 조회
+						최근에 판매 등록한 메뉴 순으로 
+	 	-->
+	 	
+	
+	<select id="selectMenu" parameterType="String" resultType="menuVO">
+      SELECT MENU_NM
+          , MENU_IMG_PATH
+          , MENU_AMT
+          , MENU_EXPLN
+          , RLS_YMD
+          , MENU_TYPE
+        FROM MENU
+       WHERE NTSL_TYPE = 'NTSL02'
+         <if test="menuGubun != null and menuGubun != ''">
+             AND MENU_TYPE = #{menuGubun}
+        </if>
+      ORDER BY  MENU_TYPE , RLS_YMD DESC
+   </select>
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객-가맹점 상담신청 
+		
+	 	-->
+	<insert id="insertDscsnPost" parameterType="String">
+		<selectKey resultType="String" order="BEFORE" keyProperty="dscsnCode">
+			SELECT 'DS' || (NVL(MAX(CAST(SUBSTR(DSCSN_CODE, 3) AS INTEGER)), 0) + 1) AS DSCSN_CODE
+   		   FROM FRCS_DSCSN
+		</selectKey>
+	
+		INSERT INTO FRCS_DSCSN(DSCSN_CODE
+							  ,MBR_ID
+							  ,DSCSN_PLAN_YMD
+							  ,RGN_NO)
+			VALUES(#{dscsnCode}
+				 , #{mbrId}
+				 , REPLACE(#{dscsnPlanYmd},'-','')
+				 , #{rgnNo})
+	
+	</insert>
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.21
+		@description  : 고객-가맹점 상담신청 _ 상담 중복체크 
+		
+		public int checkId(String mbrId); 
+		-->
+	<select id="checkId" parameterType="String" resultType="int">
+		SELECT COUNT(1)
+		  FROM FRCS_DSCSN
+		 WHERE MBR_ID= #{mbrId}
+		   AND DSCSN_TYPE IN ('DSC01')
+	</select>
+	
+	<!-- 
+	@author       : 정기쁨
+	@date         : 2024.10.08
+	@description  : 고객-가맹점 상담신청 조회 
+	@param 		  : mbrId 
+	-->
+	<select id="selectFrcsDscsn" parameterType="String" resultType="Map">
+		SELECT 
+		    TO_CHAR(TO_DATE(DSCSN_PLAN_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') AS DSCSN_PLAN_YMD,
+		    RGN_NO,
+	        (SELECT COM_NM FROM COM_CODE WHERE COM_NO = RGN_NO) AS RGN_NM
+		       FROM FRCS_DSCSN
+		      WHERE MBR_ID = #{mbrId}
+		        AND DSCSN_TYPE IN('DSC01','DSC03')
+	</select>
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객- 이벤트 조회
+		
+		SELECT EVENT_TYPE
+			     , BGNG_YMD
+			     , EXP_YMD
+			     , EVENT_NO
+			     , EVENT_TTL 
+			     , FILE_GROUP_NO
+			FROM   EVENT
+			WHERE  EVENT_TYPE = 'EVT04'
+			  AND  BGNG_YMD <= SYSDATE AND EXP_YMD >= SYSDATE
+		    ORDER BY BGNG_YMD DESC
+	 	-->
+	<select id="selectEvent" resultMap="eventMap">
+		 <![CDATA[
+			 SELECT E.EVENT_TYPE
+			      , E.EVENT_NO
+			      , E.EVENT_TTL 
+			      , E.BGNG_YMD
+			      , E.EXP_YMD
+			      , E.FILE_GROUP_NO
+			      , F.FILE_ORIGINAL_NAME
+			      , F.FILE_SAVE_NAME
+			      , F.FILE_SAVE_LOCATE
+			      , F.FILE_SIZE
+			   FROM EVENT E 
+			   	    LEFT OUTER JOIN FILE_DETAIL F
+			     ON E.FILE_GROUP_NO = F.FILE_GROUP_NO
+			  WHERE  EVENT_TYPE = 'EVT04'
+			    AND  BGNG_YMD <= SYSDATE 
+			    AND EXP_YMD >= SYSDATE
+			  ORDER BY BGNG_YMD DESC
+		]]>
+		
+	</select>
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.19
+		@description  : 고객-  종료 이벤트 조회
+		
+
+			
+		
+	 	-->
+	<select id="selectEndEventAjax" resultMap="eventMap">
+	    <![CDATA[
+	      
+		SELECT E.EVENT_TYPE
+		      , E.EVENT_NO
+		      , E.EVENT_TTL 
+		      , E.BGNG_YMD
+		      , E.EXP_YMD
+		      , E.FILE_GROUP_NO
+		      , F.FILE_ORIGINAL_NAME
+		      , F.FILE_SAVE_NAME
+		      , F.FILE_SAVE_LOCATE
+		      , F.FILE_SIZE
+		   FROM EVENT E 
+		   	    LEFT OUTER JOIN FILE_DETAIL F
+		     ON E.FILE_GROUP_NO = F.FILE_GROUP_NO
+		  WHERE  EVENT_TYPE = 'EVT05'
+	        AND  EXP_YMD <= SYSDATE
+	      ORDER  BY BGNG_YMD DESC
+	   	]]>
+   </select>
+
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  :  가맹점  조회
+	 	-->
+	<select id="selectOrdrStore" parameterType="hashMap" resultType="bzentVO">
+		SELECT 
+			B.BZENT_NO,
+            B.BZENT_NM,
+            B.BZENT_ADDR,
+            B.BZENT_DADDR,
+            B.BZENT_TELNO,
+            B.RGN_NO,
+            <choose>
+            	<when test="mbrId !=null and mbrId !=''">
+		            ROW_NUMBER() OVER (ORDER BY 
+				        CASE 
+				            WHEN B.BZENT_NO IN (SELECT FRCS_NO FROM FAV_FRCS WHERE MBR_ID =#{mbrId}) THEN 0 
+				            ELSE 1 
+				        END, 
+				        B.BZENT_NM) AS RNUM
+            	</when>
+            	<otherwise>
+		            ROW_NUMBER() OVER (ORDER BY B.BZENT_NM) AS RNUM
+            	</otherwise>
+            </choose>
+        FROM 
+            BZENT B
+        JOIN 
+            FRCS F ON B.BZENT_NO = F.FRCS_NO
+        WHERE 
+            F.FRCS_TYPE = 'FRS01'
+            AND B.BZENT_TYPE = 'BZ_F01'
+            <if test="rgnNo != null and rgnNo != ''">
+                AND B.RGN_NO = #{rgnNo}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (B.BZENT_NM LIKE '%' || #{keyword} || '%' OR B.BZENT_ADDR LIKE '%' || #{keyword} || '%')
+            </if>
+	</select>
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객- 고객이 쿠폰 발급 받을 때 , 이미 발급 받은 쿠폰인지 확인하기 위함
+	 	-->
+	<select id="chkCoupon" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		  FROM COUPON
+		 WHERE MBR_ID = #{mbrId}
+		   AND COUPON_CODE = #{couponCode}
+	</select>
+	
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 메인 화면 - 캐러셀로 매장 소개
+	 	-->
+	<select id="selectBzentInfo" resultType="bzentVO">
+			 <![CDATA[
+	           SELECT BZENT_NM
+				     , BZENT_ADDR
+				     , BZENT_DADDR
+				     , BZENT_TELNO
+				     , REG_YMD
+				FROM (
+				    SELECT BZENT_NM
+				         , BZENT_ADDR
+				         , BZENT_DADDR
+				         , BZENT_TELNO
+				         , REG_YMD
+				    FROM BZENT 
+				    WHERE BZENT_TYPE = 'BZ_F01'
+				    ORDER BY REG_YMD DESC, RGN_NO ASC
+				)
+				WHERE ROWNUM <= 12
+	   		]]>
+	</select>
+	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객- 캐러셀로 메뉴 소개
+	 	-->
+	<select id="selectMainMenu" resultType="menuVO">
+	 <![CDATA[
+			SELECT MENU_NM
+			     , MENU_IMG_PATH
+			     , MENU_AMT
+			     , MENU_EXPLN
+			     , RLS_YMD
+			     , MENU_TYPE
+			FROM (
+			    SELECT MENU_NM
+			         , MENU_IMG_PATH
+			         , MENU_AMT
+			         , MENU_EXPLN
+			         , RLS_YMD
+			         , MENU_TYPE
+			         , ROW_NUMBER() OVER (PARTITION BY MENU_TYPE ORDER BY RLS_YMD DESC) AS RN
+			    FROM MENU
+			    WHERE NTSL_TYPE = 'NTSL02'
+			)
+			WHERE RN <= 3
+			ORDER BY MENU_TYPE, RLS_YMD DESC
+			
+	]]>
+	</select>
+</mapper>

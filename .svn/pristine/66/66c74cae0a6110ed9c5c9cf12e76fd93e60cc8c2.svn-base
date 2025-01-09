@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsNetProfitMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.10.09
+	@description  : 가맹점 순수익 sql
+-->
+	
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<collection property="frcsClclnVOList" resultMap="frcsClclnMap"></collection>
+		<collection property="frcsSlsVOList" resultMap="frcsSlsMap"></collection>
+	</resultMap>
+	
+	<resultMap type="frcsClclnVO" id="frcsClclnMap">
+		<result property="clclnYm" column="CLCLN_YM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="slsGramt" column="SLS_GRAMT"/>
+		<result property="royalty" column="ROYALTY"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		<result property="month" column="MONTH"/>
+	</resultMap>	
+	
+	<resultMap type="frcsSlsVO" id="frcsSlsMap">
+		<result property="slsYm" column="SLS_YM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="pureAmt" column="PURE_AMT"/>
+		<result property="mngAmt" column="MNG_AMT"/>
+		<result property="hireAmt" column="HIRE_AMT"/>
+		<result property="sumPoAmt" column="SUM_PO_AMT"/>
+	</resultMap>
+	
+	<select id="selectFrcsNetProfitList" parameterType="hashMap" resultMap="frcsMap">
+		SELECT SUBSTR(FC.CLCLN_YMD, 5, 2) AS MONTH
+		     , FC.SLS_GRAMT
+		     , FC.ROYALTY
+		     , FS.SUM_PO_AMT
+		     , FS.MNG_AMT
+		     , FS.HIRE_AMT
+		     , FS.PURE_AMT
+		FROM   FRCS F 
+		INNER JOIN FRCS_CLCLN FC ON (F.FRCS_NO = FC.FRCS_NO)
+		INNER JOIN FRCS_SLS FS ON (FC.CLCLN_YM = FS.SLS_YM)
+		WHERE  F.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		<if test="year != null and year != ''">
+		AND    SUBSTR(FC.CLCLN_YMD, 0, 4) = #{year}
+		</if>
+	</select>
+
+</mapper>

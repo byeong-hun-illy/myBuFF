@@ -1,0 +1,16 @@
+package com.buff.hdofc.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.MenuVO;
+
+public interface HdofcAnalyzeService {
+	
+	public List<MenuVO> selectAnalyzeList(Map<String, Object> map);
+	
+	public int menuTotalCnt(Map<String, Object> map);
+	
+	public Map<String, Object> tapMaxTotal();
+	
+}

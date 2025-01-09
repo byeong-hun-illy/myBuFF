@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cnpt.mapper.CnptSlsMapper">
+
+	<resultMap type="poVO" id="poMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="bzentVO" resultMap="bzentMap"/>
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE_NM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="qty" column="QTY"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+		<association property="bzentVO" resultMap="bzentMap"/> 
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	<!--
+ 		@programName : 거래처 매출 데이터
+ 		@description : 매출 데이터 가져오기
+ 		@author      : 이병훈
+ 		@date        : 2024. 10. 08
+	-->
+	
+	<select id="selectSales" parameterType="hashMap" resultMap="poClclnMap">
+	    SELECT * FROM (
+			    SELECT
+			      ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+		          P.PO_NO,
+		          PC.CLCLN_AMT,
+		          PC.CLCLN_YMD, 
+	              SUBSTR(CLCLN_YMD,1,6)
+	                , SUM(PC.CLCLN_AMT)
+	          FROM PO P
+	          JOIN PO_CLCLN PC ON P.PO_NO = PC.PO_NO
+	          JOIN (SELECT DISTINCT PO_NO FROM STOCK_PO WHERE BZENT_NO=#{bzentNo}) SP ON SP.PO_NO=P.PO_NO
+	          WHERE P.BZENT_NO = 'HO0001'
+	          AND PC.CLCLN_YN = 'Y'
+	          <if test="selectedYear != null and selectedYear != ''">
+		          AND SUBSTR(PC.CLCLN_YMD, 1, 4) = #{selectedYear}
+		      </if>
+		      <if test="startMonth != null and startMonth != '' and endMonth != null and endMonth != ''">
+		          AND PC.CLCLN_YMD BETWEEN CONCAT(#{startMonth}, '-01') AND LAST_DAY(CONCAT(#{endMonth}, '-01'))
+		      </if>
+	                GROUP BY SUBSTR(CLCLN_YMD,1,6)
+	                	   , P.PO_NO
+	                	   , PC.CLCLN_AMT
+	                	   , PC.CLCLN_YMD
+			) 
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>	
+	
+	<!--
+ 		@programName : 거래처 매출 총 갯수
+ 		@description : (특정 조건에 따른)거래처 매출 총 갯수
+ 		@author      : 이병훈
+ 		@date        : 2024. 10. 08
+	-->
+	<select id="selectTotalSls" resultType="int" parameterType="hashMap">
+		SELECT COUNT(*)
+		  FROM PO_CLCLN PC
+		  JOIN PO P ON PC.PO_NO = P.PO_NO
+		 JOIN (SELECT DISTINCT PO_NO FROM STOCK_PO WHERE BZENT_NO=#{bzentNo}) SP ON SP.PO_NO=P.PO_NO
+		 WHERE P.BZENT_NO = 'HO0001'
+		   AND PC.CLCLN_YN = 'Y'
+		  <if test="selectedYear != null and selectedYear != ''">
+	          AND SUBSTR(PC.CLCLN_YMD, 1, 4) = #{selectedYear}
+	      </if>
+	      <if test="startMonth != null and startMonth != '' and endMonth != null and endMonth != ''">
+	          AND PC.CLCLN_YMD BETWEEN #{startMonth} AND #{endMonth}
+      	  </if>
+	      <if test="selectedDate != null and selectedDate != ''">
+	          AND PC.CLCLN_YMD = #{selectedDate}
+      	  </if>
+	</select>
+	
+	<!-- 검색 없이 모든 매출의 총 갯수 -->
+	<select id="selectAllSales" resultType="int" parameterType="String">
+		 SELECT COUNT(*)
+	       FROM PO_CLCLN PC
+	       JOIN PO P ON PC.PO_NO = P.PO_NO
+	       JOIN (SELECT DISTINCT PO_NO FROM STOCK_PO WHERE BZENT_NO=#{bzentNo}) SP ON SP.PO_NO=P.PO_NO
+	      WHERE P.BZENT_NO = 'HO0001'
+	        AND PC.CLCLN_YN = 'Y'
+	</select>
+	
+	<!-- 일간 매출 조회를 위한 SQL 구문 -->
+	<select id="selectDailySales" parameterType="hashMap" resultMap="poClclnMap">
+	    SELECT * FROM (
+	         SELECT
+	         	ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM
+		        , P.PO_NO
+		        , PC.CLCLN_AMT
+		        , PC.CLCLN_YMD  
+              	, SUBSTR(CLCLN_YMD,1,8)
+                , SUM(PC.CLCLN_AMT)
+                , G.GDS_NM
+          FROM PO P
+          JOIN PO_CLCLN PC ON P.PO_NO = PC.PO_NO
+          JOIN (SELECT DISTINCT PO_NO, GDS_CODE FROM STOCK_PO WHERE BZENT_NO=#{bzentNo}) SP ON SP.PO_NO=P.PO_NO
+          LEFT JOIN GDS G ON SP.GDS_CODE = G.GDS_CODE
+          WHERE P.BZENT_NO = 'HO0001'
+          AND PC.CLCLN_YN = 'Y'
+	      AND PC.CLCLN_YMD = #{selectedDate} 
+                GROUP BY SUBSTR(CLCLN_YMD,1,8)
+                       , G.GDS_NM
+                       , P.PO_NO
+                       , PC.CLCLN_AMT
+                       , PC.CLCLN_YMD
+	    ) 
+	    WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 일간 매출 총 갯수 -->
+	<select id="selectTotalDailySales" resultType="int" parameterType="hashMap">
+		SELECT COUNT(*)
+		FROM   PO P
+		JOIN  PO_CLCLN PC ON P.PO_NO = PC.PO_NO
+		JOIN  STOCK_PO SP ON P.PO_NO = SP.PO_NO
+	     AND SP.BZENT_NO = #{bzentNo}
+	    JOIN GDS G ON SP.GDS_CODE = G.GDS_CODE
+	   WHERE P.BZENT_NO = 'HO0001'
+	     AND PC.CLCLN_YN = 'Y'
+	     AND PC.CLCLN_YMD = #{selectedDate}  
+	</select>
+	
+	<!-- 동적으로 계산되는 매출 총 금액 -->
+	<select id="selectTotalSalesAmount" parameterType="hashMap" resultType="long">
+		SELECT COALESCE(SUM(PC.CLCLN_AMT), 0)
+		  FROM PO_CLCLN PC
+		  JOIN PO P ON PC.PO_NO = P.PO_NO
+		  JOIN (SELECT DISTINCT PO_NO FROM STOCK_PO WHERE BZENT_NO=#{bzentNo}) SP ON SP.PO_NO=P.PO_NO
+		 WHERE P.BZENT_NO = 'HO0001'
+		 <if test="selectedYear != null and selectedYear != ''">
+		 	AND SUBSTR(PC.CLCLN_YMD, 1,4) = #{selectedYear}
+		 </if>
+		 <if test="startMonth != null and startMonth != '' and endMonth != null and endMonth != ''">
+		 	AND PC.CLCLN_YMD BETWEEN CONCAT(#{startMonth}, '-01') AND LAST_DAY(CONCAT(#{endMonth}, '-01'))
+		 </if>
+		 <if test="selectedDate != null and selectedDate != ''">
+		 	AND PC.CLCLN_YMD = #{selectedDate}
+		 </if>
+	</select>
+	
+	
+	
+</mapper>

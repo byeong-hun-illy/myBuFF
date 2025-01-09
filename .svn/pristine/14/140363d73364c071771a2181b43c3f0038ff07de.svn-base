@@ -1,0 +1,112 @@
+/*******************************************
+  @fileName    : gds.js
+  @author      : 이병훈
+  @date        : 2024. 09. 23
+  @description : 거래처 상품 조회 코드
+********************************************/
+document.write("<script src='/resources/js/global/value.js'></script>");
+
+// @methodName  : selectGdsAjax
+// @author      : 이병훈
+// @date        : 2024.09.23
+// @jsp         : cnpt/gds/selectGds
+// @description : 거래처 상품 리스트 및 검색 조건에 따른 리스트 조회
+
+function selectGdsAjax(){
+	
+	let gubun = $("#gubun").val();
+	let keyword = $("#keyword").val();
+	
+	console.log("bzentNo : " + bzentNo);
+	
+	let data = {
+			"currentPage" : currentPage,
+			"sort" : sort, 
+			"orderby" : orderby,
+			"gubun" : gubun,
+			"keyword" : keyword,
+			"bzentNo" : bzentNo
+			
+	};
+	
+	$.ajax({
+		url : "/cnpt/gds/listAjax",
+		type : "GET",
+		data : data, 
+		success : function(res){
+			console.log("res : ",res);
+			
+			// 전체 상품 수 all값을 동적으로 업데이트 
+			$("#tap-all").text(res.all);
+			
+			let strTbl = '';
+			if(res.articlePage.total == 0){ // 검색 결과가 0인 경우
+				strTbl += 
+						`<tr>
+							<td class="error-info" colspan="8"> 
+								<span class="icon material-symbols-outlined">error</span>
+								<div class="error-msg">검색 결과가 없습니다</div>
+							</td>
+						</tr>`;
+			
+			} else {
+				res.articlePage.content.forEach(list => {
+					// 각각의 재고 정보를 반복하여 출력
+					console.log(list.rnum, list.gdsNm);
+					
+					let qty = list.stockVOList[0].qty;
+					// 천 단위 구분 기호 적용
+					let formatQty = qty.toLocaleString();
+					
+					let amt = list.stockVOList[0].gdsAmtVO.amt;
+					
+					let formatAmt = amt.toLocaleString();
+					
+					
+					strTbl += 
+	 						`
+	 						<tr>
+	 							<td class="center">${list.rnum}</td>
+	 							<td class="center">${list.gdsNm}</td>
+	 							<td class="center">${formatQty}</td>
+	 							<td class="center">${list.unitNm}</td>
+	 							<td class="center">${formatAmt}원</td>
+	 						</tr>
+	 						`;
+				
+					
+				});
+			}
+	
+				// 페이징 처리
+				let page = '';
+				if (res.articlePage.startPage > res.articlePage.blockSize) {
+				    page += `<a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_left</span></a>`;
+				}
+				for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+					if (res.articlePage.currentPage === pnum) {
+						page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+					} else {
+						page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+					}
+				}
+				if (res.articlePage.endPage < res.articlePage.totalPages) {
+					page += `<a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_right</span></a>`;
+				}
+				
+				$('.pagination').html(page);
+			
+				// 테이블 바디에 데이터 삽입
+				$('#table-body').html(strTbl);
+				
+				
+		}
+	});
+	
+}
+
+
+
+

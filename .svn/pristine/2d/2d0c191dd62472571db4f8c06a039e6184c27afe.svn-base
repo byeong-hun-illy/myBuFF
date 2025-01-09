@@ -1,0 +1,61 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Calendar" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    // 현재 날짜를 가져옵니다.
+    Calendar calendar = Calendar.getInstance();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    String currentDate = sdf.format(calendar.getTime());
+%>
+<script src="/resources/js/jquery-3.6.0.js"></script> 
+<script type="text/javascript">
+	
+
+
+
+</script>
+
+
+<div class="wrap">
+    <div class="cont">
+        <form id="selectEventForm" method="get" action="/buff/selectEvent">
+            <div class="search-wrap">
+                <div class="search-cont">
+                    <select name="rgnNo" onchange="this.form.submit()">
+                        <option value="" selected>전체</option>
+                        <option value="open"
+                            <c:if test="(currentDate.compareTo(eventVO.expYmd) <= 0)}">selected</c:if>
+                        >진행 중 이벤트</option>
+                        <option value="close"
+                            <c:if test="(currentDate.compareTo(eventVO.expYmd) > 0)}">selected</c:if>
+                        >지난 이벤트</option>
+                    </select>
+                </div>
+                <div class="search-cont">
+                    <div class="search-input-btn">
+                        <input type="text" name="keyword" placeholder="검색어를 입력해주세요" class="search-input" style="width: 220px;" value="${param.keyword}" />
+                        <button type="submit" class="search-btn"></button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="cont">
+        <div class="img-cont">
+            <ul class="event-list">
+                <c:forEach var="eventVO" items="${eventVOList}">
+                    <li>
+                        <div class="img-box">
+                            <span id="spnImg" style="background-image: url(https://imecomall.co.kr/v2/data/file/event/thumb-1030082823_V8wJ96cI_66b4f0f5a3c5c7db2e9d3d0f0732371d9c0fe6be_1170x270.jpg); 
+                            border-radius: 18px; width: 1170px;"></span>
+                        </div>
+                        <div class="list-title"><a href="/cust/insertEventCoupon?eventNo=${eventVO.eventNo}">${eventVO.eventTtl}</a></div>
+                        <div class="list-date">${eventVO.bgngYmd} ~ ${eventVO.expYmd}</div>
+                    </li>
+                </c:forEach>
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.buff.frcs.mapper.FrcsSlsMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.10.03
+	@description  : 가맹점 매출 sql
+-->
+	
+	<resultMap type="ordrVO" id="ordrMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="ordrType" column="ORDR_TYPE"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+	</resultMap>
+	
+	<sql id="slsSearch">
+		<if test="startYmd != null and startYmd != ''">
+		<![CDATA[
+			AND O.ORDR_DT >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+		]]>
+		</if>
+		<if test="endYmd != null and endYmd != ''">
+		<![CDATA[
+			AND O.ORDR_DT <= TO_DATE(#{endYmd}, 'YYYY-MM-DD')
+		]]>
+		</if>
+	</sql>
+	
+	<select id="selectFrcsPeriodSlsList" parameterType="hashMap" resultMap="ordrMap">
+	    WITH T AS (
+	        SELECT ROW_NUMBER() OVER(ORDER BY O.ORDR_DT) AS RNUM,
+	               O.ORDR_NO, O.ORDR_DT, O.ORDR_TYPE, O.SPMT_YN, O.MBR_ID,
+	               O.ISSU_SN, OD.FRCS_NO, OD.MENU_NO, OD.ORDR_QTY, OD.ORDR_AMT
+	        FROM   ORDR O
+	        INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO)
+	        WHERE  OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+	        <include refid="slsSearch"/>
+	    )
+	    SELECT T.*
+	    FROM T
+	    WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	    ORDER BY 
+	        CASE 
+	            WHEN (#{startYmd} != null AND #{startYmd} != '') OR (#{endYmd} != null AND #{endYmd} != '') THEN T.ORDR_DT  -- T.ORDR_DT로 수정
+	            ELSE NULL
+	        END ASC,
+	        CASE 
+	            WHEN (#{startYmd} IS NULL OR #{startYmd} = '') AND (#{endYmd} IS NULL OR #{endYmd} = '') THEN T.ORDR_DT  -- T.ORDR_DT로 수정
+	            ELSE NULL
+	        END DESC
+	</select>
+	
+	<select id="selectTotalFrcsPeriodSlsList" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*) 
+		FROM ORDR O
+		INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO) 
+		WHERE OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+		<include refid="slsSearch"/>
+	</select>
+		
+</mapper>

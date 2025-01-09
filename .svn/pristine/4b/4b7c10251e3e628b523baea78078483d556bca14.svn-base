@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.hdofc.mapper.HdofcAdjustmentMapper">
+	
+	<resultMap type="poVO" id="poMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE"/>
+		<result property="deliTypeNm" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+	</resultMap>
+	
+	
+	<select id="selectHdofcSettleList" parameterType="hashMap" resultMap="poMap"></select>
+	
+	<select id="selectHdofcTotalSettle" parameterType="hashMap" resultType="int"></select>
+	
+	<select id="selectHdofcgetPayList" parameterType="hashMap" resultMap="poMap"></select>
+	
+	<select id="selectHdofcTotalGetPay" parameterType="hashMap" resultType="int"></select>
+	
+</mapper>

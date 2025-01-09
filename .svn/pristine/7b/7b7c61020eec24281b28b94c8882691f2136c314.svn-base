@@ -1,0 +1,102 @@
+package com.buff.frcs.service.impl;
+
+/**
+* @packageName  : com.buff.frcs.service.impl
+* @fileName     : FrcsStockServiceImpl.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 ServiceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20        정현종     	  			최초 생성
+*/
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsStockMapper;
+import com.buff.frcs.service.FrcsStockService;
+import com.buff.vo.BzentVO;
+
+
+@Service
+public class FrcsStockServiceImpl implements FrcsStockService {
+	
+	@Autowired
+	FrcsStockMapper frcsStockMapper;
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	@Override
+	public List<BzentVO> selectFrcsStockList() {
+		return this.frcsStockMapper.selectFrcsStockList();
+	}
+	
+	/**
+	* @methodName  : selectAll
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 전체 상품 갯수
+	*/
+	@Override
+	public int selectAll(Map<String, Object> map) {
+		return this.frcsStockMapper.selectAll(map);
+	}
+	
+	/**
+	* @methodName  : selectFood
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 식품 갯수
+	*/
+	@Override
+	public int selectFood(Map<String, Object> map) {
+		return this.frcsStockMapper.selectFood(map);
+	}
+	
+	/**
+	* @methodName  : selectPacking
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 포장재 갯수
+	*/
+	@Override
+	public int selectPacking(Map<String, Object> map) {
+		return this.frcsStockMapper.selectPacking(map);
+	}
+	
+	/**
+	* @methodName  : selectSubMart
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 부자재 갯수
+	*/
+	@Override
+	public int selectSubMart(Map<String, Object> map) {
+		return this.frcsStockMapper.selectSubMart(map);
+	}
+	
+	/**
+	* @methodName  : selectTotal
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param 	   : map
+	* @return	   : 검색조건에 맞는 현재 전체 상품 갯수
+	*/
+	@Override
+	public int selectTotal(Map<String, Object> map) {
+		return this.frcsStockMapper.selectTotal(map);
+	}
+}

@@ -1,0 +1,35 @@
+package com.buff.com.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+* @packageName  : com.buff.com.controller
+* @fileName     : ErrorController.java
+* @author       : 송예진
+* @date         : 2024.10.05
+* @description  : 로그인 시 에러 처리 페이지
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.10.05        송예진     	  			최초 생성
+*/
+@Controller
+@RequestMapping("/error")
+public class ErrorController {
+	
+	// 주로 거래처, 본사
+	// 고객 페이지에 접근 시에 고객 권한이 없으면 뜨는 페이지
+	@GetMapping("/cust")
+	public String accessErrorCustPage() {
+		return "error/custError";
+	}
+	
+	// 고객
+	// 관리자 로그인을 접근 시에 이동
+	@GetMapping("/admin")
+	public String accessErrorAdminPage() {
+		return "error/adminError";
+	}
+}

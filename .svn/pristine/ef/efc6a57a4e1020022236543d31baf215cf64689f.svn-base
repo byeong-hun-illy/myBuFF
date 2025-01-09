@@ -1,0 +1,199 @@
+package com.buff.frcs.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.com.mapper.ComMapper;
+import com.buff.frcs.service.FrcsStockService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.GdsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.frcs.controller
+* @fileName     : FrcsStockController.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20                정현종     	  		      최초 생성
+*/
+
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsStockController {
+	
+	@Autowired
+	FrcsStockService frcsStockService;
+	
+	@Autowired
+	ComMapper comMapper;
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 회원아이디, 상품 유형, 상품 이름
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	@GetMapping("/stockList")
+	public String selectFrcsStockList(Model model, Principal principal,
+			@RequestParam(name = "gdsClass", required = false, defaultValue = "") String gdsClass,
+			@RequestParam(name = "gdsType", required = false, defaultValue = "") String gdsType,
+			@RequestParam(name = "keyword", required = false, defaultValue = "") String keyword, 
+			@RequestParam(name = "sfStockQty", required = false, defaultValue = "") String sfStockQty, 
+			@RequestParam(name = "currentPage", required = false, defaultValue = "1") int currentPage
+		) { 
+		
+		int size = 10;
+		
+		//principal == CustomUser
+		//principal.getName() : 로그인 한 아이디
+		String mbrId = principal.getName();
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("mbrId", mbrId);
+		map.put("gdsClass", gdsClass);
+		map.put("gdsType", gdsType);
+		map.put("keyword", keyword);
+		map.put("sfStockQty", sfStockQty);
+		map.put("currentPage", currentPage);
+		map.put("size", size);
+		
+		// 전체 재고 현황 조회
+		List<GdsVO> stockVOList = this.frcsStockService.selectFrcsStockList(map);
+		log.info("selectFrcsStockList->stockVOList : " + stockVOList);
+		
+		int total = this.frcsStockService.selectTotalFrcsStock(map);
+		
+		ArticlePage<GdsVO> articlePage = new ArticlePage<GdsVO>(total, currentPage, size, stockVOList, map);
+		
+		int fdStockQty = this.frcsStockService.selectFdStock(map);
+		int smStockQty = this.frcsStockService.selectSmStock(map);
+		int pmStockQty = this.frcsStockService.selectPmStock(map);
+		
+		Map<String, Object> gdsTypeQtyMap = new HashMap<String, Object>();
+		
+		gdsTypeQtyMap.put("fdStockQty", fdStockQty);
+		gdsTypeQtyMap.put("smStockQty", smStockQty);
+		gdsTypeQtyMap.put("pmStockQty", pmStockQty);
+		
+		model.addAttribute("articlePage", articlePage);
+		model.addAttribute("gd", this.comMapper.selectCom("GD"));
+		model.addAttribute("gdsTypeQtyMap", gdsTypeQtyMap);
+		
+		return "frcs/selectFrcsStockList";
+	}
+	
+	/**
+	* @methodName  : selectFrcsStockDetail
+	* @author      : 정현종
+	* @date        : 2024.09.24
+	* @param  	   : 회원아이디, 상품 번호
+	* @return      : 가맹점 재고 상세
+	*/
+	@GetMapping("/stockDetail")
+	public String selectFrcsStockDetail(Model model, Principal principal, String gdsCode) {
+		
+		//principal == CustomUser
+		//principal.getName() : 로그인 한 아이디
+		String mbrId = principal.getName();
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("mbrId", mbrId);
+		map.put("gdsCode", gdsCode);
+		
+		GdsVO gdsVO = this.frcsStockService.selectFrcsStockDetail(map);
+		
+		model.addAttribute("gdsVO", gdsVO);
+		
+		return "frcs/selectFrcsStockDetail";
+	}
+	
+	/**
+	 * @methodName  : safeStockFrcsUpdateAjax
+	 * @description : 가맹점 안전 재고 설정을 처리하는 메서드
+	 * @author      : 정현종
+	 * @date        : 2024.09.24
+	 * @param       : principal, map (gdsCode, sfStockQty)
+	 * @return      : int (1: 성공, 0: 실패)
+	 */
+	@ResponseBody
+	@PostMapping("/safeStockFrcsUpdateAjax")
+	public int safeStockFrcsUpdateAjax(Principal principal, @RequestBody Map<String, Object> map) {
+		//map: {gdsCode=SMS001, sfStockQty=50}
+		log.info("safeStockFrcsUpdateAjax -> map: " + map);
+	    
+		// principal.getName() 메서드를 통해 로그인 한 사용자의 아이디를 가져옵니다.
+	    String mbrId = principal.getName();
+
+	    // map 객체에 mbrId를 추가합니다.
+	    map.put("mbrId", mbrId);
+
+	    // gdsCode와 selfStockQty를 요청 본문에서 추출
+	    String gdsCode = (String) map.get("gdsCode");
+	    //파라미터는 String타입임.
+	    int sfStockQty = Integer.parseInt(map.get("sfStockQty").toString());
+	    log.info("gdsCode: " + gdsCode + ", sfStockQty: " + sfStockQty + ", mbrId: " + mbrId);
+	    
+	    
+	    // 서비스 메서드 호출하여 안전 재고 설정을 처리합니다.
+	    int result = this.frcsStockService.safeStockFrcsUpdateAjax(map);
+	    log.info("safeStockFrcsUpdateAjax -> result: " + result);
+
+	    return result; // 성공 시 1, 실패 시 0을 반환
+	}
+	
+	/**
+	* @methodName  : stockFrcsUpdateAjax
+	* @description : 가맹점 재고 조정을 처리하는 메서드
+	* @author      : 정현종
+	* @date        : 2024.09.25
+	* @param 	   : map(상품코드, 사업체번호, 조정수량, 조정사유)
+	* @return	   : 0 또는 1 이상
+	*/
+	@ResponseBody
+	@PostMapping("/stockFrcsUpdateAjax")
+	public int stockFrcsUpdateAjax(@RequestBody Map<String, Object> map) {
+	    
+	    int result = 0;
+
+	    // 1. 재고 조정 기록 입력
+	    Map<String, Object> insertMap = new HashMap<String, Object>();
+	    insertMap.put("gdsCode", map.get("gdsCode"));
+	    insertMap.put("bzentNo", map.get("bzentNo"));
+	    insertMap.put("qty", map.get("qty"));
+	    insertMap.put("ajmtRsn", map.get("ajmtRsn"));
+	    
+	    // INSERT 작업 수행
+	    result += this.frcsStockService.stockAjmtFrcsInsertAjax(insertMap);
+	    
+	    // 2. 재고 수량 업데이트
+	    Map<String, Object> updateMap = new HashMap<String, Object>();
+	    updateMap.put("bzentNo", map.get("bzentNo"));
+	    updateMap.put("gdsCode", map.get("gdsCode"));
+	    
+	    // UPDATE 작업 수행
+	    result += this.frcsStockService.stockFrcsUpdateAjax(updateMap);
+	    
+	    return result;
+	}
+}

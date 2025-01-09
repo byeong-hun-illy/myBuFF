@@ -1,0 +1,382 @@
+
+<%--
+	 	@fileName    : Login.jsp
+	 	@programName : 로그인 화면
+	 	@description : 사용자 로그인을 위한 화면
+	 				   유형 선택이 아닌 로그인 시, 권한에 따라 
+	 				   페이지가 나뉘어질 예정이라 추후 바뀔 예정임.
+	 	@author      : 이 병 훈
+	 	@date        : 2024. 09. 11
+	--%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<script type="text/javascript" src="/resources/js/jquery.min.js"></script>
+<html>
+<head>
+<meta charset="UTF-8">
+<script type="text/javascript">
+$(function(){
+	// ID찾기 모달 이벤트 핸들러
+	$("#idCheck").on("click", function(){
+		var userName = $('#idName').val();
+		var userEmail = $('#idMail').val();
+		
+		// 필수 입력값 확인 예외처리 (입력값이 비었으면 경고 표시)
+		if(!userName || !userEmail){
+			Swal.fire({
+			      icon: 'error',
+			      title: 'Error!',
+			      text: '이름과 이메일을 모두 입력하세요.'
+			    });
+			return;
+		}
+		
+		$.ajax({
+			url : "/find/idAjax",
+			data : {userName : userName, userEmail : userEmail},
+			type : "POST",
+			beforeSend:function(xhr){ 
+				xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}"); 
+			},
+			success : function(res){
+				console.log(res);
+				// 응답 데이터를 결과 모달에 표시
+				// ID가 정상적으로 조회된 경우 결과 모달에 표시
+				if(res){
+					
+				$("#idResult").text("회원님의 ID는 " + res + "입니다.");
+				// 기본 모달 숨기기
+				$("#idFindModal").modal("hide"); 
+				// 결과 모달 열기
+				$("#idResultModal").modal("show");
+				
+				} else{
+					// ID값을 찾지 못한 경우 메시지 표시
+					Swal.fire({
+					      icon: 'error',
+					      title: 'Error!',
+					      text: '입력한 정보로 일치하는 ID를 찾을 수 없습니다.'
+					    });
+				}
+			},
+		 	error : function(xhr, status, error){
+		 		// 서버와의 통신 실패 시 에러 메시지 표시
+		 		Swal.fire({
+				      icon: 'error',
+				      title: 'Error!',
+				      text: 'ID찾기 요청 중 오류가 발생하였습니다!'
+				    });
+		 		console.error("Error : ", status, error);
+		 	}
+			
+		}); // ajax 끝.
+		
+	}); // ID찾기 모달 끝.
+	
+	// Password찾기 모달 이벤트 핸들러
+	$("#passCheck").on("click", function(){
+		var userId = $("#passId").val();
+		var userName = $("#passName").val();
+		var userEmail = $("#passMail").val();
+		
+		// 필수 입력값 확인 (입력값이 비었으면 경고 표시)
+		if(!userId || !userName || !userEmail){
+			Swal.fire({
+			      icon: 'error',
+			      title: 'Error!',
+			      text: 'ID, 이름, 이메일을 모두 입력하세요.'
+			    });
+			return;
+		}
+		
+		// 비밀번호 찾기 Ajax
+		$.ajax({
+			url : "/find/pswdAjax",
+			data : { userId: userId, userName: userName, userEmail: userEmail },
+			type : "POST",
+			beforSend : function(xhr){
+				// CSRF 토큰을 요청 헤더에 추가
+				xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+			},
+			success : function(res){
+				// 	서버로부터 받은 응답 처리
+					alert(res);
+// 				if(res){
+					console.log(res);
+// 					// 비밀번호 앞 5자리만 보여주고, 뒷자리는 *로 표시
+// 					var startPswd = res.subString(0, 5);
+// 					var hiddenPswd = '*'.repeat(res.length - 5);
+					
+// 					// 최종적으로 보여줄 비밀번호
+// 					var pswd = startPswd + hiddenPswd;
+					
+					// 비밀번호가 정상적으로 조회한 경우 결과 모달에 표시
+// 					$("#passResult").text("회원님의 비밀번호는 " + res + "입니다.");
+					
+					Swal.fire({
+					      icon: 'success',
+					      title: '성 공!',
+					      text: '입력하신 이메일로 임시 비밀번호가 전송되었습니다.'
+					    });
+					
+					
+					// 기존 모달 창 닫기
+					$("#pwdFindModal").modal("hide");
+					// 결과 모달 창 열기
+// 					$("#pwdResultModel").modal("show");
+					
+// 				} else{
+// 					// 비밀번호를 찾지 못한 경우, 경고창 표시
+// 					Swal.fire({
+// 					      icon: 'error',
+// 					      title: 'Error!',
+// 					      text: '입력한 정보로 일치하는 비밀번호를 찾을 수 없습니다.'
+// 					    });
+// 				}
+			},
+			error : function(xhr, status, error){
+				// 서버와의 통신 오류시, 에러메세지
+				Swal.fire({
+				      icon: 'error',
+				      title: 'Error!',
+				      text: '비밀번호 찾기 요청 도중 오류가 발생하였습니다!'
+				    });
+				console.error("Error :" + status, error);		
+					
+			}
+			
+		}) // Ajax 끝.
+		
+		
+	});	// 비밀번호 찾기 모달 끝.
+	
+	// id 입력시 대문자 포함될 경우, 감지
+	$("#username").on("input", function(){
+		//  id창 입력하는 값
+		let inputVal = $(this).val(); 
+		
+		// 대문자가 포함되어있는지 확인하는 정규식
+		let hasUpperCase = /[A-Z]/.test(inputVal);
+		         
+		if(hasUpperCase){
+			$("#warning").show();
+		}else{
+			$("#warning").hide();
+		}
+		
+		
+	});
+	
+	
+});
+
+
+</script>
+<title></title>
+</head>
+<body>
+	<div class="wrap d-flex justify-content-center align-items-center vh-100">
+		<div class="cont w-350">
+			<!-- 제목 시작 -->
+				<div class="cont-title text-center">
+					<b>로그인 페이지</b>
+				</div>
+			<!-- 제목 끝 -->
+			<form id="loginf" action="/login" method="post">
+				<!-- 로그인 입력 시작 -->
+				<div class="mb-3">
+					<label class="form-label d-flex align-items-center" for="username">
+						회원 ID 
+						<span class="ms-2" id="warning" style="color: red; display: none; font-size: small;">
+						<span class="material-symbols-outlined icon">warning</span> 대문자가 포함되어 있습니다.</span>
+					</label>
+					<div class="input-group">
+						<input type="text" id="username" 
+							   class="form-control" name="username" placeholder="ID를 입력하세요" required />
+						<div class="input-group-append">
+							<div class="input-group-text">
+								<span class="fas fa-user"></span>
+							</div>
+						</div>
+					</div> 
+					
+					  	   
+				</div>
+				<div class="mb-3">
+					<label for="password" class="form-label">비밀 번호</label> 
+					<div class="input-group">
+						<input type="password" id="password" name="password" 
+							   class="form-control" placeholder="Password를 입력하세요" required />
+						<div class="input-group-append">
+							<div class="input-group-text">
+								<span class="fas fa-user"></span>
+							</div>
+						</div>	   
+					</div>
+				</div>
+				<!-- 로그인 입력 끝 -->
+				<div class="text-center">
+					<button class="btn-active w-100" type="submit"
+					        style="border-radius: var(--radius--m);">Log In</button>
+				</div>
+				<!-- csrf : Cross Site(크로스 사이트) Request(요청) Forgery(위조) -->
+				<sec:csrfInput/>
+			</form>
+
+			<div class="d-flex justify-content-between mt-3">
+				<div>
+					<button class="btn-default w-150" data-bs-toggle="modal" 
+							data-bs-target="#idFindModal" style="border-radius: var(--radius--m);">아이디 찾기</button>
+                	<button class="btn-default w-150" data-bs-toggle="modal" 
+                			data-bs-target="#pwdFindModal" style="border-radius: var(--radius--m);">비밀번호 찾기</button>
+				</div>
+			</div>
+				 <button class="btn-default w-100 text-center" 
+	                    onclick="javascript:location.href='/join'" 
+	                    style="color: var(--text--primary); background-color: var(--gray--0); border-radius: var(--radius--m);">회원 가입</button>
+
+			<!-- ID찾기 Modal -->
+			<div class="modal" id="idFindModal">
+				<div class="modal-dialog">
+					<div class="modal-content">
+
+						<!-- Modal Header -->
+						<div class="modal-header modal-title">
+							 ID 찾기
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+
+						<!-- Modal body -->
+						<div class="modal-body">
+							<div>
+								<form id="idform" name="idform">
+									<label>이름</label><br> 
+									<input type="text" class="data"
+										   name="idName" id="idName"><br> 
+									<label>이메일</label><br>
+									<input type="text" class="data" name="idMail" id="idMail"><br>
+								</form>
+							</div>
+								<div class="tap-btn-wrap">
+									<div class="btn-wrap">
+										<button type="button" id="idCheck" class="btn-active" style="border-radius: var(--radius--m);">확인</button>
+									</div>
+								</div>
+						</div>
+
+						<!-- Modal footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger"
+								data-bs-dismiss="modal">닫기</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+			<!-- PassWord찾기 Modal -->
+			<div class="modal" id="pwdFindModal">
+				<div class="modal-dialog">
+					<div class="modal-content">
+
+						<!-- Modal Header -->
+						<div class="modal-header modal-title">
+							 비밀번호 찾기
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+
+						<!-- Modal body -->
+						<div class="modal-body">
+							<div>
+								<form id="passform" name="passform">
+									<label>ID</label><br> 
+									<input type="text" class="data"
+										   name="passId" id="passId"><br>
+									<label>이름</label><br>
+									<input type="text" class="data"
+										   name="passName" id="passName"><br>
+									<label>이메일</label><br>
+									<input type="text" class="data" name="passMail" id="passMail"><br>
+								</form>
+							</div>
+								<div class="tap-btn-wrap">
+									<div class="btn-wrap">
+										<button type="button" id="passCheck" class="btn-active" style="border-radius: var(--radius--m);">전송</button>
+									</div>
+								</div>
+						</div>
+
+						<!-- Modal footer -->
+						<div class="modal-footer">
+							 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ID 찾기 결과 Modal -->
+			<div class="modal" id="idResultModal">
+				<div class="modal-dialog">
+					<div class="modal-content">
+
+						<!-- Modal Header -->
+						<div class="modal-header modal-title">
+							ID 찾기 결과
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+
+						<!-- Modal body -->
+						<div class="modal-body">
+							<p id="idResult"></p>
+						</div>
+
+						<!-- Modal footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger"
+								data-bs-dismiss="modal">닫기</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+			<!-- Password 찾기 결과 Modal -->
+			<div class="modal" id="passResultModal">
+				<div class="modal-dialog">
+					<div class="modal-content">
+
+						<!-- Modal Header -->
+						<div class="modal-header modal-title">
+							비밀번호 찾기 결과
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+
+						<!-- Modal body -->
+						<div class="modal-body">
+							<p id="passResult"></p>
+						</div>
+
+						<!-- Modal footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger"
+								data-bs-dismiss="modal">닫기</button>
+						</div>
+
+
+						<input type="hidden" name="${_csrf.parameterName}"
+							   value="${_csrf.token}">
+					</div>
+				</div>
+			</div>
+			<!-- Password 찾기 결과 Modal 끝 -->
+
+		</div>
+	</div>
+</body>
+</html>

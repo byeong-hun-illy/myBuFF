@@ -1,0 +1,191 @@
+@charset "UTF-8";
+
+.wrap-inner {
+	display: flex;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+.store-list {
+	width: 1000px;
+	display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.store-search {
+    border: 1px solid var(--border--primary) !important;
+    height: 44px !important;
+    padding: 10px;
+    border-radius: var(--radius--m);
+}
+
+.store-search input {
+    width: 220px;
+    border: none;
+    padding: 0 !important;
+    border-radius: 0;
+}
+
+.store-search input:focus {
+	outline: none;
+}
+
+.store-search input:focus ~ .store-search {
+	 border: 1px solid var(--brand--primary) !important;
+}
+
+/* 가맹점 목록 리스트 */
+.card {
+	padding: 20px;
+	gap: 10px;
+}
+
+.store-cont {
+	height: 663px;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gray--4);
+}
+
+.store-box {
+    border-bottom: 1px solid var(--gray--4);
+    padding: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.store-box:hover {
+    background: var(--bg--blue);
+}
+
+.store-box:hover .store-nm {
+	font-weight: bold;
+}
+
+.store-nm {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+.star-btn {
+    background: none;
+    padding: 0;
+}
+
+.star-icon01 {
+	font-size: 2rem;	
+}
+
+.star-icon02 {
+	font-size: 2rem;
+	font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+	color: var(--brand--primary);
+}
+
+.info-txt {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.no-list {
+	display: flex;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    margin: auto;
+    background: #f7f7f7;
+    width: 100%;
+    height: 100%;
+    padding-top: 250px;
+}
+
+.no-icon {
+	font-size: 4.5rem;
+}
+
+
+
+/* 모달 */
+
+.modal-header{
+	background: var(--blue--0);
+	padding: var(--pd--s) var(--pd--m) !important;
+}
+.modal-title{
+	color:var(--blue--8);
+	display: flex;
+}
+.btn-icon{
+	background: none;
+	padding : 1px !important;
+}
+.icon-btn{
+	font-size:1.5rem;
+  font-variation-settings:
+		  'FILL' 0,
+		  'wght' 300,
+		  'GRAD' 0,
+		  'opsz' 40
+}
+.modal-title .star-btn{
+	display: flex;
+    align-items: center;
+}
+.modal-body{
+	display: flex;
+    flex-direction: column;
+    gap: var(--gap--l);
+    justify-content: center;
+    padding: var(--pd--l);
+/*     font-size: var(--accent--size); */
+    font-weight: var(--accent--weight);
+}
+.modal-cont{
+	display: flex;
+	gap: var(--gap--m);
+}
+.cont-title{
+	color: var(--green--5);
+	width: 80px;
+    text-align: center;
+}
+.cont-cont, .cont-cont p{
+	color: var(--gray--7);
+}
+#st-addr{
+	display: flex;
+	flex-direction: column;
+	gap:var(--gap--s)
+}
+.modal-footer{
+	display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70px;
+    font-size: x-large;
+    font-weight: 700;
+    color: var(--blue--0);
+    background: var(--brand--primary);
+    cursor: pointer;
+}
+.modal-footer:hover {
+	background-color: var(--green--3);
+}
+
+
+
+
+
+
+
+
+
+
+

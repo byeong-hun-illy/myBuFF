@@ -1,0 +1,32 @@
+package com.buff.cust.service;
+
+import java.util.List;
+
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MemberVO;
+import com.buff.vo.OrdrVO;
+import com.buff.vo.QsVO;
+
+public interface CustMyPageService {
+
+	/**
+	* @methodName  : selectMyPage
+	* @author      : 서윤정
+	 *@param QsVO, FrcsDscsnVO, EventVO,myStore
+	*  마이페이지 페이지 조회
+	* @return : 
+	*/
+	public List<QsVO> myQs(String mbrId);
+
+	public List<FrcsDscsnVO> myDscsn(String mbrId);
+
+	public List<OrdrVO> myOrdr(String mbrId);
+
+	public List<EventVO> myCoupon(String mbrId);
+
+	public MemberVO myStore(String mbrId);
+
+
+	
+}

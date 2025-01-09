@@ -1,0 +1,65 @@
+@charset "UTF-8";
+
+.cont2 {
+    margin-right: 10px !important;
+}
+
+/* 매출이나 정산 관련 데이터를 가져오는 css */
+.menu-wrap {
+	display: flex;
+	gap: 20px;
+}
+
+.menu-cont {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    border-radius: 10px;
+}
+.menu-title-sub {
+    display: flex;
+    justify-content: space-between;
+}
+.menu-title {
+	color: var(--text--secondary);	
+}
+.menu-title-main {
+	display: flex;
+    align-items: center;
+    gap: var(--gap--s);
+}
+.title-bge {
+    font-weight: var(--container--title--weight);
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: 50px;
+}
+.title-bge.top {
+    border: 1.5px solid #ce8c90;
+    color: #ce8c90;
+}
+.title-bge.best {
+    border: 1.5px solid #77bd38;
+    color: #77bd38;
+}
+.title-bge.total {
+    border: 1.5px solid #38afbd;
+    color: #38afbd;
+}
+.menu-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.menu-cont{
+	text-align: left;
+}
+
+.menu-title-date{
+	font-size: var(--secondary--size);
+	font-weight: var(--secondary--weight);
+	color: var(--text--secondary);
+}
+/* 매출이나 정산 관련 데이터를 가져오는 css 끝 */

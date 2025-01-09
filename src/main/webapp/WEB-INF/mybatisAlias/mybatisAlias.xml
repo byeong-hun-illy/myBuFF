@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- 
+	[마이바티스] 스프링에서 "_"를 사용한 컬럼명을 사용 시(BOOK 테이블의 BOOK_ID)
+	카멜케이스로 읽어줌(bookId)
+	ex) 테이블 컬러명이 member_id인 경우 jsp화면단에서 이 값을 사용 시 memberId로 사용
+	-->
+	<settings>
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+	<!-- 자주 사용하는 타입의 별칭을 세팅 -->
+	<typeAliases>
+<!-- 		<typeAlias type="com.buff.vo.BookVO" alias="bookVO" />		 -->
+			<typeAlias type="com.buff.vo.MemberVO" alias="memberVO" />
+			<typeAlias type="com.buff.vo.AuthVO" alias="authVO" />
+			<typeAlias type="com.buff.vo.FrcsVO" alias="frcsVO" />
+			<typeAlias type="com.buff.vo.BzentVO" alias="bzentVO" />
+			<typeAlias type="com.buff.vo.FrcsMenuVO" alias="frcsMenuVO" />
+			<typeAlias type="com.buff.vo.MenuVO" alias="menuVO" />
+			<typeAlias type="com.buff.vo.CouponVO" alias="couponVO" />
+			<typeAlias type="com.buff.vo.CouponGroupVO" alias="couponGroupVO" />
+			<typeAlias type="com.buff.vo.MngrVO" alias="mngrVO" />
+			<typeAlias type="com.buff.vo.FaqVO" alias="faqVO" />
+			<typeAlias type="com.buff.vo.PoVO" alias="poVO" />
+			<typeAlias type="com.buff.vo.PoClclnVO" alias="poClclnVO" />
+         	<typeAlias type="com.buff.vo.FrcsDscsnVO" alias="frcsDscsnVO" />
+         	<typeAlias type="com.buff.vo.FrcsCheckVO" alias="frcsCheckVO" />
+          	<typeAlias type="com.buff.vo.FileGroupVO" alias="fileGroupVO" />
+			<typeAlias type="com.buff.vo.FileDetailVO" alias="fileDetailVO" />
+			<typeAlias type="com.buff.vo.EventVO" alias="eventVO" />
+          	<typeAlias type="com.buff.vo.NoticeVO" alias="noticeVO" />
+         	<typeAlias type="com.buff.vo.QsVO" alias="qsVO" />
+         	<typeAlias type="com.buff.vo.StockVO" alias="stockVO" />
+         	<typeAlias type="com.buff.vo.GdsVO" alias="gdsVO" />
+         	<typeAlias type="com.buff.vo.FrcsClsbizVO" alias="frcsClsbizVO" />
+         	<typeAlias type="com.buff.vo.FrcsClclnVO" alias="frcsClclnVO" />
+         	<typeAlias type="com.buff.vo.FrcsSlsVO" alias="frcsSlsVO" />
+         	<typeAlias type="com.buff.vo.GdsAmtVO" alias="gdsAmtVO" />
+         	<typeAlias type="com.buff.vo.ComVO" alias="comVO" />
+         	<typeAlias type="com.buff.vo.OrdrVO" alias="ordrVO" />
+         	<typeAlias type="com.buff.vo.OrdrDtlVO" alias="ordrDtlVO" />
+         	<typeAlias type="com.buff.vo.StockPoVO" alias="stockPoVO" />
+         	<typeAlias type="com.buff.vo.StockAjmtVO" alias="stockAjmtVO" />
+         	<typeAlias type="com.buff.vo.RecipeVO" alias="recipeVO" />
+         	<typeAlias type="com.buff.vo.MenuSetVO" alias="menuSetVO" />
+         	<typeAlias type="com.buff.vo.FrcsSlsVO" alias="frcsSlsVO" />
+         	<typeAlias type="com.buff.vo.FrcsClclnMaxVO" alias="frcsClclnMaxVO" />
+         	<typeAlias type="com.buff.vo.FavMenuVO" alias="favMenuVO" />
+         	<typeAlias type="com.buff.vo.FavFrcsVO" alias="favFrcsVO" />
+         	<typeAlias type="com.buff.vo.hdofc.HdofcCntVO" alias="hdofcCntVO" />
+         	<typeAlias type="com.buff.vo.hdofc.HdofcAmtVO" alias="hdofcAmtVO" />
+         	<typeAlias type="com.buff.vo.NavVO" alias="navVO" />
+         	<typeAlias type="com.buff.vo.CnptCntVO" alias="cnptCntVO" />
+	</typeAliases>
+</configuration>
+
+
+
+
+
+

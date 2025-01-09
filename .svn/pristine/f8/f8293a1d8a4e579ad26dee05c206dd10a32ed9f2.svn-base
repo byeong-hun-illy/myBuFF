@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsSlsMapper">
+    <!-- 
+        @author       : 정현종
+        @date         : 2024.10.03
+        @description  : 가맹점 매출 sql
+    -->
+    
+    <resultMap type="ordrVO" id="ordrMap">
+        <result property="rnum" column="RNUM"/>
+        <result property="month" column="MONTH"/>
+        <result property="ordrNo" column="ORDR_NO"/>
+        <result property="ordrDt" column="ORDR_DT"/>
+        <result property="ordrType" column="ORDR_TYPE"/>
+        <result property="spmtYn" column="SPMT_YN"/>
+        <result property="mbrId" column="MBR_ID"/>
+        <result property="issuSn" column="ISSU_SN"/>
+
+        <result property="dailysales" column="DAILYSALES"/>
+        <result property="maxdailysales" column="MAXDAILYSALES"/>
+        
+        <collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+    </resultMap>
+    
+    <resultMap type="ordrDtlVO" id="ordrDtlMap">
+        <result property="ordrNo" column="ORDR_NO"/>
+        <result property="frcsNo" column="FRCS_NO"/>
+        <result property="menuNo" column="MENU_NO"/>
+        <result property="ordrQty" column="ORDR_QTY"/>
+        <result property="ordrAmt" column="ORDR_AMT"/>
+        
+        <result property="ordrAmtSum" column="ORDR_AMT_SUM"/>
+        <result property="period" column="PERIOD"/>
+    </resultMap>
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="rnum" column="RNUM"/>
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+ 	</resultMap>  
+	
+	<!-- 검색 조건 -->
+    <sql id="slsSearch">
+        <if test="startYmd != null and startYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+            ]]>
+        </if>
+        <if test="endYmd != null and endYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT < TO_DATE(#{endYmd}, 'YYYY-MM-DD') + 1
+            ]]>
+        </if>
+    </sql>
+    
+    <!-- 기간별 매출 리스트 -->
+    <select id="selectFrcsPeriodSlsList" parameterType="hashMap" resultMap="ordrMap">
+	    WITH T AS (
+	        SELECT ROW_NUMBER() OVER(ORDER BY O.ORDR_DT DESC) AS RNUM,
+	               O.ORDR_NO, O.ORDR_DT, O.ORDR_TYPE, O.SPMT_YN, O.MBR_ID,
+	               O.ISSU_SN, OD.FRCS_NO, OD.MENU_NO, OD.ORDR_QTY, OD.ORDR_AMT
+	        FROM   ORDR O
+	        INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO)
+	        WHERE  OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+	        <include refid="slsSearch"/>
+	    )
+	    SELECT T.*
+	    FROM T
+	    WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+     
+    <!-- 전체 행의 수 -->
+    <select id="selectTotalFrcsPeriodSlsList" parameterType="hashMap" resultType="int">
+        SELECT COUNT(*) 
+        FROM ORDR O
+        INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO) 
+        WHERE OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+        <include refid="slsSearch"/>
+    </select>
+    
+    <!-- 기간별 매출 합계 -->
+    <select id="selectFrcsPeriodSlsTotalAmt" parameterType="hashMap" resultType="long">
+	    SELECT NVL(SUM(OD.ORDR_QTY * OD.ORDR_AMT), 0) AS TOTALAMT
+	    FROM ORDR O
+	    INNER JOIN ORDR_DTL OD ON (O.ORDR_NO = OD.ORDR_NO)
+	    WHERE OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+	    <include refid="slsSearch"/>
+	</select>
+        
+    <select id="selectFrcsPeriodSlsDetailAjax" parameterType="hashMap" resultMap="ordrMap">
+    	SELECT EXTRACT(MONTH FROM ORDR_DT) AS MONTH,
+		       SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS ORDR_AMT
+		FROM   ORDR O
+		INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		WHERE OD.FRCS_NO = #{bzentNo}
+		  AND EXTRACT(YEAR FROM ORDR_DT) = #{year}
+		GROUP BY EXTRACT(MONTH FROM ORDR_DT)
+		ORDER BY MONTH
+    </select>    
+    
+    <!-- 당일 매출 금액 -->
+    <select id="selectdailySales" parameterType="hashMap" resultType="long">
+    	SELECT NVL(SUM(ORDR_QTY * ORDR_AMT), 0) AS DAILYSALES
+		FROM   ORDR O
+		INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		WHERE  TRUNC(O.ORDR_DT) = TRUNC(SYSDATE) 
+		AND    OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+    </select>
+    
+    <!-- 최고 일일 매출 금액 -->
+    <select id="selectmaxDailySales" parameterType="hashMap" resultType="long">
+    	SELECT NVL(MAX(DAILYSALES), 0) AS MAXDAILYSALES
+		FROM (
+		    SELECT TRUNC(O.ORDR_DT) AS ORDR_DT, SUM(ORDR_QTY * ORDR_AMT) AS DAILYSALES
+		    FROM   ORDR O
+		    INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		    AND    OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+		    GROUP BY TRUNC(O.ORDR_DT)
+		)
+    </select>
+	
+	<!-- 일간,월간,연간 매출 차트 -->
+	<select id="selectfrcsSlsList" parameterType="hashMap" resultMap="ordrMap">
+        SELECT SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS ORDR_AMT_SUM,
+	        <choose>
+	            <when test="date == 'year'">
+	                TO_CHAR(O.ORDR_DT, 'MM') AS PERIOD
+	            </when>
+	            <when test="date == 'month'">
+	                TO_CHAR(O.ORDR_DT, 'DD') AS PERIOD
+	            </when>
+	            <otherwise>
+	                TO_CHAR(O.ORDR_DT, 'HH24') AS PERIOD
+	            </otherwise>
+	        </choose>
+	    FROM ORDR_DTL OD
+	    JOIN ORDR O ON O.ORDR_NO = OD.ORDR_NO
+	    WHERE OD.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId})
+	        <choose>
+	            <when test="date == 'year'">
+	                AND TO_CHAR(O.ORDR_DT, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+	            </when>
+	            <when test="date == 'month'">
+	                AND TO_CHAR(O.ORDR_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+	            </when>
+	            <otherwise>
+	                AND TO_CHAR(O.ORDR_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	            </otherwise>
+	        </choose>
+	    GROUP BY 
+	        <choose>
+	            <when test="date == 'year'">
+	                TO_CHAR(O.ORDR_DT, 'MM')
+	            </when>
+	            <when test="date == 'month'">
+	                TO_CHAR(O.ORDR_DT, 'DD')
+	            </when>
+	            <otherwise>
+	                TO_CHAR(O.ORDR_DT, 'HH24')
+	            </otherwise>
+	        </choose>
+	    ORDER BY PERIOD
+    </select>
+    
+</mapper>

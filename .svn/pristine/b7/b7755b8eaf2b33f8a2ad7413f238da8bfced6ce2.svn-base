@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsStockAjmtMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.30
+	@description  : 가맹점 재고 조정 sql
+-->
+	
+	<resultMap type="gdsVO" id="gdsMap">
+        <result property="rnum" column="RNUM"/>
+        <result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		
+        <collection property="stockVOList" resultMap="stockMap"/>
+    </resultMap>
+	
+    <resultMap type="stockVO" id="stockMap">
+        <result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<collection property="stockAjmtVOList" resultMap="stockAjmtMap"/>
+    </resultMap>
+    
+    <resultMap type="stockAjmtVO" id="stockAjmtMap">
+    	<result property="ajmtNo" column="AJMT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="ajmtType" column="AJMT_TYPE"/>
+		<result property="qty" column="QTY"/>
+		<result property="ajmtYmd" column="AJMT_YMD"/>
+		<result property="ajmtRsn" column="AJMT_RSN"/>
+    </resultMap>
+	
+	<!-- 검색 조건 -->
+	<sql id="stockAjmt_Search">
+		<if test="ajmtType != null and ajmtType != ''">
+		    AND SA.AJMT_TYPE = #{ajmtType}
+		</if>
+		<if test = "startYmd != null and startYmd != ''">
+			AND TO_DATE(SA.AJMT_YMD, 'YYYY-MM-DD') >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+		</if>
+
+		<if test = "endYmd != null and endYmd != ''">
+		<![CDATA[	
+			AND TO_DATE(SA.AJMT_YMD, 'YYYY-MM-DD') <= TO_DATE(#{endYmd}, 'YYYY-MM-DD')
+		]]>
+		</if>
+		
+		<if test = "gdsClass != null and gdsClass != ''">
+			AND G.GDS_TYPE LIKE #{gdsClass} || '%'
+		</if>
+		
+		<if test = "gdsType != null and gdsType != ''">
+			AND G.GDS_TYPE = #{gdsType} 
+		</if>
+		
+		<if test = "gdsNm != null and gdsNm != ''">
+			AND G.GDS_NM LIKE '%' || #{gdsNm} || '%'
+		</if>
+	</sql>
+	
+	<!-- 재고조정현황 리스트 -->
+	<select id="selectFrcsStockAjmtList" parameterType="hashMap" resultMap="gdsMap">
+	    WITH T AS (
+	        SELECT ROW_NUMBER() OVER(ORDER BY SA.AJMT_NO DESC) AS RNUM,
+	               G.GDS_CODE AS GDS_CODE_G, 
+	               G.GDS_NM, 
+	               G.GDS_TYPE, 
+	               G.UNIT_NM, 
+	               G.REG_YMD, 
+	               G.MBR_ID,
+	               S.BZENT_NO, --AS BZENT_NO_S, 
+	               S.SF_STOCK_QTY, 
+	               S.NTSL_TYPE,
+	               SA.AJMT_NO, --AS AJMT_NO_SA, 
+	               SA.AJMT_TYPE, 
+	               SA.QTY, --AS QTY_SA, 
+	               SA.AJMT_YMD, 
+	               SA.AJMT_RSN
+	        FROM GDS G
+	        INNER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+	        INNER JOIN STOCK_AJMT SA ON S.GDS_CODE = SA.GDS_CODE 
+	                                  AND S.BZENT_NO = SA.BZENT_NO 
+	                                  AND SA.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+	        WHERE 1=1
+	        <include refid="stockAjmt_Search"/>
+	    )    
+	    SELECT T.*
+	    FROM T
+	    WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+
+	<!-- 전체 행의 수 -->
+	<select id="selectTotalFrcsStockAjmt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM   GDS G
+		INNER JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		INNER JOIN STOCK_AJMT SA ON(S.GDS_CODE = SA.GDS_CODE 
+								 	AND S.BZENT_NO = SA.BZENT_NO 
+								 	AND SA.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId}))
+        WHERE 1=1
+   		<include refid="stockAjmt_Search"/>
+	</select>
+	
+	<!-- 전체 상품의 수 -->
+	<select id="selectAllStockAjmtCount" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM   GDS G
+		INNER JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		INNER JOIN STOCK_AJMT SA ON(S.GDS_CODE = SA.GDS_CODE 
+								 	AND S.BZENT_NO = SA.BZENT_NO 
+								 	AND SA.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId}))
+        WHERE 1=1
+   		<include refid="stockAjmt_Search"/>
+	</select>
+	
+	<!-- 출고 유형(판매) 수 -->
+	<select id="selectOrderStockAjmtCount" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM   GDS G
+		INNER JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		INNER JOIN STOCK_AJMT SA ON(S.GDS_CODE = SA.GDS_CODE 
+								 	AND S.BZENT_NO = SA.BZENT_NO 
+								 	AND SA.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId}))
+        WHERE 1=1
+        AND   SA.AJMT_TYPE = 'AJMT03'
+   		<include refid="stockAjmt_Search"/>
+	</select>
+	
+	<!-- 출고 유형(폐기) 수 -->
+	<select id="selectDisposeStockAjmtCount" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM   GDS G
+		INNER JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		INNER JOIN STOCK_AJMT SA ON(S.GDS_CODE = SA.GDS_CODE 
+								 	AND S.BZENT_NO = SA.BZENT_NO 
+								 	AND SA.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId}))
+        WHERE 1=1
+        AND   SA.AJMT_TYPE = 'AJMT02'
+   		<include refid="stockAjmt_Search"/>
+	</select>
+
+</mapper>

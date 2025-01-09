@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustCenterMapper">
+
+	<select id="selectFaq"  parameterType="String" resultType="faqVO">
+		SELECT FAQ_SEQ
+			 , FAQ_TTL
+			 , FAQ_CN
+			 , QS_TYPE
+		  FROM FAQ
+		<where>
+			<if test="faqCategory != null and faqCategory != ''">
+				AND QS_TYPE = #{faqCategory}
+			</if>
+		</where>
+		ORDER BY FAQ_SEQ DESC
+	</select>
+	
+	
+	<select id="selectNotice" parameterType="hashMap" resultType="noticeVO">
+    SELECT 
+        NTC_SEQ
+       , NTC_TTL
+       , NTC_CN
+       , INQ_CNT
+       , WRTR_DT
+       , NVL(CAST(SUBSTR(FIXD_SEQ, 3) AS INTEGER), 0) AS FIXD_SEQ
+    FROM NOTICE
+    WHERE 1=1
+    <if test="noticeCategory != null and noticeCategory != ''">
+        <choose>
+            <when test="noticeCategory == 'ntcTtl'">
+                AND NTC_TTL LIKE '%' || #{keyword} || '%'
+            </when>
+            <when test="noticeCategory == 'ntcCn'">
+                AND NTC_CN LIKE '%' || #{keyword} || '%'
+            </when>
+        </choose>
+    </if>
+    <if test="noticeCategory == null or noticeCategory == ''">
+        AND (NTC_TTL LIKE '%' || #{keyword} || '%' OR NTC_CN LIKE '%' || #{keyword} || '%')
+    </if>
+    
+    ORDER BY FIXD_SEQ DESC, NTC_SEQ DESC
+</select>
+
+	<select id="selectNoticeDetail" parameterType="int" resultType="noticeVO">
+		SELECT NTC_SEQ
+	         , NTC_TTL
+	         , NTC_CN
+	         , INQ_CNT
+	         , WRTR_DT
+          FROM NOTICE
+         WHERE NTC_SEQ = #{ntcSeq}
+	</select>
+
+	<!-- 
+	들어옴 QsVO(qsSeq=null, mbrId=tieawu5d, mngrId=null, qsType=QS01, qsTtl=1, qsCn=2
+		, wrtrDt=null, ansDt=null, ansCn=null, fileGroupNo=0)
+		
+	나갈땐 QsVO(qsSeq=11, mbrId=tieawu5d, mngrId=null, qsType=QS01, qsTtl=1, qsCn=2
+		, wrtrDt=null, ansDt=null, ansCn=null, fileGroupNo=0)
+	 -->
+	<insert id="insertQsPost" parameterType="qsVO">
+		<selectKey resultType="String" order="BEFORE" keyProperty="qsSeq">
+			SELECT TO_CHAR(NVL(MAX(QS_SEQ), 0) + 1) FROM QS
+		</selectKey>
+	
+        INSERT INTO QS(QS_SEQ, MBR_ID, QS_TYPE, QS_TTL, QS_CN, FILE_GROUP_NO )
+        VALUES (
+             #{qsSeq}
+            ,#{mbrId} 
+            ,#{qsType} 
+            ,#{qsTtl} 
+            ,#{qsCn}
+            ,#{fileGroupNo}
+        )
+    </insert>
+    
+    <update id="inqCnt" parameterType="int">
+    	 UPDATE NOTICE
+    		SET INQ_CNT = INQ_CNT +1
+    	  WHERE NTC_SEQ = #{ntcSeq}
+    </update>
+	
+</mapper>

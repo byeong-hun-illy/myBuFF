@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsNetProfitMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.10.09
+	@description  : 가맹점 순수익 sql
+-->
+
+	<!-- 순수익 INSERT
+		SELECT C.CLCLN_YM
+	        , C.FRCS_NO
+	        , C.SLS_GRAMT - C.ROYALTY - C.NPMNT_AMT + C.DSCNT_AMT - NVL(SUM(PC.CLCLN_AMT+PC.NPMNT_AMT),0)
+	        , NVL(SUM(PC.CLCLN_AMT+PC.NPMNT_AMT),0)
+		FROM FRCS_CLCLN C
+		LEFT JOIN PO P ON C.FRCS_NO=P.BZENT_NO
+		LEFT JOIN PO_CLCLN PC ON P.PO_NO=PC.PO_NO AND C.CLCLN_YM=SUBSTR(PC.CLCLN_YMD,1,6)
+		WHERE C.FRCS_NO='FR0030'
+		GROUP BY C.CLCLN_YM
+        , C.FRCS_NO
+        , C.SLS_GRAMT
+        , C.ROYALTY
+        , C.NPMNT_AMT
+        , C.DSCNT_AMT
+	
+	 -->
+
+
+	
+	<resultMap type="frcsClclnVO" id="frcsClclnMap">
+		<result property="clclnYm" column="CLCLN_YM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="slsGramt" column="SLS_GRAMT"/>
+		<result property="royalty" column="ROYALTY"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		<result property="month" column="MONTH"/>
+	</resultMap>	
+	
+	<resultMap type="frcsSlsVO" id="frcsSlsMap">
+		<result property="rnum" column="RNUM"/>
+		
+		<result property="slsYm" column="SLS_YM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="pureAmt" column="PURE_AMT"/>
+		<result property="mngAmt" column="MNG_AMT"/>
+		<result property="hireAmt" column="HIRE_AMT"/>
+		<result property="sumPoAmt" column="SUM_PO_AMT"/>
+		<result property="poAmt" column="PO_AMT"/>
+		<result property="poNpmntAmt" column="PO_NPMNT_AMT"/>
+		
+		<association property="frcsClclnVO" resultMap="frcsClclnMap"></association>
+	</resultMap>
+	
+	<select id="selectFrcsNetProfitList" parameterType="hashMap" resultMap="frcsSlsMap">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(<include refid="sort_profit"/> <include refid="orderby"></include>) AS RNUM
+				 , FS.SLS_YM     
+			     , FC.SLS_GRAMT
+			     , FC.ROYALTY
+			     , FC.DSCNT_AMT
+			     , FC.NPMNT_AMT
+			     , FS.SUM_PO_AMT
+			     , FS.MNG_AMT
+			     , FS.HIRE_AMT
+			     , FS.PURE_AMT
+			FROM   FRCS_SLS FS
+			JOIN FRCS_CLCLN FC 
+				ON FC.CLCLN_YM = FS.SLS_YM 
+				AND FC.FRCS_NO = FS.FRCS_NO
+			WHERE  FS.FRCS_NO = #{bzentNo}
+			<if test="year != null and year != ''">
+				AND    SUBSTR(FS.SLS_YM, 0, 4) = #{year}
+			</if>
+			<if test="month != null and month != ''">
+				AND TO_NUMBER(SUBSTR(FS.SLS_YM, 5 ,2)) = #{month}
+			</if>
+		)
+	    WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_profit">
+		<!-- 가맹점 이름 순 -->
+		<if test="sort == 'slsYm'">
+			ORDER BY FS.SLS_YM
+		</if>
+		<!-- 가맹점주 이름 순 -->
+		<if test="sort == 'pureAmt'">
+			ORDER BY FS.PURE_AMT
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'slsGramt'">
+			ORDER BY FC.SLS_GRAMT
+		</if>
+		<!-- 점검 일자 순 -->
+		<if test="sort == 'royalty'">
+			ORDER BY FC.ROYALTY
+		</if>
+		<!-- 총 점수 순 -->
+		<if test="sort == 'sumPoAmt'">
+			ORDER BY FS.SUM_PO_AMT
+		</if>
+		<!-- 지역순 -->
+		<if test="sort == 'mngAmt'">
+			ORDER BY FS.MNG_AMT
+		</if>
+		<!-- 점검자순 -->
+		<if test="sort == 'hireAmt'">
+			ORDER BY FS.HIRE_AMT
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<select id="selectTotalFrcsNetProfit" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(*) 
+	    FROM   FRCS_SLS FS
+	    JOIN FRCS_CLCLN FC 
+				ON FC.CLCLN_YM = FS.SLS_YM 
+				AND FC.FRCS_NO = FS.FRCS_NO
+	    WHERE  FS.FRCS_NO = #{bzentNo}
+		<if test="year != null and year != ''">
+			AND    SUBSTR(FS.SLS_YM, 0, 4) = #{year}
+		</if>
+		<if test="month != null and month != ''">
+			AND TO_NUMBER(SUBSTR(FS.SLS_YM, 5 ,2)) = #{month}
+		</if>
+	</select>
+	
+	<update id="updateNetProfitAjax" parameterType="frcsSlsVO">
+		UPDATE FRCS_SLS FS
+		SET 
+		    FS.MNG_AMT = #{mngAmt},
+		    FS.HIRE_AMT = #{hireAmt},
+		    FS.PURE_AMT = (SELECT NVL(FC.SLS_GRAMT, 0) - NVL(FC.ROYALTY, 0) - NVL(FS.SUM_PO_AMT, 0) - NVL(#{mngAmt}, 0) - NVL(#{hireAmt}, 0)
+					       FROM  FRCS_CLCLN FC
+					       WHERE FC.CLCLN_YM = FS.SLS_YM
+					       AND   FC.FRCS_NO = FS.FRCS_NO
+		    )
+		WHERE FS.SLS_YM = #{slsYm}
+		AND   FS.FRCS_NO = #{frcsNo}
+	</update>
+	
+<!-- 
+	@author       : 송예진
+	@date         : 2024.10.14
+	@description  : 가맹점 순수익 추가할 갯수 카운트
+-->	
+	<!-- count(1) -->
+	<select id="selectInsertChk" parameterType="String" resultType="int">
+		SELECT COUNT(1)
+		FROM FRCS_CLCLN
+		WHERE CLCLN_YM NOT IN (
+		    SELECT SLS_YM 
+		    FROM FRCS_SLS 
+		    WHERE FRCS_NO = (
+		        SELECT BZENT_NO 
+		        FROM BZENT 
+		        WHERE MBR_ID = #{mbrId}
+		    )
+		)
+		AND FRCS_NO = (
+		    SELECT BZENT_NO 
+		    FROM BZENT 
+		    WHERE MBR_ID = #{mbrId}
+		)
+	</select>
+	
+<!-- 
+	@author       : 송예진
+	@date         : 2024.10.14
+	@description  : 가맹점 순수익 추가
+-->
+	<!-- clclnYm에  -->
+	<insert id="insertSls" parameterType="String">
+		INSERT INTO FRCS_SLS(SLS_YM, FRCS_NO, PURE_AMT, SUM_PO_AMT)
+		SELECT C.CLCLN_YM
+	        , C.FRCS_NO
+	        , C.SLS_GRAMT - C.ROYALTY - C.NPMNT_AMT + C.DSCNT_AMT - NVL(SUM(PC.CLCLN_AMT+PC.NPMNT_AMT),0)
+	        , NVL(SUM(PC.CLCLN_AMT+PC.NPMNT_AMT), 0)
+		FROM FRCS_CLCLN C
+		LEFT JOIN PO P ON C.FRCS_NO=P.BZENT_NO
+		LEFT JOIN PO_CLCLN PC ON P.PO_NO=PC.PO_NO AND C.CLCLN_YM=SUBSTR(PC.CLCLN_YMD,1,6)
+		WHERE C.FRCS_NO=#{bzentNo}
+		AND C.CLCLN_YM NOT IN (SELECT SLS_YM FROM FRCS_SLS WHERE FRCS_NO=#{bzentNo})
+		GROUP BY C.CLCLN_YM
+	       , C.FRCS_NO
+	       , C.SLS_GRAMT
+	       , C.ROYALTY
+	       , C.NPMNT_AMT
+	       , C.DSCNT_AMT
+	</insert>
+	
+	<select id="selectSlsDtl" parameterType="frcsSlsVO" resultMap="frcsSlsMap">
+		SELECT FS.SLS_YM     
+			     , FC.SLS_GRAMT
+			     , FC.ROYALTY
+			     , FC.DSCNT_AMT
+			     , FC.NPMNT_AMT
+			     , FS.SUM_PO_AMT
+			     , FS.MNG_AMT
+			     , FS.HIRE_AMT
+			     , FS.PURE_AMT
+			     , SUM(PC.CLCLN_AMT) AS PO_AMT
+			     , SUM(PC.NPMNT_AMT) AS PO_NPMNT_AMT
+			FROM   FRCS_SLS FS
+			JOIN FRCS_CLCLN FC 
+				ON FC.CLCLN_YM = FS.SLS_YM 
+				AND FC.FRCS_NO = FS.FRCS_NO
+			LEFT JOIN PO P ON FS.FRCS_NO=P.BZENT_NO
+			LEFT JOIN PO_CLCLN PC ON P.PO_NO=PC.PO_NO AND FS.SLS_YM=SUBSTR(PC.CLCLN_YMD,1,6)
+			WHERE  FS.FRCS_NO = #{frcsNo}
+			AND FS.SLS_YM = #{slsYm}
+			GROUP BY FS.SLS_YM     
+			     , FC.SLS_GRAMT
+			     , FC.ROYALTY
+			     , FC.DSCNT_AMT
+			     , FC.NPMNT_AMT
+			     , FS.SUM_PO_AMT
+			     , FS.MNG_AMT
+			     , FS.HIRE_AMT
+			     , FS.PURE_AMT
+	</select>
+</mapper>

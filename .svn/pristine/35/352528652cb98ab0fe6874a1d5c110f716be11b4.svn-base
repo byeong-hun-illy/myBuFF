@@ -1,0 +1,22 @@
+package com.buff.com.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.com.service.MemberService;
+
+@Controller
+public class MemberController {
+	
+	@Autowired
+	MemberService memberService;
+	
+	@ResponseBody
+	@PostMapping("/addCust")
+	public int insertRoleCust(@RequestParam String mbrId) {
+		return this.memberService.insertRoleCust(mbrId);
+	}
+}

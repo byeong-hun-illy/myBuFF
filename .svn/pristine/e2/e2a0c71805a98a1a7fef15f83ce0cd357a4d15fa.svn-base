@@ -1,0 +1,17 @@
+@charset "UTF-8";
+
+/* 전체 테이블에 고정된 레이아웃을 적용하고, 너비를 100%로 설정 */
+.table-blue {
+    width: 100%;
+    table-layout: fixed; 고정된 레이아웃
+}
+
+/* `th`의 너비를 고정하여 균일하게 맞춤 */
+.table-blue th {
+    width: 10%; th의 너비를 25%로 설정하여 4열 기준 맞춤
+}
+
+/* `td`의 너비도 th와 동일하게 설정 */
+.table-blue td {
+    width: 40%; td의 너비도 동일하게 설정
+}

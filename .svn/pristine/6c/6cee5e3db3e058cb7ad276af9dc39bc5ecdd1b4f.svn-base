@@ -1,0 +1,180 @@
+/* clcln 시작*/  
+.cont-title{
+    display: flex;
+    justify-content: space-between;
+}
+.clcln-wrap{
+    display: flex;
+    gap: var(--gap--l);
+}
+.clcln-cont{
+	display: flex;
+	gap:var(--gap--s);
+    align-items: center;
+    width: 230px;
+}
+.clcln-icon{
+	display: flex;
+	justify-content: center;
+    align-items: center;
+    background: var(--green--4);
+    width: 40px;
+    height: 40px;
+    padding: var(--pd--s);
+    border-radius: 20%;
+}
+.clcln-icon .material-symbols-outlined{
+	color: var(--blue--0);
+}
+.clcln-dtl{
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap--s);
+    width: -webkit-fill-available;
+}
+.clcln-title{
+	color: var(--gray--6);
+}
+.clcln-cn{
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+}
+.radio{
+	display: flex;
+    justify-content: end;
+}
+/*메뉴 구분 선택*/
+.form_radio_btn {
+	width: 100px;
+	height : 45px;
+	border: 1px solid #EAE7E7;
+	border-radius: 10px;
+}
+.form_radio_btn input[type=radio] {
+	display: none;
+}
+.form_radio_btn label {
+	display: block;
+	border-radius: 10px;
+	margin: 0 auto;
+	text-align: center;
+	height: -webkit-fill-available;
+	line-height: 45px;
+}
+/* Checked */
+.form_radio_btn input[type=radio]:checked + label {
+	background: var(--green--4);
+	color: #fff;
+}
+ 
+/* Hover */
+.form_radio_btn label:hover {
+	color: #666;
+}
+ 
+/* Disabled */
+.form_radio_btn input[type=radio] + label {
+	background: #F9FAFC;
+	color: #666;
+}
+
+/* clcln 끝*/  
+
+
+/* amt 시작*/  
+.amt-wrap{
+	display: flex;
+	gap: var(--gap--m);
+	flex-direction: row;
+}
+.amt-col{
+	display:flex;
+	flex-direction:column;
+	gap: var(--gap--m);
+}
+.amt-cont{
+	box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: var(--pd--m);
+    
+    width: -webkit-fill-available;
+    
+    gap: var(--gap--s);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.amt-title{
+	font-size: large;
+    font-weight: 400;
+    color: var(--gray--5);
+}
+.amt-cont-dtl{
+	display: flex;
+    flex-direction: column;
+    gap: var(--gap--s);
+}
+.amt-dtl{
+	display: flex;
+	flex-direction: row;
+	gap:var(--gap--s);
+	align-items: end;
+    justify-content: right;
+}
+.amt-amt{
+	font-size: x-large;
+	font-weight: 700;
+}
+.amt-icon{
+	display: flex;
+    align-items: center;
+}
+.icon-amt{
+	font-size:50px;
+	color:var(--gray--4);
+}
+/* amt 끝*/  
+
+/* cnt 시작 */
+.cnt-wrap{
+	display: flex;
+	gap: var(--gap--m);
+	flex-direction: row;
+}
+.cnt-cont{
+	box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: var(--pd--m);
+    
+    gap: var(--gap--s);
+    display: flex;
+    flex-direction: column;
+    width: 130px;
+}
+.cnt-num{
+	font-size: 1.5rem;
+    font-weight: 900;
+}
+.cnt-icon{
+	background: var(--green--4);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.icon-cnt{ /*아이콘*/
+	font-size: 30px;
+	color: white;
+}
+.cnt-title{
+	font-size: 0.9rem;
+	color: var(--gray--4);
+}
+/* cnt 끝 */

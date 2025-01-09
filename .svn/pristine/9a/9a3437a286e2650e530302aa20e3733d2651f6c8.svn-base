@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.09.22
+@description  : 거래처 상품 관련 sql
+ -->
+<mapper namespace="com.buff.cnpt.mapper.CnptGdsMapper">
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	
+	<!--
+ 		@programName : 거래처 상품 조회
+ 		@description : 거래서 재고 현황 화면
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectCnptGds" resultMap="gdsMap">
+		WITH T AS (
+			SELECT ROW_NUMBER() OVER(<include refid="sort_gds"/> <include refid="orderby"/>) AS RNUM
+				 , G.GDS_CODE
+			     , G.GDS_NM
+			     , G.GDS_TYPE
+			     , G.UNIT_NM
+			     , B.BZENT_NM
+			     , S.BZENT_NO
+			     , S.QTY
+			     , S.SF_STOCK_QTY
+			     , GA.AMT_SEQ
+			     , GA.AMT
+			     , GA.AJMT_DT
+			 FROM GDS G 
+			 JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+			 JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+			 JOIN GDS_AMT GA ON G.GDS_CODE = GA.GDS_CODE
+			                 AND S.BZENT_NO = GA.BZENT_NO
+			 WHERE 1=1
+			  <include refid="search"/>
+			 <!-- 상품 이름 검색 -->
+		    <if test="keyword!=null and keyword!=''">
+	    		AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+	    	</if>               
+		 	ORDER BY B.BZENT_NO, G.GDS_CODE
+		 )
+		 SELECT T.*
+		 FROM T
+		 WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_gds">
+		<!-- 상품 이름 순 -->
+		<if test="sort == 'gdsNm'">
+			ORDER BY G.GDS_NM
+		</if>
+		<!-- 상품 단가 순 -->
+		<if test="sort == 'AMT'">
+			ORDER BY GA.AMT
+		</if> 
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="search">
+		<!-- 전체 -->
+		<if test="gubun == null and keyword != null">
+			AND (G.GDS_NM LIKE '%'||#{keyword}||'%'
+  			OR GA.AMT LIKE '%'||#{keyword}||'%')
+		</if>
+		<!-- 상품 명 검색 -->
+		<if test="gubun == 'gdsNm' and keyword != null">
+			AND G.GDS_NM LIKE '%'||#{keyword}||'%'
+		</if>
+		<!-- 단가 검색 -->
+		<if test="gubun == 'amt' and keyword != null">
+			AND GA.AMT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--
+ 		@programName : 총 상품 개수 조회
+ 		@description : 거래서 재고 현황 화면
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectTotalGds" resultType="int">
+		SELECT COUNT(1)
+		FROM GDS G
+		JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		WHERE 1=1
+		<include refid="search"/>
+	</select>
+	
+	
+
+</mapper>

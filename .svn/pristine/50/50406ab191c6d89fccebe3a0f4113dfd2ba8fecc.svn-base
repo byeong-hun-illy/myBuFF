@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.hdofc.mapper.HdofcFrcsDscsnMapper">
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="frcsTypeNm" column="FRCS_TYPE_NM"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+		<association property="frcsClsbizVO" resultMap="frcsClsbizMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrVO" resultMap="mbrMap"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+
+
+</mapper>

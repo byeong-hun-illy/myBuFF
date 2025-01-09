@@ -1,0 +1,45 @@
+package com.buff.frcs.service.impl;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsMyPageMapper;
+import com.buff.frcs.service.FrcsMyPageService;
+import com.buff.vo.BzentVO;
+import com.buff.vo.FrcsVO;
+
+/**
+* @packageName  : com.buff.service.frcs.impl
+* @fileName     : FrcsMyPageServiceImpl.java
+* @author       : 김현빈
+* @date         : 2024.09.12
+* @description  : 가맹점 마이 페이지 serviceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12                김현빈     	  		      최초 생성
+*/
+
+@Service
+public class FrcsMyPageServiceImpl implements FrcsMyPageService {
+	
+	@Inject
+	FrcsMyPageMapper frcsMyPageMapper;
+	
+	@Override
+	public FrcsVO selectFrcsMyPage(String mbrId) {
+		return this.frcsMyPageMapper.selectFrcsMyPage(mbrId);
+	}
+
+	@Override
+	public FrcsVO updateFrcsMyPageTime(String mbrId) {
+		return this.frcsMyPageMapper.updateFrcsMyPageTime(mbrId);
+	}
+
+	@Override
+	public String updateFrcsMyPageTel(BzentVO bzentVO) {
+		return this.frcsMyPageMapper.updateFrcsMyPageTel(bzentVO);
+	}
+	
+}

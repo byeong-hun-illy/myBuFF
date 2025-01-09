@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustOrdrMapper">
+
+	 <resultMap type="menuVO" id="menuMap">
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="regYmdNew" column="REG_YMD_NEW"/><!-- 메뉴에 New span 표시 -->
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+ 	</resultMap>	
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객 주문 - 가맹점 메뉴 조회
+	 	-->
+	<select id="selectOrdrMenu" resultMap="menuMap" parameterType="hashMap">
+		  SELECT M.MENU_NO		     	
+		     , M.MENU_NM		  	
+		     , M.MENU_IMG_PATH	 	
+		     , M.MENU_AMT		   	
+		     , M.MENU_EXPLN			
+		     , M.MENU_TYPE		
+		     , SIGN(TO_DATE(FM.MENU_REG_YMD,'YYYYMMDD') + 30 - SYSDATE) REG_YMD_NEW	
+		     , FM.MENU_REG_YMD	
+		FROM   MENU M 
+		INNER JOIN FRCS_MENU FM  ON (M.MENU_NO = FM.MENU_NO)
+		WHERE 1=1 
+			AND FM.FRCS_NO = #{bzentNo}
+			AND  FM.NTSL_YN = 'Y'
+		 <if test="menuType != null and menuType != ''">
+			AND M.MENU_TYPE = #{menuType}
+		</if>
+		ORDER BY M.MENU_TYPE, REG_YMD_NEW
+	</select>
+	
+	
+	<insert id="insertOrdr" parameterType="ordrVO">
+		<selectKey order="BEFORE" keyProperty="ordrNo" resultType="String">
+			SELECT 'OR'||TO_CHAR(NVL(MAX(TO_NUMBER(REGEXP_SUBSTR(ORDR_NO, '[0-9]+'))), 0) + 1)
+			FROM ORDR
+		</selectKey>
+		
+		INSERT INTO ORDR(ORDR_NO, ORDR_DT, ORDR_TYPE, SPMT_YN, MBR_ID
+		<if test="issuSn != null and issuSn != null">
+		, ISSU_SN
+		</if>
+		)
+		VALUES(#{ordrNo}, SYSDATE, #{ordrType}, 'N', #{mbrId}
+		<if test="issuSn != null and issuSn != null">
+		, #{issuSn}
+		</if>
+		)
+	</insert>
+	
+	<insert id="insertOrdrDtl" parameterType="ordrDtlVO">
+		<selectKey keyProperty="ordrAmt" order="BEFORE" resultType="int">
+			SELECT MENU_AMT
+			FROM MENU
+			WHERE MENU_NO=#{menuNo}
+		</selectKey>
+	    INSERT INTO ORDR_DTL (ORDR_NO, FRCS_NO, MENU_NO, ORDR_QTY, ORDR_AMT)
+	    VALUES (#{ordrNo}, #{frcsNo}, #{menuNo}, #{ordrQty}, #{ordrAmt})
+	</insert>
+	
+	<!-- 쿠폰을 사용했을 경우 -->
+	<update id="updateCouponUse" parameterType="String">
+		UPDATE COUPON
+		SET USE_YN = 'Y'
+			, USE_YMD = TO_CHAR(SYSDATE,'YYYYMMDD')
+		WHERE ISSU_SN=#{issuSn}
+	</update>
+
+	
+	<!-- 사용가능한 쿠폰 리스트 조회 -->
+	<select id="selectCoupon" parameterType="String" resultType="CouponVO">
+		SELECT G.MENU_NO
+				, G.COUPON_NM
+				, C.ISSU_SN
+				, G.DSCNT_AMT
+				, E.EXP_YMD
+				, M.MENU_NM
+		 FROM COUPON C
+			  JOIN COUPON_GROUP G ON G.COUPON_CODE = C.COUPON_CODE
+			  JOIN EVENT E ON G.EVENT_NO=E.EVENT_NO
+			  JOIN MENU M ON G.MENU_NO=M.MENU_NO
+	    WHERE E.EXP_YMD > TO_CHAR(SYSDATE,'YYYYMMDD')
+	 	  AND C.USE_YN = 'N'
+		  AND C.MBR_ID = #{mbrId}
+	</select>
+</mapper>

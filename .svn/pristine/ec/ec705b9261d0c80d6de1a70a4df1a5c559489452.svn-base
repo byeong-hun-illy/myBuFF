@@ -1,0 +1,36 @@
+package com.buff.frcs.service.impl;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsPoMapper;
+import com.buff.frcs.service.FrcsPoService;
+import com.buff.vo.BzentVO;
+import com.buff.vo.PoVO;
+
+/**
+* @packageName  : com.buff.service.frcs.impl
+* @fileName     : FrcsPoService.java
+* @author       : 김현빈
+* @date         : 2024.09.13
+* @description  : 가맹점 마이 페이지 serviceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13                김현빈     	  		      최초 생성
+*/
+@Service
+public class FrcsPoServiceImpl implements FrcsPoService {
+	
+	@Inject
+	FrcsPoMapper frcsPoMapper;
+	
+	@Override
+	public List<PoVO> selectFrcsPoList(String mbrId) {
+		return this.frcsPoMapper.selectFrcsPoList(mbrId);
+	}
+	
+}

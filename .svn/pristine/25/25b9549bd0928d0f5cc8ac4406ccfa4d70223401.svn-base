@@ -1,0 +1,56 @@
+package com.buff.cust.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.vo.FaqVO;
+
+/**
+* @packageName  : com.buff.controller.cust
+* @fileName     : CustCenterController.java
+* @author       : 서윤정
+* @date         : 2024.09.13
+* @description  : 고객센터 - 공지사항, FAQ 조회
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     서윤정  			최초 생성
+*/
+@RequestMapping("/cust/custCenter")
+@Controller
+public class CustCenterController {
+	
+	
+	
+	@Autowired
+	CustCenterService centerService;
+	
+	@Autowired
+	CustCenterMapper centerMapper;
+	
+	
+	@GetMapping("/selectNotice")
+	public String selectNotice() {
+	
+		
+		return "cust/custCenter/selectNotice";
+	}
+	
+	
+	@GetMapping("/selectFaq")
+	public String selectFaq(Model model) {
+		List<FaqVO> faqVOList = centerService.selectFaq();
+		
+		model.addAttribute("faqVOList", faqVOList);
+		
+		return "cust/custCenter/selectFaq";
+	}
+	
+}

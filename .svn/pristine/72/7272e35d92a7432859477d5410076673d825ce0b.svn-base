@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsCouponMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.27
+	@description  : 가맹점 쿠폰 사용 내역 조회 sql
+-->
+	
+	<resultMap type="ordrVO" id="ordrMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="ordrDtlNo" column="ORDR_DTL_NO"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"></collection>	
+	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+	</resultMap>
+	
+	<resultMap type="couponVO" id="couponMap">
+		<result property="issuSn" column="ISSU_SN"/>
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="useYmd" column="USE_YMD"/>
+		
+		<association property="ordrVO" resultMap="ordrMap"></association>
+	</resultMap>
+	
+	<resultMap type="couponGroupVO" id="couponGroupMap">
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="couponNm" column="COUPON_NM"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="issuQty" column="ISSU_QTY"/>
+		
+		<association property="menuVO" resultMap="menuMap"></association>
+		<collection property="couponVOList" resultMap="couponMap"></collection>
+	</resultMap>
+	
+	<resultMap type="eventVO" id="eventMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="eventType" column="EVENT_TYPE"/>
+		<result property="eventTtl" column="EVENT_TTL"/>
+		<result property="eventCn" column="EVENT_CN"/>
+		<result property="wrtrYmd" column="WRTR_YMD"/>
+		<result property="bgngYmd" column="BGNG_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+		<result property="aprvYn" column="APRV_YN"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		
+		<collection property="couponGroupVOList" resultMap="couponGroupMap"></collection>
+	</resultMap>
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		
+	</resultMap>
+	
+	<!-- 검색 조건 -->
+    <sql id="search_coupon">
+    	AND E.EVENT_TYPE IN('EVT04','EVT05') <!-- 진행, 종료 이벤트 -->
+		AND C.USE_YN = 'Y' <!-- 사용 여부 : Y -->
+        <if test="eventType != null and eventType != ''">
+            AND E.EVENT_TYPE = #{eventType}
+        </if>
+        <if test="bgngYmd != null and bgngYmd != ''">
+           AND TO_DATE(C.USE_YMD, 'YYYY-MM-DD') >= TO_DATE(#{bgngYmd}, 'YYYY-MM-DD')
+        </if>
+        <if test="expYmd != null and expYmd != ''">
+    	<![CDATA[
+            AND TO_DATE(C.USE_YMD, 'YYYY-MM-DD') <= TO_DATE(#{expYmd}, 'YYYY-MM-DD')
+        ]]>
+        </if>
+        <if test="menuType != null and menuType != ''">
+            AND M.MENU_TYPE = #{menuType}
+        </if>
+        <if test="menuNm != null and menuNm != ''">
+	        AND M.MENU_NM LIKE '%' || #{menuNm} || '%'
+	    </if>
+    </sql>
+    
+    <!-- 쿠폰 사용 내역 조회 -->
+    <select id="selectFrcsCouponUseList" parameterType="hashMap" resultMap="eventMap">
+        WITH T AS (
+            SELECT ROW_NUMBER() OVER(ORDER BY C.USE_YMD DESC) AS RNUM	<!-- 번호 -->
+			     , E.EVENT_TYPE	<!-- 이벤트 유형 -->
+			     , C.USE_YMD	<!-- 사용 여부 -->
+			     , CG.COUPON_NM <!-- 쿠폰 명 -->
+			     , CG.DSCNT_AMT <!-- 쿠폰 금액 -->
+			     , M.MENU_TYPE	<!-- 메뉴 유형 -->
+			     , M.MENU_NM	<!-- 메뉴 명 -->
+			     , O.MBR_ID 	<!-- 고객 아이디 -->
+			FROM   EVENT E
+			INNER JOIN COUPON_GROUP CG ON E.EVENT_NO = CG.EVENT_NO
+			INNER JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+			INNER JOIN COUPON C ON CG.COUPON_CODE = C.COUPON_CODE
+			INNER JOIN ORDR O ON O.ISSU_SN = C.ISSU_SN
+			INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO 
+			WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+            <include refid="search_coupon"/>
+			GROUP BY E.EVENT_TYPE, C.USE_YMD, CG.COUPON_NM, CG.DSCNT_AMT, M.MENU_TYPE, M.MENU_NM, O.MBR_ID
+			ORDER BY C.USE_YMD DESC
+        )    
+        SELECT T.*
+        FROM T
+        WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+    </select>
+    
+    <!-- 총 행의 수 -->
+    <select id="selectTotalFrcsCoupon" parameterType="hashMap" resultType="int">
+        SELECT COUNT(DISTINCT O.ORDR_NO) -- 중복된 주문번호를 카운트하여 고유한 주문의 개수를 셉니다.
+	    FROM   EVENT E
+	    INNER JOIN COUPON_GROUP CG ON E.EVENT_NO = CG.EVENT_NO
+	    INNER JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+	    INNER JOIN COUPON C ON CG.COUPON_CODE = C.COUPON_CODE
+	    INNER JOIN ORDR O ON O.ISSU_SN = C.ISSU_SN
+	    INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO 
+	    WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+	    <include refid="search_coupon"/>
+    </select>
+    
+    <!-- 이벤트 전체 갯수 -->
+    <select id="selectAllEventCount" parameterType="hashMap" resultType="int">
+ 		SELECT COUNT(DISTINCT O.ORDR_NO) -- 중복된 주문번호를 카운트하여 고유한 주문의 개수를 셉니다.
+	    FROM   EVENT E
+	    INNER JOIN COUPON_GROUP CG ON E.EVENT_NO = CG.EVENT_NO
+	    INNER JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+	    INNER JOIN COUPON C ON CG.COUPON_CODE = C.COUPON_CODE
+	    INNER JOIN ORDR O ON O.ISSU_SN = C.ISSU_SN
+	    INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO 
+	    WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+	    <include refid="search_coupon"/>
+    </select>
+    
+    <!-- 진행중인 이벤트 갯수 -->
+    <select id="selectProgressEventCount" parameterType="hashMap" resultType="int">
+        SELECT COUNT(DISTINCT O.ORDR_NO) -- 중복된 주문번호를 카운트하여 고유한 주문의 개수를 셉니다.
+	    FROM   EVENT E
+	    INNER JOIN COUPON_GROUP CG ON E.EVENT_NO = CG.EVENT_NO
+	    INNER JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+	    INNER JOIN COUPON C ON CG.COUPON_CODE = C.COUPON_CODE
+	    INNER JOIN ORDR O ON O.ISSU_SN = C.ISSU_SN
+	    INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO 
+	    WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+        AND E.EVENT_TYPE = 'EVT04'
+        <include refid="search_coupon"/>
+    </select>
+    
+    <!-- 종료된 이벤트 갯수 -->
+    <select id="selectCompletedEventCount" parameterType="hashMap" resultType="int">
+        SELECT COUNT(DISTINCT O.ORDR_NO) -- 중복된 주문번호를 카운트하여 고유한 주문의 개수를 셉니다.
+	    FROM   EVENT E
+	    INNER JOIN COUPON_GROUP CG ON E.EVENT_NO = CG.EVENT_NO
+	    INNER JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+	    INNER JOIN COUPON C ON CG.COUPON_CODE = C.COUPON_CODE
+	    INNER JOIN ORDR O ON O.ISSU_SN = C.ISSU_SN
+	    INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO 
+	    WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+	    AND E.EVENT_TYPE = 'EVT05'
+	    <include refid="search_coupon"/>
+    </select>
+    
+</mapper>

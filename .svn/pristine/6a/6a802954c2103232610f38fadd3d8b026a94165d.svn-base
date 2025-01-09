@@ -1,0 +1,18 @@
+package com.buff.cnpt.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@RequestMapping("/cnpt")
+@Controller
+public class CnptMainController {
+	
+	
+	@GetMapping("/main")
+	public String main() {
+		return "cnpt/main/cnptMainPage";
+	}
+	
+	
+}

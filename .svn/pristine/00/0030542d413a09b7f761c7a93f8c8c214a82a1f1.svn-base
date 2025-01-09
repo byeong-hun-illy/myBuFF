@@ -1,0 +1,108 @@
+package com.buff.cust.controller;
+
+import java.security.Principal;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.cust.service.CustHomeService;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.QsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+@PreAuthorize("hasRole('ROLE_CUST')")
+@Slf4j
+@RequestMapping("/cust")
+@Controller
+public class CustMemberController {
+	
+	@Autowired
+	CustCenterService centerService;
+	
+	@Autowired
+	CustCenterMapper centerMapper;
+	
+	@Autowired
+	CustHomeService HomeServcie;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 문의사항 화면
+	*/
+	@PostMapping("/insertQsPostAjax")
+	@ResponseBody
+	public int insertQsPostAjax(@RequestBody QsVO qsVO
+//			, Principal principal
+			) {
+		/*
+		QsVO(qsSeq=null, mbrId=tieawu5d, mngrId=null, qsType=QS01, qsTtl=1, qsCn=2
+		, wrtrDt=null, ansDt=null, ansCn=null, fileGroupNo=0)
+		 */
+		log.info("insertQsPostAjax->qsVO : " + qsVO);
+//	    String mbrId = principal.getName();
+//	    log.info("mbrId -> : "+ mbrId);
+		
+		int result = this.centerService.insertQsPost(qsVO);
+	    //매퍼xml의 <insert, <update, <delete의 경우 resultType은 int가 당연해서 생략됨
+		//1(insert 성공) 또는 0(insert 실패)
+	    return result;
+	}
+	
+
+	//jsonString은 RequestParam 애너테이션으로 못 받음!
+	//jsonString은 RequestBody 애너테이션으로 받음
+	//{"rgnNo": "RGN21","dscsnPlanYmd": "2024-09-25","mbrId": "tieawu5d"}
+	@PostMapping("/insertDscsnPost")
+	@ResponseBody
+	public int insertDscsnPost(
+	        @RequestBody FrcsDscsnVO frcsDscsnVO, 
+	        Principal principal) {
+		/*
+		FrcsDscsnVO(rnum=null, dscsnCode=null, mbrId=tieawu5d, mngrId=null
+		, dscsnPlanYmd=2024-09-25, rgnNo=RGN21, dscsnCn=null, dscsnType=null
+		, dscsnTypeNm=null, rgnNm=null, mngrVO=null, mbrVO=null)
+		 */
+		log.info("insertDscsnPost->frcsDscsnVO : " + frcsDscsnVO);
+		
+		String mbrId = principal.getName();
+		//insertDscsnPost -> : tieawu5d
+		log.info("insertDscsnPost -> : " + mbrId);
+		
+		//신청여부 중복체크
+		int cnt = HomeServcie.checkId(mbrId);
+		log.info("cnt : " + cnt);
+		
+		int result = 0;		
+		
+		if(cnt<1) {
+		    try {
+		    	//신청d
+		        result = HomeServcie.insertDscsnPost(frcsDscsnVO);
+		        return result; 
+		    } catch (Exception e) {
+		        return 0; 
+		    }
+		}else {
+			return 3;
+		}
+	}
+
+	
+}

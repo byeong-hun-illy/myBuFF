@@ -1,0 +1,18 @@
+/*******************************************
+  @fileName    : common.js
+  @author      : 정기
+  @description : 공통 스크립트. 주로 공통 ui 요소에 대한 js를 처리한다. 
+********************************************/
+
+ 
+$(document).ready(function() {
+
+	// @methodName  : onCheckAll
+	// @author      : 정기쁨
+	// @jsp         : 일자를 선택하는 input type="date"
+	// @description : 오늘 날짜를 선택 되게 하는 기능. id 값에 currentDate를 추가하면 됨
+	if(document.getElementById('currentDate')!=null){
+		document.getElementById('currentDate').value = new Date().toISOString().substring(0, 10);
+	}
+})
+ 

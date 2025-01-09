@@ -1,0 +1,31 @@
+package com.buff.cust.service.impl;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustHomeService;
+import com.buff.vo.BzentVO;
+
+@Service
+public class CustHomeServiceImpl implements CustHomeService {
+
+	@Inject
+	MemberMapper memberMapper;
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 고객 메인화면_ 가맹점 카드 리스트 
+	*/
+	@Override
+	public List<BzentVO> home() {
+		return this.memberMapper.home();
+	}
+}

@@ -1,0 +1,26 @@
+package com.buff.hdofc.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+* @packageName  : com.buff.hdofc.controller
+* @fileName     : HdofcMainController.java
+* @author       : 송예진
+* @date         : 2024.09.19
+* @description  : 메인 화면 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.21        송예진     	  			최초 생성
+*/
+@RequestMapping("/hdofc")
+@Controller
+public class HdofcMainController {
+	
+	@GetMapping("/main")
+	public String main() {
+		return "hdofc/main/home";
+	}
+}

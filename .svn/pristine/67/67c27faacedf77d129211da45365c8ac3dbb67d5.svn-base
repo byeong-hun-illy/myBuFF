@@ -1,0 +1,141 @@
+/*******************************************
+  @fileName    : sls.js
+  @author      : 이병훈
+  @date        : 2024. 10. 07
+  @description : 거래처 매출 관련 코드
+********************************************/
+
+/*******************************************
+  해당 거래처 매출 데이터 가져오기
+********************************************/
+// 매출 데이터 로드 함
+function selectSalesData(){
+	let data = {
+			currentPage : currentPage,
+			startMonth  : $("#startMonth").val(),
+			endMonth : $("#endMonth").val(),
+			selectedYear : $("#selectedYear").val(),
+			bzentNo : bzentNo
+	};
+	
+	$.ajax({
+		url : "/cnpt/sls/selectSalesAjax",
+		data : data,
+		type : "GET",
+		beforeSend : function(xhr){
+			// CSRF 헤더와 토큰을 설정
+			xhr.setRequestHeader(csrfHeader, csrfToken); 
+		},
+		success : function(res){
+			// 테이블과 페이징네이션 업데이트
+			selectSalesTable(res.articlePage.content, res.articlePage);
+			// 차트 데이터 업데이트
+			selectSalesChart(res.articlePage.content);
+			
+		}, 
+		error : function(xhr, status, error){
+			console.error("에러가 발생하였습니다.", error);
+		}
+		
+	// ajax 끝	
+	});
+// selectSalesData 함수 끝	
+}
+
+/*******************************************
+  왼쪽 구역 테이블 설정 및 페이지네이션 처리
+********************************************/
+// 테이블 및 페이징네이션 업데이트 함수
+function selectSalesTable(data, articlePage){
+	let strTbl = '';
+	
+	if(data.length === 0){
+		strTbl += `<tr><td colspan="3">검색 결과가 없습니다.</td><tr>`;
+	} else {
+		data.forEach(item => {
+			strTbl += `<tr>
+							<td class="center">${item.rnum}</td>
+							<td class="center">${item.clclnYmd}</td>
+							<td class="right">${item.clclnAmt.toLocaleString()}</td>
+					  </tr>`;		
+		});
+		
+	}
+	$('#table-body').html(strTbl);
+	
+	// 페이지 처리
+	let page = '';
+	
+	if (articlePage.startPage > articlePage.blockSize) {
+        page += `<a href="#page" class="page-link" data-page="${articlePage.startPage - articlePage.blockSize}">
+                    <span class="icon material-symbols-outlined">chevron_left</span></a>`;
+    }
+    for (let pnum = articlePage.startPage; pnum <= articlePage.endPage; pnum++) {
+        if (articlePage.currentPage === pnum) {
+            page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+        } else {
+            page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+        }
+    }
+    if (articlePage.endPage < articlePage.totalPages) {
+        page += `<a href="#page" class="page-link" data-page="${articlePage.startPage + articlePage.blockSize}">
+                    <span class="icon material-symbols-outlined">chevron_right</span></a>`;
+    }
+
+    $('.pagination').html(page);
+	
+// selectSalesTable 함수 끝	
+}
+
+/*******************************************
+ 선택한 파라미터에 따른 차트 업데이트 함수 
+********************************************/
+// 차트 업데이트 함수
+function selectSalesChart(data){
+	// x축 : 월
+	let months = data.map(item => item.clclnYmd);
+	// y축 : 정산 금액
+	let amounts = data.map(item => item.clclnAmt);
+	
+	let ctx = document.getElementById('salesChart').getContext('2d');
+	new Chart(ctx, {
+		type : 'bar',
+		data : {
+			labels : months,
+			datasets : [{
+				label : '매출 현황',
+				data : amounts,
+				backgroundColor: 'rgba(75, 192, 192, 0.2)',
+	            borderColor: 'rgba(75, 192, 192, 1)',
+	            borderWidth: 1
+			}]
+		},
+		options : {
+			scales : {
+				y : {
+					beginAtZero : true,
+					title : {
+						display : true,
+						text : '매출 금액'
+					},
+					ticks : {
+						// 포멧팅 함수
+						callback : function(value) {
+							return value.toLocaleString();
+						}
+					}
+				},
+				x : {
+					title : {
+						display : true,
+						text : '월'
+					}
+				}
+			}
+		}
+		
+	});
+// selectSalesChart 함수 끝	
+}	
+
+

@@ -1,0 +1,8 @@
+@charset "UTF-8";
+
+
+.wrap {
+    display: flex; 
+    justify-content: space-between; /* 각 섹션 간의 공간을 고르게 배치 */
+}
+

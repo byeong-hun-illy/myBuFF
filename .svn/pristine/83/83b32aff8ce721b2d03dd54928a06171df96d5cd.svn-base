@@ -1,0 +1,7 @@
+package com.buff.cust.mapper;
+
+public interface CustMyPageMapper {
+
+//	public List<MemberVO> myPageMain();
+
+}

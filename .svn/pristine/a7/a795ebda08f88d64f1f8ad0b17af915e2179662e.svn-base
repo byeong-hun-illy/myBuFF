@@ -1,0 +1,12 @@
+/* selectFrcsMenuList.css */
+.menu-table tbody {
+    display: block; /* 가로세로 조절 가능 */
+    max-height: 600px; /* 보여주고 싶은 만큼 세로값 입력 */
+    overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.menu-table thead, .menu-table tbody tr {
+    display: table;
+    width: 100%;
+}
+

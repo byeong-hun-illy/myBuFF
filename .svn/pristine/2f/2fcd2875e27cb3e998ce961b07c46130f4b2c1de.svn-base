@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@description  : 가맹점 점검
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcFrcsCheckMapper">
+	<resultMap type="frcsCheckVO" id="frcsCheckMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="chckSeq" column="CHCK_SEQ"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="mngrId" column="INSCTR_ID"/>
+		<result property="chckYmd" column="CHCK_YMD"/>
+		<result property="clenScr" column="CLEN_SCR"/>
+		<result property="srvcScr" column="SRVC_SCR"/>
+		<result property="totScr" column="TOT_SCR"/>
+		<result property="chckCn" column="CHCK_CN"/>
+		
+		<association property="insctrVO" resultMap="insctrMap"/>
+		
+		<association property="frcsVO" resultMap="frcsMap"/>
+	</resultMap>
+	
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="frcsTypeNm" column="FRCS_TYPE_NM"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrVO" resultMap="mbrMap"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="insctrMap">
+		<result property="mbrId" column="INSCTR_ID"/>
+		<result property="mbrNm" column="INSCTR_NM"/>
+		<result property="mbrTelno" column="INSCTR_TELNO"/>
+		<result property="mbrEmlAddr" column="INSCTR_EML_ADDR"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+	
+	<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 가맹점 점검 추가 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 가맹점 점검할 대상 조회(insert에 가맹점 선택 시 사용)
+ 		@description : 가맹점 점검 조회를 위한 화면(가맹점 선택)
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 19
+	-->
+	<select id="selectFrcs" parameterType="hashMap" resultMap="frcsCheckMap">
+		SELECT * FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_check"/> <include refid="orderby"/>) AS RNUM
+				    , F.FRCS_NO
+				    , T.COM_NM AS FRCS_TYPE_NM
+				    , B.BZENT_NM
+				    , C.CHCK_YMD
+				    , B.RGN_NO
+				    , M.MBR_NM
+				    , N.MBR_NM AS MNGR_NM
+				    , O.COM_NM AS RGN_NM
+				    , SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) AS TOT_SCR
+			FROM FRCS F
+			JOIN BZENT B ON F.FRCS_NO = B.BZENT_NO
+			JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+			JOIN COM_CODE T ON F.FRCS_TYPE=T.COM_NO
+			JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+			LEFT JOIN MEMBER N ON B.MNGR_ID=N.MBR_ID
+			LEFT OUTER JOIN FRCS_CHECK C ON C.FRCS_NO = F.FRCS_NO
+			WHERE 1=1
+			AND FRCS_TYPE = 'FRS01'
+			<include refid="dateChk"/>
+			<include refid="modal-search"/>
+			GROUP BY C.CHCK_SEQ
+				     , F.FRCS_NO
+				     , T.COM_NM
+				     , B.BZENT_NM
+				     , C.CHCK_YMD
+				     , M.MBR_NM
+				     , N.MBR_NM
+				     , O.COM_NM
+				     , B.RGN_NO
+			HAVING MAX(C.CHCK_SEQ) = (SELECT MAX(A.CHCK_SEQ)
+				                       FROM FRCS_CHECK A
+				                       WHERE F.FRCS_NO = A.FRCS_NO)
+				   OR MAX(C.CHCK_SEQ) IS NULL
+			)
+			WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 점검할 대상 조회(insert에 가맹점 선택 시 사용)
+ 		@description : 가맹점 점검 조회를 위한 화면(가맹점 선택) 총 갯수
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 19
+	-->
+	<select id="selectTotalFrcs" parameterType="hashMap" resultType="int">
+			SELECT COUNT(1)
+			FROM (
+		    SELECT COUNT(1)
+			FROM FRCS F
+			JOIN BZENT B ON F.FRCS_NO = B.BZENT_NO
+			JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+			JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+			LEFT JOIN MEMBER N ON B.MNGR_ID=N.MBR_ID
+			LEFT OUTER JOIN FRCS_CHECK C ON C.FRCS_NO = F.FRCS_NO
+			WHERE 1=1
+			AND FRCS_TYPE = 'FRS01'
+			<include refid="dateChk"/>
+			<include refid="modal-search"/>
+			GROUP BY C.CHCK_SEQ
+				     , F.FRCS_NO
+				     , B.BZENT_NM
+				     , C.CHCK_YMD
+				     , M.MBR_NM
+				     , N.MBR_NM
+				     , O.COM_NM
+				     , B.RGN_NO
+			HAVING MAX(C.CHCK_SEQ) = (SELECT MAX(A.CHCK_SEQ)
+				                       FROM FRCS_CHECK A
+				                       WHERE F.FRCS_NO = A.FRCS_NO)
+				   OR MAX(C.CHCK_SEQ) IS NULL
+			)
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_check">
+		<!-- 가맹점 이름 순 -->
+		<if test="sort == 'bzentNm'">
+			ORDER BY B.BZENT_NM
+		</if>
+		<!-- 가맹점주 이름 순 -->
+		<if test="sort == 'mbrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'mngrNm'">
+			ORDER BY N.MBR_NM
+		</if>
+		<!-- 점검 일자 순 -->
+		<if test="sort == 'chckYmd'">
+			ORDER BY C.CHCK_YMD
+		</if>
+		<!-- 총 점수 순 -->
+		<if test="sort == 'totScr'">
+			ORDER BY SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0))
+		</if>
+		<!-- 지역순 -->
+		<if test="sort == 'rgnNo'">
+			ORDER BY B.RGN_NO
+		</if>
+		<!-- 점검자순 -->
+		<if test="sort == 'insctrNm'">
+			ORDER BY I.MBR_NM 
+		</if>
+		<!-- 운영타입순 -->
+		<if test="sort == 'frcsType'">
+			ORDER BY F.FRCS_TYPE 
+		</if>
+		<if test="sort == 'warnCnt'">
+			ORDER BY F.WARN_CNT
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="modal-search">
+		<!-- 전체 -->
+		<if test="gubun == null and keyword != null">
+			AND (M.MBR_NM LIKE '%'||#{keyword}||'%'
+  			OR B.BZENT_NM LIKE '%'||#{keyword}||'%')
+		</if>
+		<!-- 가맹점 이름 검색 -->
+		<if test="gubun == 'bzentNm' and keyword != null">
+			AND B.BZENT_NM LIKE '%'||#{keyword}||'%'
+		</if>
+		<!-- 가맹점주 이름 검색 -->
+		<if test="gubun == 'mbrNm' and keyword != null">
+			AND M.MBR_NM LIKE '%'||#{keyword}||'%'
+		</if>
+	<!-- 관리자 검색 -->
+		<if test="mngrId != null">
+			AND B.MNGR_ID = #{mngrId}
+		</if>
+	<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND B.RGN_NO = #{rgnNo}
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="search_check">
+		<!-- 가맹점 이름 검색 -->
+		<if test="bzentNm != null">
+			AND B.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+		</if>
+		<!-- 가맹점주 이름 검색 -->
+		<if test="mbrNm != null">
+			AND M.MBR_NM LIKE '%'||#{mbrNm}||'%'
+		</if>
+		<!-- 가맹점 타입 검색 -->
+		<if test="frcsType != null">
+			AND F.FRCS_TYPE = #{frcsType}
+		</if>
+		<!-- 점검자 이름 검색 -->
+		<if test="insctrNm != null">
+			AND I.MBR_NM LIKE '%'||#{insctrNm}||'%'
+		</if>
+	<!-- 관리자 검색 -->
+		<if test="mngrId != null">
+			AND B.MNGR_ID = #{mngrId}
+		</if>
+	<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND B.RGN_NO = #{rgnNo}
+		</if>
+	<!-- 경고 검색 -->
+		<if test="warnCnt != null">
+			AND F.WARN_CNT = #{warnCnt}
+		</if>
+	<!-- 점검일자 검색 -->
+		<if test="bgngYmd != null">
+		<![CDATA[
+			AND C.CHCK_YMD >= #{bgngYmd}
+		]]>
+		</if>
+		<if test="endYmd != null">
+		<![CDATA[
+			AND C.CHCK_YMD <= #{endYmd}
+		]]>
+		</if>
+	</sql>
+	<sql id="search_score">
+		<!-- 점수 검색 -->
+		<if test="totScr == 1">
+			<![CDATA[
+			HAVING SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) < 60
+			]]>
+		</if>
+		<if test="totScr >= 60 and totScr &lt; 90">
+			<![CDATA[
+			HAVING SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) >= #{totScr}
+				AND SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) < #{totScr} + 10
+			]]>
+		</if>
+		<if test="totScr >= 90">
+			<![CDATA[
+			HAVING SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) >= #{totScr}
+			]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	<!-- 분류 -->
+	<sql id="dateChk">
+		<if test="chk == 'chk'">
+		<![CDATA[
+			AND (TO_DATE(C.CHCK_YMD) < ADD_MONTHS(SYSDATE, -6) OR C.CHCK_YMD IS NULL)
+		]]>
+		</if>
+	</sql>
+		
+	<!--
+ 		@programName : 가맹점 점검추가
+ 		@description : 점검 추가 사유가 없을 때는 예외처리
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<insert id="insertFrcsCheck" parameterType="frcsCheckVO">
+		<selectKey order="BEFORE" resultType="int" keyProperty="chckSeq">
+			SELECT NVL(MAX(CHCK_SEQ)+1,1)
+			FROM FRCS_CHECK
+			WHERE FRCS_NO = #{frcsNo}
+		</selectKey>
+	
+		INSERT INTO FRCS_CHECK(CHCK_SEQ, FRCS_NO, MNGR_ID, CHCK_YMD, CLEN_SCR, SRVC_SCR
+			<if test="chckCn != null">
+			, CHCK_CN
+			</if>
+		)
+		VALUES(#{chckSeq}, #{frcsNo}, #{mngrId}, TO_CHAR(SYSDATE, 'YYYYMMDD'), #{clenScr}, #{srvcScr}
+			<if test="chckCn != null">
+			, #{chckCn}
+			</if>
+		)
+	</insert>
+	
+	<!--
+ 		@programName : 경고 추가
+ 		@description : 총 점수가 60점 미만일 경우 경고
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<update id="updateWarn" parameterType="String">
+		UPDATE FRCS
+		SET WARN_CNT = WARN_CNT + 1
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+	
+	<!--
+ 		@programName : 경고 추가시 
+ 		@description : 경고 횟수 확인 3회면 폐업 절차
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectWarn" parameterType="String" resultType="int">
+		SELECT WARN_CNT
+		FROM FRCS
+		WHERE FRCS_NO = #{frcsNo}
+	</select>
+	
+	<!--
+ 		@programName : 폐업 조치
+ 		@description : 경고 횟수 확인 3회면 폐업 조치
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<update id="updateFrcsCls" parameterType="String">
+		UPDATE FRCS
+		SET FRCS_TYPE='FRS03',
+		CLSBIZ_YMD = TO_CHAR(LAST_DAY(SYSDATE),'YYYYMMDD')
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+	
+	<!--
+ 		@programName : 폐업 조치
+ 		@description : 경고 횟수 확인 3회면 폐업 조치
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<insert id="insertFrcsClsbiz" parameterType="String">
+		INSERT INTO FRCS_CLSBIZ(FRCS_NO, CLSBIZ_PRNMNT_YM, CLSBIZ_RSN_TYPE)
+		VALUES(#{frcsNo}, TO_CHAR(SYSDATE, 'YYYYMM'), 'CR06')
+	</insert>
+	
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 가맹점 점검 조회 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
+	<!--
+ 		@programName : 가맹점 점검조회
+ 		@description : 점검된 목록
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectFrcsCheck" parameterType="hashMap" resultMap="frcsCheckMap">
+		SELECT * FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_check"/> <include refid="orderby"/>) AS RNUM
+				    , C.FRCS_NO
+				    , C.CHCK_SEQ
+				    , T.COM_NM AS FRCS_TYPE_NM
+				    , F.FRCS_TYPE
+				    , F.WARN_CNT
+				    , B.BZENT_NM
+				    , C.CHCK_YMD
+				    , M.MBR_NM
+				    , N.MBR_NM AS MNGR_NM
+				    , I.MBR_NM AS INSCTR_NM
+				    , O.COM_NM AS RGN_NM
+				    , SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) AS TOT_SCR
+			FROM FRCS F
+			JOIN BZENT B ON F.FRCS_NO = B.BZENT_NO
+			JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+			JOIN COM_CODE T ON F.FRCS_TYPE=T.COM_NO
+			JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+			LEFT JOIN MEMBER N ON B.MNGR_ID=N.MBR_ID
+			LEFT OUTER JOIN FRCS_CHECK C ON C.FRCS_NO = F.FRCS_NO
+			JOIN MEMBER I ON C.MNGR_ID=I.MBR_ID
+			WHERE 1=1
+			<include refid="search_check"/>
+			GROUP BY C.CHCK_SEQ
+				    , C.FRCS_NO
+				    , T.COM_NM 
+				    , F.FRCS_TYPE
+				    , F.WARN_CNT
+				    , B.BZENT_NM
+				    , C.CHCK_YMD
+				    , M.MBR_NM
+				    , N.MBR_NM 
+				    , I.MBR_NM
+				    , O.COM_NM 
+				    , B.RGN_NO
+			<include refid="search_score"/>
+			)
+			WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	
+	<!--
+ 		@programName : 가맹점 점검조회 총 갯수
+ 		@description : 점검된 목록
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectTotalFrcsCheck" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM(
+			SELECT COUNT(1)
+				FROM FRCS F
+				JOIN BZENT B ON F.FRCS_NO = B.BZENT_NO
+				JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+				JOIN COM_CODE T ON F.FRCS_TYPE=T.COM_NO
+				JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+				LEFT JOIN MEMBER N ON B.MNGR_ID=N.MBR_ID
+				LEFT OUTER JOIN FRCS_CHECK C ON C.FRCS_NO = F.FRCS_NO
+				JOIN MEMBER I ON C.MNGR_ID=I.MBR_ID
+				WHERE 1=1
+				<include refid="search_check"/>
+				GROUP BY C.CHCK_SEQ
+					    , C.FRCS_NO
+					    , T.COM_NM 
+					    , F.FRCS_TYPE
+					    , F.WARN_CNT
+					    , B.BZENT_NM
+					    , C.CHCK_YMD
+					    , M.MBR_NM
+					    , N.MBR_NM 
+					    , I.MBR_NM
+					    , O.COM_NM 
+				<include refid="search_score"/>
+		)
+	</select>
+	
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 가맹점 점검 상세 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	
+	<!--
+ 		@programName : 가맹점 점검 상세
+ 		@description : 점검된 상세 정보
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectFrcsCheckDtl" parameterType="frcsCheckVO" resultMap="frcsCheckMap">
+		SELECT B.BZENT_NM
+				, C.FRCS_NO
+				, O.COM_NM AS FRCS_TYPE_NM
+				, B.BZENT_TELNO
+				, R.COM_NM AS RGN_NM
+				, F.FRCS_TYPE
+				, M.MBR_NM
+				, M.MBR_TELNO
+				, N.MBR_NM AS MNGR_NM
+				, N.MBR_TELNO AS MNGR_TELNO
+				, I.MBR_NM AS INSCTR_NM
+				, I.MBR_TELNO AS INSCTR_TELNO
+				, C.CHCK_YMD
+				, C.CLEN_SCR+C.SRVC_SCR AS TOT_SCR
+				, C.CLEN_SCR
+				, C.SRVC_SCR
+				, C.CHCK_CN
+		FROM FRCS_CHECK C
+		JOIN FRCS F ON C.FRCS_NO=F.FRCS_NO
+		JOIN BZENT B ON B.BZENT_NO=F.FRCS_NO
+		JOIN MEMBER I ON I.MBR_ID=C.MNGR_ID
+		JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+		JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+		LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+		JOIN COM_CODE O ON O.COM_NO=F.FRCS_TYPE
+        WHERE C.FRCS_NO = #{frcsNo}
+        AND C.CHCK_SEQ = #{chckSeq}
+	</select>
+
+	<!--
+ 		@programName : 가맹점 점검 삭제
+ 		@description : 점검 삭제
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<delete id="deleteFrcsCheck" parameterType="frcsCheckVO">
+		DELETE
+		FROM FRCS_CHECK
+		WHERE FRCS_NO = #{frcsNo}
+        AND CHCK_SEQ = #{chckSeq}
+	</delete>
+	
+	<!--
+ 		@programName : 폐업 조치 취소
+ 		@description : 경고 횟수 확인 3회면 폐업 조치
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<update id="cancelFrcs" parameterType="String">
+		UPDATE FRCS
+		SET FRCS_TYPE='FRS01',
+		CLSBIZ_YMD = NULL
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+	
+	<!--
+ 		@programName : 폐업 조치 취소
+ 		@description : 강제로 폐업 조치가 되었을 경우에만 삭제
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<delete id="cancelFrcsClsbiz" parameterType="String">
+		DELETE
+		FROM FRCS_CLSBIZ
+		WHERE FRCS_NO = #{frcsNo}
+		AND CLSBIZ_RSN_TYPE = 'CR06'
+	</delete>
+
+	<!--
+ 		@programName : 경고 취소
+ 		@description : 총 점수가 60점 미만일 경우 경고
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 20
+	-->
+	<update id="deleteWarn" parameterType="String">
+		UPDATE FRCS
+		SET WARN_CNT = WARN_CNT - 1
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+
+	<select id="selectFrcsType" parameterType="String" resultType="String">
+		SELECT CLSBIZ_TYPE
+		FROM FRCS_CLSBIZ
+		WHERE FRCS_NO = #{frcsNo}
+	</select>
+	
+	
+<!--  //////////////////////////////////////////////////////////////////////////////////////////////////////////// -->	
+	<!-- 가맹점 상세 -->
+	<select id="selectFrcsDtlCheckList" parameterType="String" resultMap="frcsCheckMap">
+		SELECT ROW_NUMBER() OVER (ORDER BY C.CHCK_SEQ DESC) AS RNUM
+				, C.MNGR_ID
+				, I.MBR_NM AS INSCTR_NM
+				, SUM(COALESCE(C.CLEN_SCR, 0) + COALESCE(C.SRVC_SCR, 0)) AS TOT_SCR
+				, C.CHCK_YMD
+				, C.CLEN_SCR
+				, C.SRVC_SCR
+				, C.CHCK_SEQ
+		FROM FRCS_CHECK C
+		JOIN MEMBER I ON I.MBR_ID=C.MNGR_ID
+		WHERE C.FRCS_NO = #{frcsNo}
+		GROUP BY C.MNGR_ID
+				, I.MBR_NM
+				, C.CHCK_YMD
+				, C.CLEN_SCR
+				, C.SRVC_SCR
+				, C.CHCK_SEQ
+	</select>
+	
+	<select id="selectAvgScr" parameterType="String" resultType="int">
+	    SELECT COALESCE( (SELECT SUM(CLEN_SCR+SRVC_SCR) FROM FRCS_CHECK 
+        					WHERE FRCS_NO = #{frcsNo}
+	   						 GROUP BY FRCS_NO)/ 
+        			(SELECT COUNT(1) FROM FRCS_CHECK WHERE FRCS_NO = #{frcsNo}), 0)
+	    FROM DUAL
+	</select>
+
+</mapper>

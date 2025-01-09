@@ -1,0 +1,60 @@
+package com.buff.cust.controller;
+
+import java.security.Principal;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.buff.cust.mapper.CustMyPageMapper;
+import com.buff.cust.service.CustMyPageService;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.OrdrVO;
+import com.buff.vo.QsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+
+@PreAuthorize("hasRole('ROLE_CUST')")
+@Slf4j
+@RequestMapping("/custPage")
+@Controller
+public class CustMyPageController {
+	
+	@Autowired
+	CustMyPageService myPageService;
+	
+	@Autowired
+	CustMyPageMapper myPageMapper;
+	
+	
+	
+	@GetMapping("/myPageMain")
+	public String myPageMain(Principal principal, Model model) {
+		
+		String mbrId = principal.getName();
+		log.info("myPageMain -> mbrId :" + mbrId);
+		
+		List<QsVO> qsVOList = myPageService.myQs(mbrId);
+		log.info("myPageMain -> qsVOList : " + qsVOList);
+		
+		List<FrcsDscsnVO> frcsDscsnVOList = myPageService.myDscsn(mbrId);
+		log.info("myPageMain -> frcsDscsnVOList : " + frcsDscsnVOList);
+		
+		/*
+		 * List<OrdrVO> OrdrVOList = myPageService.myOrdr(mbrId);
+		 * log.info("myPageMain -> OrdrVOList : " + OrdrVOList);
+		 */
+		
+		model.addAttribute("qsVOList",qsVOList);
+		model.addAttribute("frcsDscsnVOList",frcsDscsnVOList);
+		
+		
+		return "cust/custPage/myPageMain";
+	}
+	
+}

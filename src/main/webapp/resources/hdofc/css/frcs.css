@@ -1,0 +1,221 @@
+@charset "UTF-8";
+/* 가맹점 조회 + 상세 + 추가 */
+
+.bar{
+	border-top: 1px solid var(--blue--8);
+}
+.break {
+    flex-basis: 10%;  /* 줄 바꿈 */
+}
+/* 설정 */
+.table-wrap{
+	margin-bottom: var(--gap--m);
+}
+.table-wrap::-webkit-scrollbar{
+  display:none;
+}
+
+/* input 안 검색 */
+.input-wrapper {
+    position: relative;
+/*     display: inline-block; */
+}
+.input-wrapper input{
+	width:100%;
+}
+/* 가맹점주 관리자 가맹점 조회시 Input안으로 들어가는 돋보기 버튼 */
+.update-btn {
+	border: none;
+	background: var(--gray-0);
+	background: url(/resources/images/common/search.png) no-repeat 50% 50%;
+    background-size: 20px 20px;
+    transform: translateX(-115%) translateY(25%);
+	padding: 15px;
+    position: absolute;
+}
+/* 상세정보 조회에 경고창 아이콘 */
+#mngr-warn .material-symbols-outlined {
+	font-size : 120px;
+	margin: var(--gap--s);
+	font-variation-settings:
+	  'FILL' 0,
+	  'wght' 700,
+	  'GRAD' 0,
+	  'opsz' 48;
+	  color: var(--text--placeholder);
+}
+/* 상세 정보 조회에 경고창 */
+#mngr-warn{
+	text-align: center;
+	border-top: 1px solid var(--blue--8);
+}
+/* 상세 정보 조회에 경고창 내용 */
+.warn-cont{
+	color : var(--text--placeholder);
+	font-size : 1.2rem;
+}
+/* 경고 문구 */
+.warning{
+	color: var(--red--5);
+	margin-bottom: var(--gap--s);
+}
+
+/* 상세 조회 아이콘 */
+.title-icon{
+	vertical-align: middle;
+	color : var(--text--primary);
+	font-size : var(--page--title--size);
+}
+
+/* insert에 넣는 title */
+.th-title{
+	height: 64.73px;
+}
+.th-title-cont{
+	text-align: center;
+    font-size: 1.2rem;
+}
+.table-footer{
+	text-align-last: right;
+    margin: var(--gap--s);
+}
+
+.modal-body{
+	background-color: var(--blue--05);
+}
+.submit-btn{
+	padding: 1px 40px;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+/* 가맹점 조회 + 상세 + 추가 끝*/
+
+
+/* 점검 시작 */
+/* 돋보기 버튼 효과 리셋 */
+.add-btn{
+	padding: none;
+	border: none;
+	background: none;
+}
+.center{
+	text-align: center;
+}
+
+input[type='radio']{
+	accent-color: var(--blue--6);
+    width: 25px;
+}
+/* th 버튼 클릭 */
+.all{
+	cursor: pointer;
+}
+
+/* 편집기 높이 설정 */
+.ck-editor__editable {
+    min-height: 200px;
+}
+
+
+/* 점검 상세 모달 */
+.modal-table {
+    table-layout: fixed;  /* 테이블 열의 너비를 고정 */
+    width: 100%;          /* 테이블의 전체 너비 */
+}
+
+.modal-table th,.modal-table td {
+    width: 25%;           /* 모든 열의 너비를 동일하게 설정 */
+}
+.circle {
+	margin:var(--gap--l);
+    width: 150px;
+    border: 25px solid black;
+    height: 150px;
+    padding-left: 25px;
+    border-radius: 50%;
+    position: relative;
+    box-sizing: border-box;
+    line-height: 100px;
+    font-size: 3rem;
+    font-weight: 900
+}
+
+.circle-default {
+	border-color: var(--bge--default);
+}
+.circle-active {
+	border-color: var(--bge--active);
+}
+.circle-danger {
+	border-color: var(--bge--danger);
+}
+.circle-warning {
+	border-color: var(--bge--warning);
+}
+.circle-info {
+	border-color: var(--bge--info);
+}
+
+.circle-title{
+	position: absolute;
+	font-size: 1rem;
+	bottom: -8px;
+}
+.check{
+	gap:var(--gap--m);
+}
+.check-table{
+	flex: 1 0 auto;
+}
+/* 상세 점검 테이블 고정*/
+.table-check tbody{
+  display: block; /* 가로세로 조절 가능 */
+  max-height: 150px; /* 보여주고 싶은 만큼 세로값 입력 */
+  overflow-y: scroll; /* 스크롤 만듦 */
+}
+.table-check thead, 
+.table-check tbody tr {
+  display: table;
+  width: 100%; 
+}
+/* 상품 단가 테이블 */
+.table-check tbody{
+	max-height: 300px;
+}
+.chart-wrap{
+	padding: var(--gap--m);
+}
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-mngrId-container"] { 
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-mngrId-container"] .select2-dropdown {
+	width: 198px !important;
+}
+.search-input-btn{
+    gap: var(--gap--s);
+}
+
+/* 에러 */
+/* error 테이블 영역 */
+.error-info {
+    text-align: center;
+    padding: var(--pd--l) 0 40px 0 !important;
+}
+.error-info:hover {
+	background-color: var(--gray--0) !important;
+}
+.error-info .icon {
+	font-size: 5rem !important;
+	font-variation-settings:
+	'FILL' 0,
+	'wght' 100,
+	'GRAD' 0,
+	'opsz' 24
+}
+.error-msg {
+	padding-top: var(--pd--s);
+	font-size: 1.2rem;
+	color: var(--text--secondary);
+}
+

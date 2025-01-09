@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.12
+@description  : FAQ crud
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcFaqMapper">
+	
+	<resultMap type="faqVO" id="faqMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="faqSeq" column="FAQ_SEQ"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="faqTtl" column="FAQ_TTL"/>
+		<result property="faqCn" column="FAQ_CN"/>
+		<result property="qsType" column="QS_TYPE"/>
+		<result property="qsTypeNm" column="QS_TYPE_NM"/>
+		<association property="mngrVO" resultMap="mngrMap"></association>
+	</resultMap>
+	
+	<resultMap type="mngrVO" id="mngrMap">
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="mngrType" column="MNGR_TYPE"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="hdofYn" column="HDOF_YN"/>
+		<result property="rtrmYmd" column="RTRM_YMD"/>
+		<association property="memberVO" resultMap="memberMap"></association>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="memberMap">
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrId" column="MBR_ID"/>
+	</resultMap>
+	
+	 <!--
+ 		@programName : FAQ 리스트 select
+ 		@description : FAQ 리스트 select
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 30
+	-->
+	<select id="selectFaqList" parameterType="hashMap" resultMap="faqMap">
+		SELECT *
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY TO_NUMBER(F.FAQ_SEQ) DESC) AS RNUM
+				 , C.COM_NM AS QS_TYPE_NM
+			     , F.FAQ_SEQ
+			     , F.FAQ_TTL
+			     , F.FAQ_CN
+			     , F.QS_TYPE
+			     , MN.MNGR_ID
+			     , M.MBR_NM
+			FROM   FAQ F
+			LEFT   OUTER JOIN MNGR MN ON F.MNGR_ID = MN.MNGR_ID
+			LEFT   OUTER JOIN MEMBER M ON MN.MNGR_ID = M.MBR_ID
+			LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = F.QS_TYPE
+			WHERE  1=1
+			<!-- 문의 유형 필터링 -->
+			<if test="qsType != null and qsType != ''">
+				AND F.QS_TYPE = #{qsType}
+			</if>
+			<!-- FAQ 제목 필터링 -->
+			<if test="faqTtl != null and faqTtl != ''">
+				AND F.FAQ_TTL LIKE '%' || #{faqTtl} || '%'
+			</if>
+			<!-- FAQ 내용 필터링 -->
+<!-- 			<if test="faqCn != null and faqCn != ''"> -->
+<!-- 				AND F.FAQ_CN LIKE '%' || #{faqCn} || '%' -->
+<!-- 			</if> -->
+		)
+		WHERE  RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+	</select>
+	
+	 <!--
+ 		@programName : FAQ 리스트 총 갯수
+ 		@description : FAQ 리스트 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 30
+	-->
+	<select id="faqTotalCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*) 
+		FROM   FAQ
+		WHERE 1=1 
+		<!-- 문의 유형 필터링 -->
+		<if test="qsType != null and qsType != ''">
+			AND QS_TYPE = #{qsType}
+		</if>
+		<!-- FAQ 제목 필터링 -->
+		<if test="faqTtl != null and faqTtl != ''">
+			AND FAQ_TTL LIKE '%' || #{faqTtl} || '%'
+		</if>
+		<!-- FAQ 내용 필터링 -->
+<!-- 		<if test="faqCn != null and faqCn != ''"> -->
+<!-- 			AND FAQ_CN LIKE '%' || #{faqCn} || '%' -->
+<!-- 		</if> -->
+	</select>
+	
+	<!--
+ 		@programName : FAQ 문의유형의 갯수
+ 		@description : FAQ 문의유형의 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 30
+	-->
+	<select id="tapMaxTotal" resultType="hashMap">
+		SELECT MAX(T.tapAll) tapAll
+		     , MAX(T.tapWaiting) tapWaiting
+		     , MAX(T.tapProgress) tapProgress
+		     , MAX(T.tapScheduled) tapScheduled
+		     , MAX(T.tapCompleted) tapCompleted
+		     , MAX(T.tapCancelled) tapCancelled
+		FROM
+		(
+		    SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress,0 tapScheduled,0 tapCompleted,0 tapCancelled
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    UNION ALL
+		    SELECT 0,COUNT(*),0,0,0,0
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    F.QS_TYPE = 'QS01'
+		    UNION ALL
+		    SELECT 0,0,COUNT(*),0,0,0
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    F.QS_TYPE = 'QS02'
+		    UNION ALL
+		    SELECT 0,0,0,COUNT(*),0,0
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    F.QS_TYPE = 'QS03'
+		    UNION ALL
+		    SELECT 0,0,0,0,COUNT(*),0
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    F.QS_TYPE = 'QS04'
+		    UNION ALL
+		    SELECT 0,0,0,0,0,COUNT(*)
+		    FROM   FAQ F 
+		    INNER  JOIN COM_CODE C ON F.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    F.QS_TYPE = 'QS05'
+		) T
+	</select>
+	
+	<!--
+ 		@programName : FAQ 상세보기
+ 		@description : FAQ 상세보기
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<select id="selectFaqDetail" parameterType="String" resultMap="faqMap">
+		SELECT C.COM_NM AS QS_TYPE_NM
+			 , M.MBR_NM
+		     , F.FAQ_TTL
+		     , F.FAQ_CN
+		     , F.FAQ_SEQ
+		     , F.QS_TYPE
+		FROM   FAQ F
+		LEFT   OUTER JOIN MNGR MN ON F.MNGR_ID = MN.MNGR_ID
+		LEFT   OUTER JOIN MEMBER M ON MN.MNGR_ID = M.MBR_ID
+		LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = F.QS_TYPE
+		WHERE  F.FAQ_SEQ = #{faqSeq}
+	</select>
+	
+	<!--
+ 		@programName : FAQ 상세화면 업데이트
+ 		@description : FAQ 상세화면 업데이트
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<update id="updateFaqDetail" parameterType="faqVO">
+	    UPDATE FAQ
+	    SET FAQ_TTL = #{faqTtl}, 
+	        FAQ_CN = #{faqCn}, 
+	        MNGR_ID = #{mngrId}, 
+	        QS_TYPE = #{qsType}
+	    WHERE FAQ_SEQ = #{faqSeq}
+	</update>
+	
+	<!--
+ 		@programName : FAQ insert 등록
+ 		@description : FAQ insert 등록
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<insert id="insertFaqList" parameterType="faqVO">
+		INSERT INTO FAQ 
+			(
+			 FAQ_SEQ
+		   , MNGR_ID
+		   , FAQ_TTL
+		   , FAQ_CN
+		   , QS_TYPE
+		) 
+		SELECT TO_CHAR(NVL(MAX(TO_NUMBER(FAQ_SEQ)), 0) + 1)
+			 , #{mngrId}
+			 , #{faqTtl}
+			 , #{faqCn}
+			 , #{qsType} 
+	    FROM FAQ
+	</insert>
+	
+	<!--
+ 		@programName : FAQ insert 등록시 출력 관리자명
+ 		@description : FAQ insert 등록시 출력 관리자명
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<select id="selectMbrNm" parameterType="String" resultType="memberVO">
+		SELECT MBR_NM
+		FROM   MEMBER
+		WHERE  MBR_ID = #{mbrId}
+	</select>
+	
+	<!--
+ 		@programName : FAQ 삭제
+ 		@description : FAQ 삭제
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 17
+	-->
+	<delete id="deleteFaq" parameterType="String">
+		DELETE FROM FAQ
+		WHERE  FAQ_SEQ = #{faqSeq}
+	</delete>
+	
+</mapper>

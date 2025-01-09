@@ -1,0 +1,76 @@
+package com.buff.frcs.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.buff.frcs.service.FrcsPoService;
+import com.buff.vo.PoVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.controller.frcs
+* @fileName     : FrcsPoController.java
+* @author       : 김현빈
+* @date         : 2024-09-12
+* @description  : 
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024-09-13		김현빈				?
+*/
+
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsPoController {
+	
+	@Autowired
+	FrcsPoService frcsPoService;
+	
+	/** 가맹점 진입페이지
+	 * 요청URI : /frcs/MyPage
+	 * 요청파라미터 : 
+	 * 요청방식 : get
+	 */
+	@GetMapping("/frcsPoList")
+	public String selectFrcsPoList(Model model, 
+			@RequestParam(value="gubun", required=false, defaultValue="") String gubun,
+			@RequestParam(value="gubun2", required=false, defaultValue="") String gubun2) {
+		
+		// 검색조건
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("gubun", gubun);
+		map.put("gubun2", gubun2);
+		log.info("selectFrcsMenuList->map : " + map);
+		
+		List<PoVO> poVOList = this.frcsPoService.selectFrcsPoList();
+		log.info("poVOLfrcsPoListist -> poVOList" + poVOList);
+		
+		model.addAttribute("poVOList", poVOList);
+		
+		return "frcs/frcsPoList";
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+

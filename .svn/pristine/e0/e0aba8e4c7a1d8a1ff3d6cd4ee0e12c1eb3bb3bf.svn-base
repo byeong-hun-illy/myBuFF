@@ -1,0 +1,220 @@
+@charset "UTF-8";
+
+/* body */
+.wrap {
+	padding: 180px 0 100px 0;
+}
+.wrap-cont {
+	width: 1170px;
+    margin: 0 auto;
+}
+.wrap-title {
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #333;
+    margin: 50px 0 40px 0;
+}
+.wrap-title.login,
+.wrap-title.join {
+	margin: 0 0 40px 0;
+}
+
+/* 로고 */
+@font-face {
+    font-family: 'KIMM';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2212@1.0/KIMM_Bold.woff2') format('woff2');
+    font-style: normal;
+}
+.logo-img {
+	height: 35px;
+}
+.logo-title {
+	font-family: 'KIMM';
+	font-size: 40px;
+	font-weight: 300;
+	color: var(--green--5);
+}
+
+/* 헤더 nav */
+nav {
+	box-shadow: 0px 2px 7px rgba(147, 147, 147, 0.1);
+    position: fixed;
+   	z-index: 10;
+    width: -webkit-fill-available;
+    background: white;
+}
+nav .header-wrap {
+	display:flex; justify-content: space-between;
+	max-width: 1170px;
+    width: 1170px;
+	margin: 0 auto;
+}
+nav .header-cont {
+	display:flex; 
+}
+nav .header-wrap.login {
+	padding: 30px 0;
+    align-items: center;
+}
+
+/* top */
+nav .header-wrap.top {
+    padding-top: 40px;
+    transition: 0.3s;
+}
+nav .header-cont.logo {
+	display:flex; 
+	gap: 4px;
+}
+nav .top-quick {
+	display:flex; 
+	align-items:center;
+    gap: var(--gap--s);
+}
+nav .logout {
+    padding: 6px 12px;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    border: 1px solid var(--gray--3);
+    color: var(--gray--7);
+    cursor: pointer;
+}
+nav .login-user {
+	color: var(--green--4);
+	font-weight: 900;
+}
+nav .login-info {
+    font-size: 0.9rem;
+    color: var(--gray--7);
+    margin-right: 5px;
+}
+.login-cont{
+    display: ruby;
+}
+
+/* bom */
+nav .header-wrap.bom{
+    align-items: center;
+    padding: 20px 0;
+}
+nav .header-cont.category {
+	gap: var(--gap--l);
+    padding: 0;
+}
+nav .header-cont.login {
+	gap: var(--gap--m) !important;
+    padding: 0;
+}
+nav .nav-menu {
+	font-size: 1.1rem;
+	font-weight: 500;
+}
+nav .nav-menu.login {
+	display: flex;
+    align-items: center;
+    gap: 2px;
+}
+nav .nav-menu.login span {
+	font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+}
+nav .nav-menu.login:hover span {
+	color: var(--brand-primary);
+}
+nav .bom-quick {
+	display:flex; 
+	align-items:center;
+    gap: var(--gap--s);
+}
+nav .quick-icon1 {
+	font-size: 30px;	
+}
+nav .quick-icon2 {
+	font-size: 37px;	
+}
+
+/* 파트너 모드 버튼 */
+.mode-change {
+    padding: 6px 12px;
+	font-weight: bold;
+    font-size: 0.8rem;
+    color: #fff;
+    cursor: pointer;
+    height: 55px;
+    text-align:center;
+    border: none;
+    background-size: 300% 100%;
+
+    border-radius: 50px;
+    moz-transition: all .4s ease-in-out;
+    -o-transition: all .4s ease-in-out;
+    -webkit-transition: all .4s ease-in-out;
+    transition: all .4s ease-in-out;
+}
+.mode-change:hover {
+	color: #fff !important;
+    background-position: 100% 0;
+    moz-transition: all .4s ease-in-out;
+    -o-transition: all .4s ease-in-out;
+    -webkit-transition: all .4s ease-in-out;
+    transition: all .4s ease-in-out;
+}
+.mode-change:focus {
+    outline: none;
+}
+.mode-change.color {
+    background-image: linear-gradient(to right, #25aae1, #4481eb, #04befe, #3f86ed);
+    box-shadow: 0 2px 10px 0 rgba(65, 132, 234, 0.4);
+}
+
+
+/* 푸터 */
+footer {
+    background-color: #f2f2f2;
+    padding: 25px 0 !important;
+    border-top: 1px solid var(--gray--2);
+}
+.footer-wrap {
+	display: flex;
+    justify-content: space-between;
+}
+.ft-title{
+	font-family: 'KIMM';
+    font-weight: 300;
+    color: var(--gray--8);
+}
+.ft-left, .ft-link {
+	display: flex;
+}  
+.ft-left {
+	gap: 30px;
+}
+.ft-link {
+	gap: 10px;
+}
+.ft-link a {
+    color: var(--gray--6);
+}
+.ft-rigth {
+	font-size: 0.9rem;
+	color: var(--gray--6);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

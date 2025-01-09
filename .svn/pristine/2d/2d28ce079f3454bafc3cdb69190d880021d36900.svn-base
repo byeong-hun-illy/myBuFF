@@ -1,0 +1,119 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<sec:authentication property="principal.MemberVO" var="user" />
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script>
+let bzentNo = "${user.bzentNo}";
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+
+$(function(){
+	// 양식 다운로드 버튼 클릭
+    $("#downloadTemp").on("click", function() {
+        window.location.href = '/cnpt/stock/downloadTemp?bzentNo='+bzentNo;
+    });
+	
+	
+	// 엑셀 파일 업로드 처리
+    $('#uploadNewStockForm').on('submit', function(e) {
+        e.preventDefault();  // 기본 폼 제출 방지
+        
+        let formData = new FormData(this);
+        
+        $.ajax({
+            url: '/cnpt/stock/uploadNewStock',
+            type: 'POST',
+            enctype : 'multipart/form-data',
+            data: formData,
+            processData: false,  // 파일 업로드를 위해 false 설정
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'success') {
+                	console.log("response : ", response);
+                    Swal.fire({
+                        icon: 'success',
+                        title: '업로드 성공',
+                        text: response.message
+                    }).then(() => {
+                        window.location.href = "/cnpt/gds/list";  // 성공 시 페이지 이동
+                    });
+                } else {
+                	console.log("업로드 실패 : ", response);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '업로드 실패',
+                        text: response.message
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+            	console.error("서버 오류 발생: ", error);  // 에러 로그 출력
+                Swal.fire({
+                    icon: 'error',
+                    title: '서버 오류',
+                    text: '서버와의 통신 중 오류가 발생했습니다.'
+                });
+            }
+        });
+    // 엑셀 업로드 처리 이벤트 끝    
+    });
+});
+
+
+</script>
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 justify-content-between">
+      <div class="row align-items-center">
+        <h1 class="m-0">신규 기초 재고 등록</h1>
+      </div><!-- /.col -->
+      <div class="btn-wrap">
+			<button class="btn-active" id="downloadTemp">양식
+			<span class="material-symbols-outlined icon">download</span></button>
+	 </div>
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+
+<div class="wrap">
+	<div class="cont">
+		
+		<!-- table-wrap -->
+		<div class="table-wrap">
+			<table class="table-default">
+				<tbody id="table-body" class="table-error">
+					<tr>
+						<td class="error-info" colspan="7">
+							<span class="icon material-symbols-outlined">notifications_active</span>
+							<div class="error-msg">
+								<span class="material-symbols-outlined">arrow_right</span>
+								상품의 기초 재고를 등록하는 페이지입니다.
+							</div>	
+							<div class="error-msg">	
+								<span class="material-symbols-outlined">arrow_right</span>
+								반드시, 우측 상단의 양식파일을 내려받은 후에 양식이 맞게 작성하신 파일을 업로드 해주세요.
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- table-wrap -->
+		</div>
+		<div style="text-align:center;">
+			<input type="hidden" value="${user.bzentNo}" name="bzentNo" />
+			
+			<label for="uploadNewStock">파일 업로드</label>
+			<input type="file" name="uploadFile" id="uploadFile" 
+				   placeholder="파일 선택" required accept=".xlsx" />
+			<input type="button" id="uploadBtn" class="btn btn-active" value="재고 등록"/>	
+		</div>
+		<!-- cont 끝 -->
+	</div>
+</div>	

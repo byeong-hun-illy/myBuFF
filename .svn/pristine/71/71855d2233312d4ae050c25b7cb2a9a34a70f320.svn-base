@@ -1,0 +1,94 @@
+package com.buff.com.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.PoVO;
+import com.buff.vo.StockPoVO;
+import com.buff.vo.StockVO;
+
+public interface DealService {
+
+	/**
+	* @methodName  : selectDeal
+	* @author      : 송예진
+	* @date        : 2024.09.26 
+	* @param map   : 필수 입력 정보 type(po || so), bzentNo, 검색 조건(sort,orderby, bzentNm, deliType, deliYmd(sdeYmd,edeYmd), spmtYmd(sregYmd,eregYmd)), 페이징
+	* @return      : 발주/납품 조회
+	*/
+	public List<PoVO> selectDeal(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectTotalDeal
+	* @author      : 송예진
+	* @date        : 2024.09.26
+	* @param map   : 필수 입력 정보 type(po || so), bzentNo, 검색 조건(sort,orderby, bzentNm, deliType, deliYmd(sdeYmd,edeYmd), spmtYmd(sregYmd,eregYmd))
+	* @return      : 발주/납품 조회 갯수
+	*/
+	public Map<String, Object> selectTotalDeal(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectDealDtl
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : 발주에 대한 상세 정보
+	*/
+	public PoVO selectDealDtl(String poNo);
+	
+	
+	/**
+	* @methodName  : selectCnptGds
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param gdsCode
+	* @return      : 해당 상품을 판매중인 거래처 조회
+	*/
+	public List<StockVO> selectCnptGds(String gdsCode);
+
+	/**
+	* @methodName  : insertDealAjax
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param bzentNoGroups
+	* @return     : 거래처별 리스트를 받아서 stockPOVO 를 반환
+	*/
+	public int insertDealAjax(Map<String, List<StockPoVO>> bzentNoGroups);
+	
+	/**
+	* @methodName  : insertPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poVo(bzentNo) : 발주 받는 사람의 사업체 번호(본사나 가맹점)
+	* @return
+	*/
+	public int insertPo(PoVO poVo);
+	
+	/**
+	* @methodName  : insertStockPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param stockPoVO : 발주 정보
+	* @return
+	*/
+	public int insertStockPo(StockPoVO stockPoVO);
+	
+	
+	/**
+	* @methodName  : deleteStockPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : STOCK_PO삭제 
+	*/
+	public int deleteStockPo(String poNo);
+	
+	/**
+	* @methodName  : deletePo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : PO삭제 (선행 STOCK_PO삭제필요) -deleteStockPo
+	*/
+	public int deletePo(String poNo);
+}

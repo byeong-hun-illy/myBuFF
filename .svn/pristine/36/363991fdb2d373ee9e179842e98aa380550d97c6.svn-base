@@ -1,0 +1,101 @@
+@charset "UTF-8";
+
+.table-wrap {
+    overflow-x: inherit !important
+}
+
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-bankType-container"] { // select2-인풋Id명-container
+	width: 100px !important;
+}
+.select2-selection[aria-labelledby="select2-bankType-container"] .select2-dropdown {
+	width: 98px !important;
+}
+
+.close {
+    color: var(--text--tertiary);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--text--secondary);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.text-input {
+	width: 200px;
+}
+.input-tel {
+	width: 60px;
+}
+.hidden {
+	display: none;
+}
+
+#mbrEmlAddr1, #mbrEmlAddr2, #customEmlAddr2, #mngrEmlAddr1, #mngrEmlAddr2 {
+	width: 250px;
+}
+#openTm, #ddlnTm {
+	width: 150px;
+}
+
+th {
+	width : 200px;
+}
+
+/* 전체 테이블에 고정된 레이아웃을 적용하고, 너비를 100%로 설정 */
+.table-blue {
+    width: 100%;
+    table-layout: fixed; /* 고정된 레이아웃 */
+}
+
+/* `th`의 너비를 고정하여 균일하게 맞춤 */
+.table-blue th {
+    width: 14%; /* th의 너비를 25%로 설정하여 4열 기준 맞춤 */
+}
+
+/* `td`의 너비도 th와 동일하게 설정 */
+.table-blue td {
+    width: 36%; /* td의 너비도 동일하게 설정 */
+}
+
+
+/* Flexbox를 사용하여 select와 input을 한 줄로 배치 */
+.flex-container {
+    display: flex;
+    justify-content: flex-start; /* 요소들을 왼쪽 정렬 */
+    align-items: center;         /* 요소들을 수직 가운데 정렬 */
+    gap: 10px;                   /* 요소 간 간격 */
+    width: 100%;                 /* 부모 td 크기 */
+}
+
+.select-wrapper {
+    flex: 0 0 130px;             /* select의 고정 너비 */
+}
+
+.input-wrapper {
+    flex: 1;                     /* input은 나머지 공간을 차지 */
+}
+
+
+
+
+
+
+
+.mbr-pswd-wrap {
+	display: flex;
+    flex-direction: column;
+    gap: var(--gap--s);
+}
+
+.pswd-wrap {
+	display: flex;
+    flex-direction: row;
+    gap: var(--gap--s);
+    align-items: center;
+}

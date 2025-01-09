@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsStockMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.20
+	@description  : 가맹점 재고 현황 sql
+-->
+    <resultMap type="gdsVO" id="gdsMap">
+        <result property="rnum" column="RNUM"/>
+        <result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		
+        <collection property="stockVOList" resultMap="stockMap"/>
+    </resultMap>
+	
+    <resultMap type="stockVO" id="stockMap">
+        <result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<collection property="stockAjmtVOList" resultMap="stockAjmtMap"/>
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap"/>
+    </resultMap>
+    
+    <resultMap type="stockAjmtVO" id="stockAjmtMap">
+    	<result property="ajmtNo" column="AJMT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="ajmtType" column="AJMT_TYPE"/>
+		<result property="qty" column="QTY"/>
+		<result property="ajmtYmd" column="AJMT_YMD"/>
+		<result property="ajmtRsn" column="AJMT_RSN"/>
+    </resultMap>
+
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+    
+    <!-- 검색 조건 시작 -->
+	<sql id="gds_search">
+		<!-- 상품 대유형 검색 -->
+		<if test="gdsClass != null and gdsClass != ''">
+	        AND G.GDS_TYPE LIKE #{gdsClass} || '%'
+	    </if>
+	    
+		<!-- 상품 소유형 검색 -->
+	    <if test="gdsType != null and gdsType != ''">
+   	 		AND G.GDS_TYPE = #{gdsType}
+		</if>
+
+		<!-- 상품 이름 검색 -->
+	    <if test="keyword != null and keyword != ''">
+    		AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+    	</if>
+    	
+    	<!-- 안전재고 검색 -->
+		<if test="sfStockQty == 'down'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY > S.QTY
+		]]>
+		</if>
+		<if test="sfStockQty == 'up'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY <= S.QTY
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+    <!--
+        @programName : 가맹점 재고 현황 조회
+        @description : 가맹점 재고 현황 조회를 위한 화면
+        @author      : 정현종
+        @date        : 2024. 09. 20
+    -->
+    <select id="selectFrcsStockList" parameterType="hashMap" resultMap="gdsMap">
+	    WITH T AS (
+	        SELECT ROW_NUMBER() OVER(ORDER BY G.GDS_NM) AS RNUM,
+	               G.GDS_CODE,
+	               G.GDS_NM,
+	               G.GDS_TYPE,
+	               G.UNIT_NM,
+	               S.BZENT_NO,
+	               S.QTY,
+	               S.SF_STOCK_QTY,
+	               A.AMT 
+	        FROM GDS G
+	        INNER JOIN STOCK S ON (G.GDS_CODE = S.GDS_CODE) 
+	        LEFT OUTER JOIN (
+	            SELECT A1.GDS_CODE,
+	                   A1.BZENT_NO,
+	                   A1.AMT,
+	                   A1.AMT_SEQ
+	            FROM GDS_AMT A1
+	            JOIN (
+	                SELECT GDS_CODE,
+	                       BZENT_NO,
+	                       MAX(AMT_SEQ) AS MAX_AMT_SEQ
+	                FROM GDS_AMT
+	                GROUP BY GDS_CODE, BZENT_NO
+	            ) A2 ON A1.GDS_CODE = A2.GDS_CODE 
+	                 AND A1.BZENT_NO = A2.BZENT_NO 
+	                 AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+	        ) A ON G.GDS_CODE = A.GDS_CODE AND A.BZENT_NO = 'HO0001'
+	        WHERE S.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+	        <include refid="gds_search"/>
+	    )
+	    SELECT T.*
+	    FROM T
+	    WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+    
+    <!--
+        @programName : 가맹점 재고 현황 조회
+        @description : 가맹점 재고 현황 조회를 위한 화면
+        @author      : 정현종
+        @date        : 2024. 09. 24
+    -->
+    <select id="selectTotalFrcsStock" parameterType="hashMap" resultType="int">
+    	SELECT COUNT(*)
+		FROM   GDS G 
+		INNER JOIN STOCK S ON (G.GDS_CODE = S.GDS_CODE)
+		WHERE  S.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		<include refid="gds_search"/>
+    </select>
+    
+    <!--
+        @programName : 가맹점 재고 상세 조회
+        @description : 가맹점 재고 상세 조회를 위한 화면
+        @author      : 정현종
+        @date        : 2024. 09. 24
+    -->
+    <select id="selectFrcsStockDetail" parameterType="hashMap" resultMap="gdsMap">
+    	SELECT ROW_NUMBER() OVER(ORDER BY G.GDS_NM) AS RNUM,
+	               G.GDS_CODE,
+	               G.GDS_NM,
+	               G.GDS_TYPE,
+	               G.UNIT_NM,
+	               S.BZENT_NO,
+	               S.QTY,
+	               S.SF_STOCK_QTY,
+	               A.AMT 
+        FROM   GDS G
+        INNER JOIN STOCK S ON (G.GDS_CODE = S.GDS_CODE) 
+        LEFT OUTER JOIN (
+            SELECT A1.GDS_CODE,
+                   A1.BZENT_NO,
+                   A1.AMT,
+                   A1.AMT_SEQ
+            FROM GDS_AMT A1
+            JOIN (
+                SELECT GDS_CODE,
+                       BZENT_NO,
+                       MAX(AMT_SEQ) AS MAX_AMT_SEQ
+                FROM GDS_AMT
+                GROUP BY GDS_CODE, BZENT_NO
+            ) A2 ON A1.GDS_CODE = A2.GDS_CODE 
+                 AND A1.BZENT_NO = A2.BZENT_NO 
+                 AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+        ) A ON G.GDS_CODE = A.GDS_CODE AND A.BZENT_NO = 'HO0001'
+        WHERE S.BZENT_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		AND   G.GDS_CODE = #{gdsCode}
+    </select>
+    
+    <!--
+        @programName : 가맹점 안전 재고 설정
+        @description : 가맹점 안전 재고 설정
+        @author      : 정현종
+        @date        : 2024. 09. 24
+    -->
+    <update id="safeStockFrcsUpdateAjax" parameterType="hashMap">
+	    UPDATE STOCK
+	    SET    SF_STOCK_QTY = #{sfStockQty}
+	    WHERE  BZENT_NO = (SELECT BZENT_NO FROM BZENT WHERE MBR_ID = #{mbrId})
+	    AND    GDS_CODE = #{gdsCode}
+	</update>
+	
+	<!-- 
+		@programName : 가맹점 재고 조정 입력
+        @description : 가맹점 재고 조정 입력
+        @author      : 정현종
+        @date        : 2024. 09. 25
+	-->
+	<insert id="stockAjmtFrcsInsertAjax" parameterType="hashMap">
+		INSERT INTO STOCK_AJMT (AJMT_NO, GDS_CODE, BZENT_NO, AJMT_TYPE, QTY, AJMT_YMD, AJMT_RSN)
+		VALUES (
+		    TO_CHAR(SYSDATE, 'YYYYMMDD') || 
+		    LPAD(COALESCE((SELECT COUNT(*) FROM STOCK_AJMT WHERE AJMT_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')), 0) + 1, 3, '0'),
+		    
+		    #{gdsCode},      
+		    #{bzentNo},     
+		    'AJMT02',      
+		    #{qty},         
+		    TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+		    #{ajmtRsn} 
+		)
+	</insert>
+	
+	<!-- 
+		@programName : 가맹점 재고 수량 수정
+        @description : 가맹점 재고 수량 수정
+        @author      : 정현종
+        @date        : 2024. 09. 25
+	-->
+    <update id="stockFrcsUpdateAjax" parameterType="hashMap">
+    	UPDATE STOCK
+		SET    QTY = (SELECT QTY 
+		              FROM   STOCK_AJMT 
+		              WHERE  AJMT_NO = (SELECT AJMT_NO 
+		                                FROM (SELECT AJMT_NO 
+		                                      FROM   STOCK_AJMT 
+		                                      WHERE  GDS_CODE = #{gdsCode}
+		                                      ORDER BY AJMT_YMD DESC, AJMT_NO DESC
+		                                      )
+		                                WHERE ROWNUM = 1))
+		WHERE  BZENT_NO = #{bzentNo}
+		AND    GDS_CODE = #{gdsCode}
+    </update>
+    
+    <!-- 
+		@programName : 가맹점 상품유형별 재고 수량 
+        @description : 가맹점 상품유형별 재고 수량
+        @author      : 정현종
+        @date        : 2024. 09. 25
+	-->
+	<select id="selectFdStock" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM   GDS G
+		INNER  JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		WHERE  S.BZENT_NO = (SELECT BZENT_NO FROM BZENT WHERE MBR_ID = #{mbrId})
+		AND    G.GDS_TYPE LIKE 'FD%'
+		<include refid="gds_search"/>
+	</select>
+	
+	<select id="selectSmStock" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM   GDS G
+		INNER  JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		WHERE  S.BZENT_NO = (SELECT BZENT_NO FROM BZENT WHERE MBR_ID = #{mbrId})
+		AND    G.GDS_TYPE LIKE 'SM%'
+		<include refid="gds_search"/>
+	</select>
+	
+	<select id="selectPmStock" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM   GDS G
+		INNER  JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE)
+		WHERE  S.BZENT_NO = (SELECT BZENT_NO FROM BZENT WHERE MBR_ID = #{mbrId})
+		AND    G.GDS_TYPE LIKE 'PM%'
+		<include refid="gds_search"/>
+	</select>
+    
+</mapper>

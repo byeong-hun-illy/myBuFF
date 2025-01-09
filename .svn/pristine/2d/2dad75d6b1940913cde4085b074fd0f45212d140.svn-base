@@ -1,0 +1,15 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+@Data
+public class PoVO {
+	private String poNo;
+	private String bzentNo;
+	private String deliYmt;
+	private String deliType;
+	private String aprvYn;
+	
+	// 공통코드 조인
+	private String deliTypeNm;
+}

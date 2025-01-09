@@ -1,0 +1,61 @@
+@charset "UTF-8";
+.gds-table tbody {
+  display: block; /* 가로세로 조절 가능 */
+  max-height: 461px; /* 보여주고 싶은 만큼 세로값 입력 */
+  overflow-y: scroll; /* 스크롤 만듦 */
+}
+.gds-table thead, 
+.gds-table tbody tr,
+.gds-table tfoot {
+  display: table;
+  width: 100%; 
+}
+
+.page-tap-cont{
+	background: white;	
+}
+
+.table-cnpt-gds tbody{
+	display: block; /* 가로세로 조절 가능 */	
+  	max-height: 461px; /* 보여주고 싶은 만큼 세로값 입력 */
+  	overflow-y: scroll; /* 스크롤 만듦 */
+}
+.table-cnpt-gds thead, 
+.table-cnpt-gds tbody tr {
+  display: table;
+  width: 100%; 
+}
+
+.cartYn .material-symbols-outlined,
+ .gdsDtl .active{
+	color: var(--brand--primary);
+}
+
+.td-cart{
+	display: flex;
+    align-items: center;
+    gap: var(--gap--s);
+}
+.cartYn {
+	display: flex;
+}
+#bzentAddr{
+	display: flex;
+    gap: 5px;
+    flex-direction: column;
+    justify-content: center;
+}
+.poQty{
+	text-align: right;
+}
+.btn-active:disabled{
+	background-color: var(--btn--disabled);
+    color: var(--text--placeholder);
+}
+.btn-active:disabled:hover {
+	background-color: var(--btn--disabled);
+    color: var(--text--placeholder);
+}
+.bar{
+	border-top: 1px solid var(--blue--8);
+}

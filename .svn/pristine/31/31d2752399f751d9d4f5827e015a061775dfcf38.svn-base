@@ -1,0 +1,602 @@
+/*******************************************
+  @fileName    : deal.js
+  @author      : 송예진
+  @date        : 2024. 09. 26
+  @description : 발주, 납품
+********************************************/
+document.write("<script src='/resources/js/global/value.js'></script>");
+ /*******************************************
+			본사 납품 조회
+********************************************/
+ function selectDealAjax(){
+ 	let bzentNm = $('#bzentNm').val();
+ 	let clclnYn = $('#clclnYn').val();
+	let sregYmdDt = $('#sregYmd').val();
+	let eregYmdDt = $('#eregYmd').val();
+	let sdeYmdDt = $('#sdeYmd').val();
+	let edeYmdDt = $('#edeYmd').val();
+	
+	let data = {};
+
+	// 값이 빈 문자열이 아니면 data 객체에 추가
+	if (bzentNm) {
+	    data.bzentNm = bzentNm;
+	}
+	if (clclnYn) {
+	    data.clclnYn = clclnYn;
+	}
+	if (sregYmdDt) {
+	    data.sregYmd = dateToStr(sregYmdDt);
+	}
+	if (eregYmdDt) {
+	    data.eregYmd = dateToStr(eregYmdDt);
+	}
+	if (sdeYmdDt) {
+	    data.sdeYmd = dateToStr(sdeYmdDt);
+	}
+	if (edeYmdDt) {
+	    data.edeYmd = dateToStr(edeYmdDt);
+	}
+	
+	data.deliType = deliType;
+	data.sort = sort;
+	data.orderby = orderby;
+	data.currentPage = currentPage;
+	data.bzentNo = bzentNo;
+	data.type = type;
+	
+	console.log(data);  // 최종적으로 빈 값이 제외된 data 객체
+	
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/deal/listAjax",
+		type : "GET",
+		data : data,
+		success : function(res){
+			// 분류 처리
+			$('#tap-all').text(res.all);
+			$('#tap-deli01').text(res.deli01);
+			$('#tap-deli02').text(res.deli02);
+			$('#tap-deli03').text(res.deli03);
+			$('#tap-deli04').text(res.deli04);
+			
+			//console.log(res);
+			// 테이블 처리
+			let strTbl = '';
+			
+			if(res.total == 0){ // 검색 결과가 0인 경우
+				strTbl+= `
+							<tr>
+								<td class="error-info" colspan="7"> 
+									<span class="icon material-symbols-outlined">error</span>
+									<div class="error-msg">검색 결과가 없습니다</div>
+								</td>
+							</tr>
+				`;
+				$('.pagination').html('');
+			} else {
+				res.articlePage.content.forEach(list => {
+				// 배송 일자
+				let deli = '-';
+				if(list.deliYmd!=null){
+					deli = strToDate(list.deliYmd);
+				}
+				
+				let clclnAmt = '-'
+				if(list.poClclnVO.clclnAmt!=0){
+					clclnAmt = list.poClclnVO.clclnAmt.toLocaleString()+'원';
+				}
+				// 등록 일자
+				let reg = strToDate(list.regYmd);
+				
+				// 정산 여부
+				let clclnYn = !list.poClclnVO.clclnYn ? `<span class='bge bge-default-border'>해당없음</span>` : list.poClclnVO.clclnYn=='Y' ? `<span class='bge bge-active-border'>정산완료</span>` : `<span class='bge bge-danger-border'>정산미납</span>`
+				// 유형
+				let deliTypeStr = list.deliType=='DELI01' ? `<span class='bge bge-info'>${list.deliTypeNm}</span>`
+					: list.deliType=='DELI02' ? `<span class='bge bge-warning'>${list.deliTypeNm}</span>` 
+					: list.deliType=='DELI03' ? `<span class='bge bge-active'>${list.deliTypeNm}</span>` : `<span class='bge bge-danger'>${list.deliTypeNm}</span>`;
+				
+				
+	    		strTbl += `
+				    <tr class="dealDtl" data-no="${list.poNo}">
+				        <td class="center">${list.rnum}</td>
+				        <td class="center">${list.poNo}</td>
+				        <td>${type=='po' ? list.stockPoVOList[0].bzentVO.bzentNm : list.bzentVO.bzentNm}</td>
+				        <td>${clclnAmt}</td>
+				        <td class="center">${deli}</td>
+				        <td class="center">${clclnYn}</td>
+				        <td class="center">${deliTypeStr}</td>
+				    </tr>
+				`;
+				
+				});
+				
+				// 페이징 처리
+				let page = '';
+				
+				if (res.articlePage.startPage > res.articlePage.blockSize) {
+				    page += `
+				        <a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_left</span>
+				        </a>
+				    `;
+				}
+				
+				// 페이지 번호 링크들 추가
+				for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+				    if (res.articlePage.currentPage === pnum) {
+				        page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+				    } else {
+				        page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+				    }
+				}
+				
+				// 'chevron_right' 아이콘 및 다음 페이지 링크 추가
+				if (res.articlePage.endPage < res.articlePage.totalPages) {
+				    page += `
+				        <a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_right</span>
+				        </a>
+				    `;
+				}
+				$('.pagination').html(page);
+				}
+			$('#table-body').html(strTbl)
+			}
+		});			
+ }
+
+ /*******************************************
+			(추가)상품 검색 +++++++++++++++++++++++++++++++++++ (본사) , 가맹점은 고려
+********************************************/
+// @methodName  : selectGdsAjax
+// @author      : 송예진
+// @date        : 2024.09.27
+// @description : 가맹점주 수정
+function selectGdsAjax(){
+	let gdsType = $('#gdsType').val();
+	let gdsNm = $('#gdsNm').val();
+	let sfStockQty = $('#sfStockQty').val();
+	
+	let data = {};
+
+	// 값이 빈 문자열이 아니면 data 객체에 추가
+	if (gdsType) {
+	    data.gdsType = gdsType;
+	}
+	if (gdsNm) {
+	    data.gdsNm = gdsNm;
+	}
+	if (sfStockQty) {
+	    data.sfStockQty = sfStockQty;
+	}
+	
+	data.sort = sort;
+	data.orderby = orderby;
+	data.currentPage = currentPage;
+	data.gdsClass = gdsClass;
+	data.bzentNo = bzentNo;
+	data.size = 5;
+	
+	//console.log(data);  // 최종적으로 빈 값이 제외된 data 객체
+	
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/gds/listAjax",
+		type : "GET",
+		data : data,
+		success : function(res){
+			// 분류 처리
+			$('#tap-all').text(res.all);
+			$('#tap-fd').text(res.fd);
+			$('#tap-sm').text(res.sm);
+			$('#tap-pm').text(res.pm);
+			
+			//console.log(res);
+			// 테이블 처리
+			let strTbl = '';
+			
+			if(res.total == 0){ // 검색 결과가 0인 경우
+				strTbl+= `
+							<tr>
+								<td class="error-info" colspan="9"> 
+									<span class="icon material-symbols-outlined">error</span>
+									<div class="error-msg">검색 결과가 없습니다</div>
+								</td>
+							</tr>
+				`;
+				$('.pagination').html('');
+			} else {
+				res.articlePage.content.forEach(list => {
+				// 유형
+				let type = `<span class='bge ${
+				    list.gdsType.substring(0, 2) == 'FD' ? 'bge-active' 
+				    : list.gdsType.substring(0, 2) == 'SM' ? 'bge-warning' 
+				    : 'bge-danger'}'>${list.gdsTypeNm}</span>`;
+				
+				let red = `${list.stockVOList[0].qty<list.stockVOList[0].sfStockQty ? 'style="color:red;"': ''}`;
+				
+				// 배열에 이미 담긴 상품인 경우 표시 추가
+                let inCart = gdsList.includes(list.gdsCode) ? 
+                `<span class="material-symbols-outlined">shopping_cart</span>` : '';
+				
+				let chk = false;
+				
+				if(inCart!=''){
+					chk=true; // 카드에 담김
+				}
+				
+	    		strTbl += `
+				    <tr class="gdsDtl" data-no="${list.gdsCode}" data-nm="${list.gdsNm}"
+				    	data-unit="${list.unitNm}" data-type="${type}" data-chk="${chk}"
+				    	data-qty="${list.stockVOList[0].sfStockQty - list.stockVOList[0].qty}">
+				        <td class="center">${list.rnum}</td>
+				        <td class="td-cart">${list.gdsNm} <span class="cartYn">${inCart}</span></td>
+				        <td ${red}>${list.stockVOList[0].qty.toLocaleString()}</td>
+				        <td>${list.stockVOList[0].sfStockQty.toLocaleString()}</td>
+				        <td class="center">${list.unitNm}</td>
+				        <td class="center">${type}</td>
+				    </tr>
+				`;
+				
+				});
+				
+				// 페이징 처리
+				let page = '';
+				
+				if (res.articlePage.startPage > res.articlePage.blockSize) {
+				    page += `
+				        <a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_left</span>
+				        </a>
+				    `;
+				}
+				
+				// 페이지 번호 링크들 추가
+				for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+				    if (res.articlePage.currentPage === pnum) {
+				        page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+				    } else {
+				        page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+				    }
+				}
+				
+				// 'chevron_right' 아이콘 및 다음 페이지 링크 추가
+				if (res.articlePage.endPage < res.articlePage.totalPages) {
+				    page += `
+				        <a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_right</span>
+				        </a>
+				    `;
+				}
+				$('.pagination').html(page);
+				}
+			$('#table-body-gds').html(strTbl)
+			}
+		});			
+ }
+ 
+ /*******************************************
+			(추가)거래처 조회 +++++++++++++++++++++++++++++++++++ (본사, 가맹점)
+********************************************/
+// @methodName  : selectCnptGdsAjax
+// @author      : 송예진
+// @date        : 2024.09.27
+// @description : 가맹점주 수정
+function selectCnptGdsAjax(gdsCode){
+// 서버전송
+	$.ajax({
+		url : "/hdofc/deal/cnptGds",
+		type : "POST",
+		data: { gdsCode : gdsCode },  // 객체 형태로 전송
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+			//console.log(res);
+			//// 상품 상세
+			let num = 1;
+			let gdsStr= '';
+			res.forEach(list => { 
+				gdsStr += `<tr class="cnptGdsModal" data-nm="${list.bzentVO.bzentNm}" 
+						data-no="${list.bzentNo}" data-amt="${list.gdsAmtVOList[0].amt}" 
+						data-qty="${list.qty - list.ntslQty}">
+							<td style="text-align:center; width: 20%;">${num++}</td>
+							<td style="width: 31%;">${list.bzentVO.bzentNm}</td>
+							<td style="text-align:center; width: 20%;">${(list.qty - list.ntslQty).toLocaleString()} / ${list.qty.toLocaleString()}</td>
+							<td style="text-align:center; width: 30%;">${list.gdsAmtVOList[0].amt.toLocaleString()}</td>
+						</tr>`;
+			});
+			$('#table-modal').html(gdsStr);
+			$('#tap-cnpt').text(num);			
+		} // success 끝
+	});				
+ }
+
+ /*******************************************
+			발주 추가(본사 추가)
+********************************************/
+function addPoList(poList){
+		let poListStr = `
+			<tr data-no="${poList.bzentNo}" data-code="${poList.gdsCode}" data-amt="${poList.amt}">
+				<td style="text-align:center; width:6%;"><button class="btn btn-default remove" data-no="${poList.gdsCode}">삭제</button></td>
+				<td style="width:16%;">${poList.bzentNm}</td>
+				<td style="width:17%;">${poList.gdsNm}</td>
+				<td style="text-align:center; width:10%;">${poList.gdsType}</td>
+				<td style="width:10%;"><input class="poQty" value="${poList.inputQty}" type="number" max="${poList.max}" data-amt="${poList.amt}"></td>
+				<td style="text-align:center; width:10%;">${poList.unitNm}</td>
+				<td style="text-align:center; width:15%;">${poList.amt.toLocaleString()}</td>
+				<td style="text-align:center; width:15%;" class="gdsTotal">${(poList.inputQty * poList.amt).toLocaleString()}</td>
+			</tr>
+		`;
+		total+=poList.inputQty * poList.amt;
+		$('#total').text(total.toLocaleString());
+		$('#po-list').append(poListStr);
+}
+
+
+ /*******************************************
+			가격 변경(본사, 가맹점)
+********************************************/
+// 모든 gdsTotal 값을 합산하여 id="total"에 반영하는 함수
+function updateTotal() {
+    let total = 0;
+    
+    // 모든 gdsTotal 값을 순회하여 합산
+    $('.gdsTotal').each(function() {
+        // gdsTotal의 텍스트 값을 가져와 숫자로 변환하여 합산
+        total += parseFloat($(this).text().replace(/,/g, ''));
+    });
+    
+    // id="total"에 총합을 업데이트
+    $('#total').text(total.toLocaleString());
+}
+
+ /*******************************************
+			발주 신청 (본사)
+********************************************/
+// 추가
+function insertPoAjax(bzentNoGroups){
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/deal/registAjax",
+		type : "POST",
+		contentType: 'application/json',
+        data: JSON.stringify(bzentNoGroups), // 데이터를 JSON으로 변환
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+			if(res>0){
+				Swal.fire({
+				  title: "완료",
+				  text: "발주가 성공적으로 신청되었습니다",
+				  icon: "success"
+				}).then((result) => {
+				 if (result.isConfirmed) {
+					 location.href="/hdofc/deal/list?type=po";
+				}
+			});
+			}
+		} // success 끝
+	});		
+}
+ /*******************************************
+			날짜 비교
+********************************************/
+// 날짜 비교 함수
+function isPastOrToday(deliYmd) {
+	// 오늘 날짜를 YYYYMMDD 형식으로 구하기
+	const today = new Date();
+	const year = today.getFullYear();
+	const month = ('0' + (today.getMonth() + 1)).slice(-2); // 월은 0부터 시작하므로 +1
+	const day = ('0' + today.getDate()).slice(-2);
+	const todayYmd = `${year}${month}${day}`; // YYYYMMDD 형식
+	
+    return deliYmd <= todayYmd; // deliYmd가 오늘 또는 이전 날짜이면 true 반환
+}
+
+ /*******************************************
+			발주 상세 조회 (본사 /가맹점/거래처 사용)
+********************************************/
+// 상세!!!
+function selectDealDtlAjax(){
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/deal/dtlAjax",
+		type : "POST",
+		data: { poNo : poNo },  // 객체 형태로 전송
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+		console.log(res);
+			let po = res.po;
+			$('#poNo').text(poNo);
+			
+			// 등록 일자
+			let reg = strToDate(po.stockPoVOList[0].spmtYmd);
+			// 정산 일자
+			let clclnYmd = '-';
+			if(po.poClclnVO){
+				if(po.poClclnVO.clclnYn=='Y'){
+					clclnYmd = strToDate(po.poClclnVO.clclnYmd);
+				}
+			}
+			
+			// 정산 여부
+			let clclnYn = !po.poClclnVO ? `-` : po.poClclnVO.clclnYn=='Y' ? `<span class='bge bge-active-border'>정산완료</span>` : `<span class='bge bge-danger-border'>정산미납</span>`
+			// 유형
+			let deliT = po.deliType=='DELI01' ? `<span class='bge bge-info'>${po.deliTypeNm}</span>`
+				: po.deliType=='DELI02' && isPastOrToday(po.deliYmd) ? `<span class='bge bge-warning'>${po.deliTypeNm}</span> <button id="stockUpdate">배송완료</button>` 
+				: po.deliType=='DELI02' ? `<span class='bge bge-warning'>${po.deliTypeNm}</span>` 
+				: po.deliType=='DELI03' ? `<span class='bge bge-active'>${po.deliTypeNm}</span>` : `<span class='bge bge-danger'>${po.deliTypeNm}</span>`;
+			
+			// 배송 일자
+			let deli = '-';
+			if(po.deliYmd!=null){
+				deli = strToDate(po.deliYmd);
+			}
+			
+			let clclnAmt = po.poClclnVO.clclnAmt.toLocaleString()+'원';
+			
+			// 배송중일 때는 배송 완료 버튼도 추가할 것
+			$('#deliType').html(deliT);
+			$('#regYmd').text(reg);
+			$('#deliYmd').text(deli);
+			$('#clclnYn').html(clclnYn);
+			$('#clclnYmd').html(clclnYmd);
+			
+			let bzentNm = '';
+			let bzentTelno = '';
+			let bzentAddr = '';
+			
+				console.log(type);
+			if(type=='po'){
+				// 자신의 발주 건인 경우
+				if(po.deliType=='DELI01'){ // 승인 대기중에는 삭제 가능
+					$('.po-aprv').show();
+				}
+				bzentNm=po.stockPoVOList[0].bzentVO.bzentNm;
+				bzentTelno = telToStr(po.stockPoVOList[0].bzentVO.bzentTelno);
+				bzentAddr = `
+							${po.stockPoVOList[0].bzentVO.bzentZip}<br>
+							${po.stockPoVOList[0].bzentVO.bzentAddr}, ${po.stockPoVOList[0].bzentVO.bzentDaddr}
+							`;
+			} else {
+				// 납품 건의 경우
+				bzentNm=po.bzentVO.bzentNm;
+				bzentTelno = telToStr(po.bzentVO.bzentTelno);
+				bzentAddr = `
+							${po.bzentVO.bzentZip}<br>
+							${po.bzentVO.bzentAddr}, ${po.bzentVO.bzentDaddr}
+							`;
+			}
+			
+			$('#bzentNm').text(bzentNm);
+			$('#bzentTelno').text(bzentTelno);
+			$('#bzentAddr').html(bzentAddr);
+			
+			let gds = '';
+			//// 상품 상세
+			po.stockPoVOList.forEach(list => { 
+				// 유형
+				let gdsType = `<span class='bge ${
+				    list.gdsVO.gdsType.substring(0, 2) == 'FD' ? 'bge-active' 
+				    : list.gdsVO.gdsType.substring(0, 2) == 'SM' ? 'bge-warning' 
+				    : 'bge-danger'}'>${list.gdsVO.gdsTypeNm}</span>`;
+			
+				gds += `<tr>
+							<td style="text-align:center; width: 10%;">${list.poSeq}</td>
+							<td style="width: 20%;">${list.gdsVO.gdsNm}</td>
+							<td style="text-align:center; width: 15%;">${gdsType}</td>
+							<td style="text-align:center; width: 15%;">${list.qty.toLocaleString()}</td>
+							<td style="text-align:center; width: 10%;">${list.gdsVO.unitNm}</td>
+							<td style="text-align:center; width: 10%;">${list.gdsAmt.toLocaleString()}</td>
+							<td style="text-align:center; width: 20%;">${(list.qty * list.gdsAmt).toLocaleString()}원</td>
+						</tr>`;
+			});
+			$('#table-body').html(gds);
+			
+			$('#clclnAmt').text(clclnAmt);
+		} // success 끝
+	});		
+}
+
+ /*******************************************
+			발주 삭제 (본사, 가맹점 사용)
+********************************************/
+// 상세!!!
+function deletePoAjax(){
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/deal/deleteAjax",
+		type : "POST",
+		data: { poNo : poNo },  // 객체 형태로 전송
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+			if(res>0){
+				Swal.fire({
+				  title: "완료",
+				  text: "거래처가 성공적으로 삭제되었습니다",
+				  icon: "success"
+				}).then((result) => {
+				 if (result.isConfirmed) {
+					 location.href="/hdofc/deal/list?type=po";
+				}
+			});
+			} else {
+				Swal.fire({
+				  title: "오류",
+				  html: "<p>재고 정보가 존재합니다</p><p>해당 거래처는 삭제할 수 없습니다.</p>",
+				  icon: "error"
+				});
+			}
+		} // success 끝
+	});		
+}
+
+ /*******************************************
+			tl
+********************************************/
+function deePoAjax(){
+	let bzentVO = {}; // bzentNo, mbrId, mngrId, bzentTelno, bzentNm, bzentZip, bzentAddr, bzentDaddr, bzentType
+	// 나중에 들어가는 값  rgnNo
+	
+	let bzentNm = $('#bzentNm').val();
+	let bzentZip= $('#bzentZip').val();
+	let bzentAddr= $('#bzentAddr').val();
+	let bzentType = $('#bzentType').val();
+
+	// 선택
+	let bzentDaddr = $('#bzentDaddr').val();
+	let mbrId = $('#mbrId').val();
+	let mngrId = $('#mngrId').val();
+	let bzentTelno = $('#bzentTelno1').val()+$('#bzentTelno2').val()+$('#bzentTelno3').val();
+	
+	bzentVO.bzentNm = bzentNm;
+	bzentVO.bzentZip = bzentZip;
+	bzentVO.bzentAddr = bzentAddr;
+	bzentVO.bzentType = bzentType;
+	bzentVO.bzentNo = bzentNo;
+	
+	if(mbrId){
+		bzentVO.mbrId = mbrId;
+	}
+	
+	if(bzentDaddr){
+		bzentVO.bzentDaddr = bzentDaddr;
+	}
+	if(mngrId){
+		bzentVO.mngrId = mngrId;
+	}
+	if(bzentTelno){
+		bzentVO.bzentTelno = bzentTelno;
+	}
+	
+	console.log(bzentVO);
+	
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/cnpt/updateAjax",
+		type : "POST",
+		data: JSON.stringify(bzentVO),  // JSON으로 변환
+        contentType: "application/json",  // JSON 형식으로 전송
+	// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+
+		},
+		error: function(xhr, status, error) {
+        	console.error("에러 발생: ", error);
+        }
+		});		
+}

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@description  : 가맹점 상담
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcFrcsDscsnMapper">
+	<resultMap type="frcsDscsnVO" id="frcsDscsnMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="dscsnRsn" column="DSCSN_RSN"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="dscsnCode" column="DSCSN_CODE"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="dscsnPlanYmd" column="DSCSN_PLAN_YMD"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="PLAN_RGN_NM"/>
+		<result property="dscsnType" column="DSCSN_TYPE"/>
+		<result property="dscsnTypeNm" column="DSCSN_TYPE_NM"/>
+		<result property="dscsnCn" column="DSCSN_CN"/>
+		
+		<association property="mbrVO" resultMap="mbrMap"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+		<association property="frcsVO" resultMap="frcsMap"/>
+	</resultMap>
+	
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="frcsTypeNm" column="FRCS_TYPE_NM"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!   가맹점 상담 조회 시작   !!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 가맹점 상담 조회
+ 		@description : 가맹점 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectFrcsDscsn" parameterType="hashMap" resultMap="frcsDscsnMap">
+		SELECT *
+		FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_dscsn"/> <include refid="orderby"/>) AS RNUM
+			        , D.DSCSN_CODE
+			        , D.MBR_ID
+			        , M.MBR_NM
+			        , M.MBR_TELNO
+			        , M.MBR_EML_ADDR
+			        , D.MNGR_ID
+			        , N.MBR_NM AS MNGR_NM
+			        , D.DSCSN_PLAN_YMD
+			        , D.RGN_NO
+			        , R.COM_NM AS PLAN_RGN_NM
+			        , D.DSCSN_TYPE
+			        , T.COM_NM AS DSCSN_TYPE_NM
+			        , D.FRCS_NO
+			FROM FRCS_DSCSN D
+			JOIN MEMBER M ON D.MBR_ID = M.MBR_ID
+			LEFT OUTER JOIN MEMBER N ON D.MNGR_ID=N.MBR_ID
+			JOIN COM_CODE R ON R.COM_NO=D.RGN_NO
+			JOIN COM_CODE T ON T.COM_NO=D.DSCSN_TYPE
+		  WHERE 1=1
+		  <include refid="dscsn_search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+<!-- 정렬 조건 시작 -->
+	<sql id="sort_dscsn">
+		<!-- 운영 상태 순 -->
+		<if test="sort == 'dscsnType'">
+			ORDER BY D.DSCSN_TYPE
+		</if>
+		<!-- 가맹점주 이름 순 -->
+		<if test="sort == 'mbrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'mngrNm'">
+			ORDER BY N.MBR_NM
+		</if>
+		<!-- 최근 개업 일자 순 -->
+		<if test="sort == 'dscsnYmd'">
+			ORDER BY D.DSCSN_PLAN_YMD
+		</if>
+		<!-- 지역순 -->
+		<if test="sort == 'rgnNo'">
+			ORDER BY D.RGN_NO
+		</if>
+		<!-- 개업여부 -->
+		<if test="sort == 'frcs'">
+			ORDER BY D.FRCS_NO
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="dscsn_search">
+		<!-- 가맹점주 이름 검색 -->
+		<if test="mbrNm != null and mbrNm != ''">
+			AND M.MBR_NM LIKE '%'||#{mbrNm}||'%'
+		</if>
+		<!-- 관리자 검색 -->
+		<if test="mngrNm != null">
+			AND N.MNGR_NM LIKE '%'||#{mngrNm}'%'
+		</if>
+		<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND D.RGN_NO = #{rgnNo}
+		</if>
+		<!-- 상담일자 검색 -->
+		<if test="bgngYmd != null">
+		<![CDATA[
+			AND D.DSCSN_PLAN_YMD >= #{bgngYmd}
+		]]>
+		</if>
+		<if test="endYmd != null">
+		<![CDATA[
+			AND D.DSCSN_PLAN_YMD <= #{endYmd}
+		]]>
+		</if>
+		<!-- 가맹점 개업 여부 -->
+		<if test="frcsOpen == 1">
+			AND D.FRCS_NO IS NOT NULL
+		</if>
+		<if test="frcsOpen == 2">
+			AND D.FRCS_NO IS NULL
+			AND D.DSCSN_TYPE IN('DSC04')
+		</if>
+		<if test="frcsOpen == 3">
+			AND D.FRCS_NO IS NULL
+			AND D.DSCSN_TYPE NOT IN('DSC04')
+		</if>
+		<if test="dscsnType != null and dscsnType != ''">
+			AND D.DSCSN_TYPE = #{dscsnType}
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--
+ 		@programName : 가맹점 상담 조회 전체 갯수 (페이징)
+ 		@description : 가맹점 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectTotalFrcsDscsn" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(1)
+		FROM FRCS_DSCSN D
+		JOIN MEMBER M ON D.MBR_ID = M.MBR_ID
+		LEFT OUTER JOIN MEMBER N ON D.MNGR_ID=N.MBR_ID
+		JOIN COM_CODE R ON R.COM_NO=D.RGN_NO
+		JOIN COM_CODE T ON T.COM_NO=D.DSCSN_TYPE
+		  WHERE 1=1
+		  <include refid="dscsn_search"/>
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 상세
+ 		@description : 가맹점 상세를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectFrcsDscsnDtl" parameterType="String" resultMap="frcsDscsnMap">
+		SELECT D.DSCSN_CODE
+		        , D.MBR_ID
+		        , M.MBR_NM
+		        , M.MBR_BRDT
+		        , M.MBR_TELNO
+		        , M.MBR_EML_ADDR
+		        , D.MNGR_ID
+		        , N.MBR_NM AS MNGR_NM
+		        , N.MBR_TELNO AS MNGR_TELNO
+		        , D.DSCSN_PLAN_YMD
+		        , D.RGN_NO
+		        , R.COM_NM AS PLAN_RGN_NM
+		        , D.DSCSN_TYPE
+		        , T.COM_NM AS DSCSN_TYPE_NM
+		        , D.FRCS_NO
+		        , D.DSCSN_CN
+			FROM FRCS_DSCSN D
+			JOIN MEMBER M ON D.MBR_ID = M.MBR_ID
+			LEFT OUTER JOIN MEMBER N ON D.MNGR_ID=N.MBR_ID
+			JOIN COM_CODE R ON R.COM_NO=D.RGN_NO
+			JOIN COM_CODE T ON T.COM_NO=D.DSCSN_TYPE
+			WHERE D.DSCSN_CODE=#{dscsnCode}
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 상담 변경
+ 		@description : 수정을 위함 꼭 dscsnType도 추가해줄것
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 23
+	-->
+	<update id="updateFrcsDscsn" parameterType="frcsDscsnVO">
+		UPDATE FRCS_DSCSN
+		SET MNGR_ID = #{mngrId}
+		, DSCSN_TYPE = #{dscsnType}
+		, RGN_NO = #{rgnNo}
+		, DSCSN_PLAN_YMD = #{dscsnPlanYmd}
+		<if test="dscsnCn != null">
+		, DSCSN_CN = #{dscsnCn}
+		</if>
+		WHERE DSCSN_CODE=#{dscsnCode}
+	</update>
+	
+	<update id="updateMbrType02" parameterType="frcsDscsnVO">
+		UPDATE MEMBER
+		SET MBR_TYPE = 'MBR02'
+		WHERE MBR_ID IN (SELECT MBR_ID FROM FRCS_DSCSN WHERE DSCSN_CODE=#{dscsnCode})
+	</update>
+</mapper>

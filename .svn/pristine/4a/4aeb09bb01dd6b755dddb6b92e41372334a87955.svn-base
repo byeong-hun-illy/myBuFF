@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsMenuMapper">
+
+<!-- 
+@author       : 정현종
+@date         : 2024.09.12
+@description  : 가맹점 판매 메뉴 sql
+ -->
+
+ 	<resultMap type="MenuVO" id="menuMap">
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+ 		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+ 	</resultMap>
+ 	
+ 	<!--
+ 		@programName : 가맹점 판매 메뉴 조회
+ 		@description : 가맹점 판매 메뉴 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 12
+	-->
+	<select id="selectFrcsMenuList" resultMap="menuMap">
+	    SELECT M.MENU_NO			<!-- 메뉴 번호 -->
+	    	 , M.MENU_NM			<!-- 메뉴 이름 -->
+	    	 , M.MENU_IMG_PATH		<!-- 메뉴 사진 경로 -->
+	    	 , M.MENU_AMT			<!-- 메뉴 금액 -->
+	    	 , M.MENU_EXPLN			<!-- 메뉴 설명 -->
+	    	 , M.MENU_TYPE			<!-- 메뉴 유형 -->
+	    	 , M.RLS_YMD			<!-- 출시 일자 -->
+	    	 , M.REG_YMD			<!-- 등록 일자 -->
+	    	 , M.NTSL_TYPE			<!-- 판매 유형 -->
+	    	 , FM.FRCS_NO			<!-- 가맹점 번호 -->
+	    	 , FM.NTSL_YN			<!-- 판매 여부 -->
+	    FROM   MENU M
+	    JOIN   FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO
+	    WHERE  FM.FRCS_NO = 'FR0303'
+	    AND    FM.NTSL_YN = 'Y'
+	    
+	    <!-- 전체 검색 조건 -->
+	    <if test="(gubun == null or gubun.trim() == '') and (keyword == null or keyword.trim() == '')">
+	        <!-- 메뉴 유형과 메뉴 이름이 모두 선택되지 않았을 경우 전체 출력 -->
+	    </if>
+	    
+	    <!-- 메뉴 유형만 검색 -->
+	    <if test="gubun == 'menutype' and (keyword == null or keyword.trim() == '')">
+	        AND M.MENU_TYPE LIKE '%' || #{keyword} || '%'
+	    </if>
+	    
+	    <!-- 메뉴 이름만 검색 -->
+	    <if test="gubun == 'menunm' and (keyword == null or keyword.trim() == '')">
+	        AND M.MENU_NM LIKE '%' || #{keyword} || '%'
+	    </if>
+	    
+	    <!-- 메뉴 유형과 메뉴 이름 모두 검색 -->
+	    <if test="gubun != null and keyword != null">
+	        AND M.MENU_TYPE LIKE '%' || #{gubun} || '%' 
+	        AND M.MENU_NM LIKE '%' || #{keyword} || '%'
+	    </if>
+	    
+	    <!-- 메뉴 유형 검색 조건이 있을 때 -->
+	    <if test="gubun == 'menutype' and keyword != null">
+	        AND M.MENU_TYPE LIKE '%' || #{gubun} || '%' 
+	        AND M.MENU_NM LIKE '%' || #{keyword} || '%'
+	    </if>
+	    
+	    <!-- 메뉴 이름 검색 조건이 있을 때 -->
+	    <if test="gubun == 'menunm' and keyword != null">
+	        AND M.MENU_NM LIKE '%' || #{gubun} || '%'
+	        AND M.MENU_TYPE LIKE '%' || #{keyword} || '%'
+	    </if>
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 판매 가능 메뉴 조회
+ 		@description : 가맹점 판매 가능 메뉴 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 13
+	-->
+	<select id="selectAllFrcsMenuList" resultMap="menuMap">
+		SELECT M.MENU_NO			<!-- 메뉴 번호 -->
+			 , M.MENU_NM			<!-- 메뉴 이름 -->
+			 , M.MENU_IMG_PATH		<!-- 메뉴 사진 경로 -->
+			 , M.MENU_AMT			<!-- 메뉴 금액 -->
+			 , M.MENU_EXPLN			<!-- 메뉴 설명 -->
+		     , M.MENU_TYPE			<!-- 메뉴 유형 -->
+		     , M.RLS_YMD			<!-- 출시 일자 -->
+		     , M.REG_YMD			<!-- 등록 일자 -->
+		     , M.NTSL_TYPE			<!-- 판매 유형 -->
+		FROM   MENU M
+		LEFT JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO AND FM.FRCS_NO = 'FR0303'
+		WHERE  FM.FRCS_NO IS NULL OR FM.NTSL_YN = 'N'
+	</select>
+	
+	<!--
+ 		@programName : 가맹점 판매 메뉴 추가
+ 		@description : 가맹점에 새로운 메뉴를 추가하는 쿼리
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 13
+	--> 
+	<update id="insertFrcsMenuAjax" parameterType="java.util.Map">
+	    UPDATE FRCS_MENU
+	    SET NTSL_YN = 'Y'
+	    WHERE FRCS_NO = 'FR0303'
+	    AND MENU_NO IN
+	    <foreach item="menuNo" collection="list" open="(" separator="," close=")">
+	        #{menuNo}
+	    </foreach>
+	</update>
+	 
+	<!--
+    @programName : 메뉴 단종 처리
+    @description : 특정 메뉴를 단종 처리하는 쿼리 
+    @author      : 정현종
+    @date        : 2024. 09. 13
+	-->
+	<update id="deleteFrcsMenuAjax" parameterType="java.util.Map">
+	    UPDATE FRCS_MENU
+	    SET NTSL_YN = 'N'
+	    WHERE FRCS_NO = 'FR0303'
+	    AND MENU_NO IN
+	    <foreach item="menuNo" collection="list" open="(" separator="," close=")">
+	        #{menuNo}
+	    </foreach>
+	</update>
+</mapper>

@@ -1,0 +1,24 @@
+package com.buff.hdofc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.GdsVO;
+
+/**
+* @packageName  : com.buff.hdofc.mapper
+* @fileName     : HdofcGdsMapper.java
+* @author       : 송예진
+* @date         : 2024.09.25
+* @description  : 상품관리, 재고관리, 안전재고관리, 상품소모량 조회
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.25        송예진     	  			최초 생성
+*/
+@Mapper
+public interface HdofcGdsMapper {
+	public List<GdsVO> selectStock(Map<String, Object> map);
+}

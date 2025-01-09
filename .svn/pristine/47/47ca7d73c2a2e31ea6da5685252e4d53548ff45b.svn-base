@@ -1,0 +1,30 @@
+package com.buff.hdofc.service;
+
+import java.util.Map;
+
+
+/**
+* @packageName  : com.buff.service.hdofc
+* @fileName     : HdofcMngrService.java
+* @author       : 정기쁨
+* @date         : 2024.09.29
+* @description  : 본사 사원 관련 서비스
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.28
+*         정기쁨     	  			최초 생성
+*/
+public interface HdofcMngrService {
+
+	/**
+	* @methodName  : selectNoticeAjax
+	* @author      : 정기쁨
+	* @date        : 2024.09.29
+	* @param bzentType
+	* @return      : 사원관리 페이지 정보
+	*/
+	public Map<String, Object> selectNoticeAjax(Map<String, Object> map);
+}
+
+

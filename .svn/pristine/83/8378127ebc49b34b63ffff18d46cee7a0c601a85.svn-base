@@ -1,0 +1,9 @@
+@charset "UTF-8";
+.btn-active:disabled{
+	background-color: var(--btn--disabled);
+    color: var(--text--placeholder);
+}
+.btn-active:disabled:hover {
+	background-color: var(--btn--disabled);
+    color: var(--text--placeholder);
+}

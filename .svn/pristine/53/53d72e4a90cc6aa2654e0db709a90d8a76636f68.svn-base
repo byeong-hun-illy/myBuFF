@@ -1,0 +1,258 @@
+/*******************************************
+  @fileName    : gds.js
+  @author      : 이병훈
+  @date        : 2024. 09. 23
+  @description : 거래처 상품 조회 코드
+********************************************/
+document.write("<script src='/resources/js/global/value.js'></script>");
+
+// @methodName  : selectGdsAjax
+// @author      : 이병훈
+// @date        : 2024.09.23
+// @jsp         : cnpt/gds/selectGds
+// @description : 거래처 상품 리스트 및 검색 조건에 따른 리스트 조회
+
+function selectGdsAjax(){
+	
+	let gubun = $("#gubun").val();
+	let keyword = $("#keyword").val();
+	
+	console.log("bzentNo : " + bzentNo);
+	
+	let data = { };
+	
+	data.currentPage = currentPage;
+	data.sort = sort;
+	data.orderby = orderby;
+	data.gubun = gubun;
+	data.keyword = keyword;
+	data.bzentNo = bzentNo;
+	
+	console.log("data : ", data);
+	
+	$.ajax({
+		url : "/cnpt/gds/listAjax",
+		type : "GET",
+		data : data, 
+		success : function(res){
+			console.log("res : ",res);
+			
+			// 전체 상품 수 all값을 동적으로 업데이트 
+			$("#tap-all").text(res.all);
+			
+			let strTbl = '';
+			if(res.articlePage.total == 0){ // 검색 결과가 0인 경우
+				strTbl += 
+						`<tr>
+							<td class="error-info" colspan="8"> 
+								<span class="icon material-symbols-outlined">error</span>
+								<div class="error-msg">검색 결과가 없습니다</div>
+							</td>
+						</tr>`;
+			
+			} else {
+				res.articlePage.content.forEach(list => {
+					// 각각의 재고 정보를 반복하여 출력
+					console.log(list);
+					
+					let qty = list.stockVOList[0].qty;
+					// 천 단위 구분 기호 적용
+					let formatQty = qty.toLocaleString();
+					
+					let amt = list.stockVOList[0].gdsAmtVOList[0].amt;
+					
+					let formatAmt = amt.toLocaleString();
+					
+					
+					strTbl += 
+	 						`
+	 						<tr class="product-row" data-gds-code="${list.gdsCode}">
+	 							<td class="center">${list.rnum}</td>
+	 							<td class="center">${list.gdsNm}</td>
+	 							<td class="center">${formatQty}</td>
+	 							<td class="center">${list.unitNm}</td>
+	 							<td class="center">${formatAmt}원</td>
+	 						</tr>
+	 						`;
+				
+					
+				});
+			}
+	
+				// 페이징 처리
+				let page = '';
+				if (res.articlePage.startPage > res.articlePage.blockSize) {
+				    page += `<a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_left</span></a>`;
+				}
+				for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+					if (res.articlePage.currentPage === pnum) {
+						page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+					} else {
+						page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+					}
+				}
+				if (res.articlePage.endPage < res.articlePage.totalPages) {
+					page += `<a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_right</span></a>`;
+				}
+				
+				$('.pagination').html(page);
+			
+				// 테이블 바디에 데이터 삽입
+				$('#table-body').html(strTbl);
+				
+				
+		}
+	// ajax 끝	
+	});
+// selectGdsAjax 끝	
+}
+ /*******************************************
+	상품 단가 변동 추이 조회 - 6개월의 월수 데이터 뽑기
+********************************************/
+ // @methodName  : getSixMonths
+// @author      : 이병훈
+// @date        : 2024.09.25
+// @jsp         : /cnpt/gds/selectGds, /cnpt/gds/amtTrend
+// @description : chart.js x행에 들어갈 6개월 간의 월 수
+
+
+// 지난 6개월의 월 단위 추출 함수
+function getSixMonths(){
+	let months = [];
+	let currentDate = new Date();
+	
+	for(let i=0; i<6; i++){
+		// 월은 0부터 시작하므로 +1
+		let month = currentDate.getMonth() + 1;
+		let year = currentDate.getFullYear();
+		
+		// 월을 두자릿수로 표시
+		let formatMonth = month < 10 ? '0' + month : month;
+		
+		// labels에 연월(YYYY-MM) 형식으로 추가
+		months.push(year + '-' + formatMonth);
+		
+		// 한 달을 뒤로 이동
+		currentDate.setMonth(currentDate.getMonth() - 1);
+		
+	}
+	// 최신날짜가 앞에 오도록 순서 반전
+	return months.reverse();
+
+// getSixMonths 함수 끝	
+}
+
+ /*******************************************
+	상품 단가 변동 추이 조회 - chart.js 그래프 내에 들어갈 데이터 들
+********************************************/
+ // @methodName  : chartData
+// @author      : 이병훈
+// @date        : 2024.09.25
+// @jsp         : /cnpt/gds/selectGds, /cnpt/gds/amtTrend
+// @description : chart.js 안에 들어갈 데이터 들
+// 단가 데이터를 받아서 그래프 데이터를 채우는 함수
+function chartData(priceData){
+	// 지난 6개월의 월을 labels로 사용
+	let labels= getSixMonths();
+	// 데이터가 없는 월은 'null'로 초기화
+	let data = new Array(6).fill(null);
+	// 이전 달의 단가를 기억할 변수
+	let lastPrice = null;
+	
+	labels.forEach((label, index) => {
+		let found = priceData.find(item => item.ajmtDt.startsWith(label));
+		if(found){
+			// 해당 월에 데이터가 있으면 단가 사용.
+			data[index] = found.amt;
+			// 마지막으로 발견된 단가 저장
+			lastPrice = found.amt;
+		} else if(lastPrice !== null){
+			// 데이터가 없으면 이전 단가로 채움
+			data[index] = lastPrice;
+		}
+		
+	});
+	
+	return { labels, data };
+
+// chartData 꿑	
+}
+
+ /*******************************************
+	상품 단가 변동 추이 조회 - ajax 비동기 후, chart.js를 실질적으로 그리는 함수
+********************************************/
+ // @methodName  : chartData
+// @author      : 이병훈
+// @date        : 2024.09.25
+// @jsp         : /cnpt/gds/selectGds, /cnpt/gds/amtTrend
+// @description : chart.js 그리는 함수
+
+// Ajax 요청 후 차트 그리는 함수
+function makeAmtChart(priceData){
+	
+	// 데이터 제대로 들어왔는지 확인하기
+	console.log("priceData : " , priceData);
+
+	// chart.js로 그래프 띄우기
+	const ctx = document.getElementById("priceChart").getContext("2d");
+	const { labels, data } = chartData(priceData);
+	
+	console.log("labels : " , labels);
+	console.log("data : ", data);
+	
+	// 데이터가 숫자가 아니면 변환
+	const numericData = data.map(item => Number(item));
+	
+	// 최소값과 최대값 설정을 위해 단가 데이터의 최소값과 최대값을 계산
+    const minValue = Math.min(...data);
+    const maxValue = Math.max(...data);
+	
+	new Chart(ctx, {
+		type : "line",
+		data : {
+			labels : labels,
+			datasets  : [{
+				label : "단가 변동 추이",
+				data : data,
+				borderColor : "rgba(8, 145, 34, 1)",
+				borderWidth : 2,
+				fill : false
+				
+			}]
+			
+		},
+		options : {
+			responsive : true,
+			scales : {
+				x : {
+					title : { display : true, text : "날짜" },
+					beginAtZero : false
+				},
+				y : {
+					title : { display : true, text : "단가 (원)"},
+					// 최소값을 단가의 최저값보다 약간 낮게 설정
+					min : minValue - 100,
+					// 최댓값을 단가의 최고값보다 약간 높게 설정
+					max : maxValue + 100,
+					ticks: {
+						// 단가가 크게 변동할 수 있다면 stepSize는 적절히 수정
+						stepSize : 500,
+						// y축 데이터가 제대로가 표시되도록 설정
+						callback : function(value){
+						 return value + "원" ;
+						}
+					}
+				}
+			}
+		// option 끝
+		}
+	// Chart 끝	
+	});
+// makeAmtChart 끝	
+}
+
+
+
+

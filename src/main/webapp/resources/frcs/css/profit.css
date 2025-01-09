@@ -1,0 +1,91 @@
+@charset "UTF-8";
+/* 쿠폰 시작 --------------------------------------------------------------------  */
+.bill{
+    margin: var(--pd--m) auto;
+    
+	-webkit-mask-image: radial-gradient(circle at right 56px bottom 13px, transparent 13px, red 13.5px), radial-gradient(closest-side circle at 50%, red 99%, transparent 100%);
+	-webkit-mask-size: 100%, 6px 17px;
+	-webkit-mask-repeat: repeat, repeat-y;
+	-webkit-mask-position: 0 13px, calc(100% - 53px);
+	-webkit-mask-composite: source-out;
+
+    border-radius: .5rem;
+    background: var(--gray--0);
+    
+    --theme: hsl(0,50%,50%);
+    -webkit-font-smoothing: antialiased;
+    color: var(--blue--8);
+    padding: var(--gap--xl);
+    
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap--l);
+    width: 600px;
+}
+.card-con{
+	position: relative; /* 부모 요소에 relative 설정 */
+	flex: 1;
+    filter: drop-shadow(.5rem .5rem 0rem #F3F4F5);
+}
+/* 쿠폰 이름 */
+.cp-title{
+	font-size: var(--page--title--size);
+    font-weight: var(--page--title--weight);
+    color: var(--gray--0);
+}
+/* 쿠폰 내용 */
+.cp-cont{
+	display:flex;
+	flex-direction: column;
+	gap : var(--gap--s);	
+}
+/* 쿠폰 메뉴 */
+.cp-menu{
+    font-size: var(--container--title--size);
+    font-weight: var(--container--title--weight);
+    color: var(--gray--0);
+}
+/* 쿠폰 가격  */
+.cp-amt{
+    color: var(--yellow--3);
+    font-size: 2.0rem;
+    font-weight: 900;
+	
+}
+/* 쿠폰 기간  */
+.cp-date{
+    font-size: var(--secondary--size);
+    font-weight: var(--secondary--weight);
+    color: var(--gray--05);
+}
+/* 쿠폰 끝 --------------------------------------------------------------------  */
+
+.cont-wrap{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	height: 32px;
+}
+.plus .cont-wrap-cn, .plus{
+	color:var(--green--4);
+}
+.minus .cont-wrap-cn, .minus{
+	color:var(--red--4);
+}
+.cont-wrap-title{
+	display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.bar{
+	border: 1px dashed var(--gray--4);
+}
+.amtInput{
+	padding: 0px !important;
+	text-align: right;
+	color:var(--red--4);
+	height: 32px;
+}
+.cont-wrap-cn{
+	margin-right: 15px;
+}

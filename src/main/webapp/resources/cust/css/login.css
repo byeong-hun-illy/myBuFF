@@ -1,0 +1,111 @@
+@charset "UTF-8";
+
+.login-wrap {
+	background-color: var(--bg--blue);
+    height: 100vh;
+}
+
+.login-inner {
+	width: 400px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 14px rgba(127, 138, 140, 0.09);
+}
+
+.btn-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 30px 0 20px 0;
+}
+
+.btn-cont {
+    width: 100% !important;
+    height: 60px;
+}
+
+.login-button-wrap {
+    display: flex;
+    flex-direction: row;
+    gap: 13px;
+    margin-bottom: 15px;
+    justify-content: left;
+}
+
+.login-button {
+	font-size: 0.8rem !important;
+    font-weight: bold;
+}
+
+.join-btn {
+	font-size: 1rem;
+    background: white;
+    border: 1px solid var(--brand--primary);
+    font-weight: 400;
+    color: var(--brand--primary);
+}
+
+.find-wrap {
+    display: flex;
+    gap: 15px;
+    justify-content: end;
+}
+
+.find-btn {
+	cursor: pointer;
+	color: var(--gray--6);
+}
+
+.input-cont {
+	height: 60px;
+	padding-left: 50px !important;
+    width: 100%;
+    border-radius: 4px !important;
+}
+
+.form-control:focus {
+	outline: none;
+}
+
+.input-icon {
+	position: absolute;
+    font-size: 2rem;
+    top: 13px;
+    left: 13px;
+}
+
+.loginSearch-wrap {
+	display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

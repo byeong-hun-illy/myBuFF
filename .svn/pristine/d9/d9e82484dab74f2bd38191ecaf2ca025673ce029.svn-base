@@ -1,0 +1,25 @@
+package com.buff.frcs.mapper;
+
+import com.buff.vo.BzentVO;
+import com.buff.vo.FrcsVO;
+
+/**
+* @packageName  : com.buff.mapper.frcs
+* @fileName     : FrcsMyPageMapper.java
+* @author       : 김현빈
+* @date         : 2024.09.12
+* @description  : 가맹점 마이 페이지 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12                김현빈     	  		      최초 생성
+*/
+public interface FrcsMyPageMapper {
+
+	public FrcsVO selectFrcsMyPage(String mbrId);
+	
+	public int updateFrcsMyPageTime(String mbrId, FrcsVO frcsVO);
+	
+	public int updateFrcsMyPageTel(String mbrId, BzentVO bzentVO);
+	
+}

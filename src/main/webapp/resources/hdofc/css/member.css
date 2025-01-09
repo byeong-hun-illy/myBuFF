@@ -1,0 +1,8 @@
+@charset "UTF-8";
+
+.select2-selection[aria-labelledby="select2-rgnNo-container"] { 
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-rgnNo-container"] .select2-dropdown {
+	width: 198px !important;
+}

@@ -1,0 +1,76 @@
+package com.buff.hdofc.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.buff.com.service.ComService;
+import com.buff.hdofc.service.HdofcAnalyzeService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.MenuVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+@PreAuthorize("hasRole('ROLE_HDOFC')")
+@RequestMapping("/hdofc/analyze")
+@Controller
+@Slf4j
+public class HdofcAnalyzeController {
+	
+	@Inject
+	HdofcAnalyzeService hdofcAnalyzeService;
+	
+	@Inject
+	ComService comService;
+	
+	@GetMapping("/selectAnalyzeList")
+	public String selectAnalyzeList(Model model, Principal principal, 
+			@RequestParam(value="currentPage", required=false, defaultValue="1") int currentPage, 
+			@RequestParam(value="menuType", required=false, defaultValue="") String menuType, 
+			@RequestParam(value="menuSearch", required=false, defaultValue="") String menuSearch, 
+			@RequestParam(value="bgngYmd", required=false, defaultValue="") String bgngYmd,
+	        @RequestParam(value="expYmd", required=false, defaultValue="") String expYmd
+			) {
+		
+		String mbrId = principal.getName();
+		log.info("mbrId -> :" + mbrId);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("currentPage", currentPage);
+		map.put("menuType", menuType);
+		map.put("menuSearch", menuSearch);
+		map.put("bgngYmd", bgngYmd);
+		map.put("expYmd", expYmd);
+		log.info("map -> :" + map);
+		
+		List<MenuVO> menuVOList = this.hdofcAnalyzeService.selectAnalyzeList(map);
+		log.info("menuVOList -> :" + menuVOList);
+		
+		int total = this.hdofcAnalyzeService.menuTotalCnt(map);
+		log.info("total -> :" + total);
+		
+		Map<String, Object> tapMaxTotal = this.hdofcAnalyzeService.tapMaxTotal();
+		log.info("tapMaxTotal -> :" + tapMaxTotal);
+		
+		ArticlePage<MenuVO> articlePage = 
+				new ArticlePage<MenuVO>(total, currentPage, 10, menuVOList, map);
+		
+		model.addAttribute("articlePage", articlePage);
+		model.addAttribute("menu", this.comService.selectCom("MENU"));
+		model.addAttribute("total", total);
+		model.addAttribute("tapMaxTotal", tapMaxTotal);
+		
+		return "hdofc/analyze/selectAnalyzeList";
+	}
+	
+}

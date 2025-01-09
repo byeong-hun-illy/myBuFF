@@ -1,0 +1,22 @@
+package com.buff.frcs.service;
+
+import java.util.List;
+
+import com.buff.vo.PoVO;
+
+/**
+* @packageName  : com.buff.service.frcs
+* @fileName     : FrcsPoServiceImpl.java
+* @author       : 김현빈
+* @date         : 2024.09.12
+* @description  : 가맹점 발주 Service
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13               김현빈     	  		      최초 생성
+*/
+public interface FrcsPoService {
+	
+	public List<PoVO> selectFrcsPoList(String bzentNo);
+	
+}

@@ -1,0 +1,10 @@
+@charset "UTF-8";
+
+#salesChart{
+	display: block;
+    box-sizing: border-box;
+    height: 550px !important;
+    width: 706px !important;
+}
+
+

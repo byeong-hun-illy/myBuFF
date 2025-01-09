@@ -1,0 +1,34 @@
+@charset "UTF-8";
+
+.select2-selection[aria-labelledby="select2-rgnNo-container"] { 
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-rgnNo-container"] .select2-dropdown {
+	width: 198px !important;
+}
+
+.select2-selection[aria-labelledby="select2-bzentNo-container"] { 
+	width: 300px !important;
+}
+.select2-selection[aria-labelledby="select2-bzentNo-container"] .select2-dropdown {
+	width: 298px !important;
+}
+
+.btn-default.date {
+    height: 44px;
+}
+
+#chart-wrap {
+    display: flex
+}
+
+#myChart {
+	display: block;
+    box-sizing: border-box;
+    height: 700px !important;
+}
+
+#chartTitle {
+	display: flex;
+    align-items: center;
+}

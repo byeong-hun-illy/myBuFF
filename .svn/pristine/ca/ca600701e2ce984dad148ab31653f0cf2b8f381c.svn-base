@@ -1,0 +1,16 @@
+package com.buff.hdofc.service;
+
+/**
+* @packageName  : com.buff.hdofc.service
+* @fileName     : HdofcFrcsCheckService.java
+* @author       : 송예진
+* @date         : 2024.09.16
+* @description  : 가맹점 점검 service interface
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.16        송예진     	  			최초 생성
+*/
+public interface HdofcFrcsCheckService {
+
+}

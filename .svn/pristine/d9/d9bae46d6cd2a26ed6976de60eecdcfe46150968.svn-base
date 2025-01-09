@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.buff.hdofc.mapper.HdofcEventMapper">
+	
+	<resultMap type="eventVO" id="eventMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="eventType" column="EVENT_TYPE"/>
+		<result property="eventTtl" column="EVENT_TTL"/>
+		<result property="eventCn" column="EVENT_CN"/>
+		<result property="wrtrYmd" column="WRTR_YMD"/>
+		<result property="bgngYmd" column="BGNG_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+		<result property="aprvYn" column="APRV_YN"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>	
+		<collection property="couponGroupVOList" resultMap="couponGroupMap"/>
+		<collection property="FileDetailVOList" resultMap="FileDetailMap"/>
+	</resultMap>
+	
+	<resultMap type="couponGroupVO" id="couponGroupMap">
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="couponNm" column="COUPON_NM"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="issuQty" column="ISSU_QTY"/>
+		<association property="menuVO" resultMap="menuMap"/>	
+	</resultMap>
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+	</resultMap>
+	
+	
+	<resultMap type="mngrVO" id="mngrMap">
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="mngrType" column="MNGR_TYPE"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="hdofYn" column="HDOF_YN"/>
+		<result property="rtrmYmd" column="RTRM_YMD"/>
+		<association property="memberVO" resultMap="memberMap"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="memberMap">
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<association property="bzentVO" resultMap="bzentMap"></association>
+		<collection property="couponVOList" resultMap="couponMap"></collection>
+	</resultMap>
+	
+	<resultMap type="FileDetailVO" id="FileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+	</resultMap>
+	
+	<resultMap type="couponVO" id="couponMap">
+		<result property="issuSn" column="ISSU_SN"/>
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="useYmd" column="USE_YMD"/>
+		<association property="ordrVO" resultMap="ordrMap"></association>
+	</resultMap>
+	
+	<resultMap type="ordrVO" id="ordrMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="ordrDtlNo" column="ORDR_DTL_NO"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"></collection>
+	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+	</resultMap>
+	
+	<!-- 이벤트 조회 시작 ////////////////////////////////////////////////////////////////////////// -->
+	<!-- 검색 조건 시작 -->
+	<!-- 분류 검색 시작 -->
+	<sql id="eventType">
+		<if test="eventType == 'EVT01' or eventType == 'EVT02' or eventType == 'EVT03' or eventType == 'EVT04' or eventType == 'EVT05'">
+			AND E.EVENT_TYPE = #{eventType}
+		</if>
+	</sql>
+	
+	<!-- 이벤트 기간 검색 -->
+	<sql id="eventDate_search">
+		<if test="bgngYmd!=null and bgngYmd!='' and (expYmd==null or expYmd=='')">
+		  	AND TO_DATE(BGNG_YMD, 'YYYYMMDD') >= TO_DATE(#{bgngYmd}, 'YYYY-MM-DD')
+	  	</if>
+		<if test="(bgngYmd==null or bgngYmd=='') and expYmd!=null and expYmd!=''">
+			AND TO_DATE(#{expYmd}, 'YYYY-MM-DD') >= TO_DATE(EXP_YMD, 'YYYYMMDD')
+	  	</if>
+		<if test="bgngYmd!=null and bgngYmd!='' and expYmd!=null and expYmd!=''">
+			AND TO_DATE(#{bgngYmd}, 'YYYY-MM-DD') >= TO_DATE(BGNG_YMD, 'YYYYMMDD')
+			AND TO_DATE(EXP_YMD, 'YYYYMMDD') >= TO_DATE(#{expYmd}, 'YYYY-MM-DD')
+	  	</if>
+	</sql>
+	
+	<!-- 쿠폰 검색 -->
+	<sql id="coupon_search">
+		<if test="couponGubun!=null and couponGubun!=''">
+		  	AND G.COUPON_NM LIKE '%' || #{couponGubun} || '%'
+		</if>
+	</sql>
+	
+	<!-- 담당자 검색 -->
+	<sql id="mbrNm_search">	
+		<if test="mbrNm!=null and mbrNm!=''">
+			AND M.MBR_NM LIKE '%' || #{mbrNm} || '%'
+		</if>
+	</sql>	
+	<!-- 제목 검색 -->
+	<sql id="eventTtl_search">
+		<if test="eventTtl!=null and eventTtl!=''">
+			AND E.EVENT_TTL LIKE '%' || #{eventTtl} || '%'
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!-- 분류 끝 -->
+	
+	<!--
+	@programName : 이벤트 조회
+	@description : 페이징의 total 갯수. 검색 조건에 현재 게시판 갯수
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectTotal" resultType="int"  parameterType="hashMap">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE 1=1
+		<include refid="eventType"></include>
+		<include refid="eventDate_search"></include>
+		<include refid="coupon_search"></include>
+		<include refid="mbrNm_search"></include>
+		<include refid="eventTtl_search"></include>
+	</select>
+	
+	<!--
+	@programName : 이벤트 조회
+	@description : 전체 이벤트 조회
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectEventList" parameterType="hashMap" resultMap="eventMap">
+		WITH t AS (
+			SELECT ROW_NUMBER() OVER (ORDER BY E.EVENT_NO DESC) RNUM,
+			    E.EVENT_NO AS EVENT_NO,  <!-- 이벤트 번호 -->
+			    E.EVENT_TYPE,
+			    C.COM_NM AS COM_NM, <!-- 이벤트 유형 -->
+			    E.EVENT_TTL, <!-- 이벤트 제목 -->
+			    E.EVENT_CN, <!-- 이벤트 내용 -->
+			    SUBSTR(E.WRTR_YMD, 1, 4) || '-' || SUBSTR(E.WRTR_YMD, 5, 2) || '-' || SUBSTR(E.WRTR_YMD, 7, 2) AS WRTR_YMD,  <!-- 작성 일자 -->
+			    SUBSTR(E.BGNG_YMD, 1, 4) || '-' || SUBSTR(E.BGNG_YMD, 5, 2) || '-' || SUBSTR(E.BGNG_YMD, 7, 2) AS BGNG_YMD, <!-- 시작 일자 -->
+			    SUBSTR(E.EXP_YMD, 1, 4) || '-' || SUBSTR(E.EXP_YMD, 5, 2) || '-' || SUBSTR(E.EXP_YMD, 7, 2) AS EXP_YMD, <!-- 종료 일자 -->
+			    E.APRV_YN, <!-- 승인 여부 -->
+		        E.MNGR_ID, <!-- 본사 담당자 아이디 -->
+	    		M.MBR_NM, <!-- 본사 담당자 이름 -->
+			    E.RJCT_RSN, <!-- 반려 사유 --> 
+			    E.FILE_GROUP_NO, <!-- 파일 그룹 번호 -->
+			    G.COUPON_NM, <!-- 쿠폰 이름 -->
+			    G.COUPON_CODE <!-- 쿠폰 이름 -->
+			FROM EVENT E
+			LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+			LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+			LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+			WHERE 1=1
+			<include refid="eventType"></include>
+			<include refid="eventDate_search"></include>
+			<include refid="coupon_search"></include>
+			<include refid="mbrNm_search"></include>
+			<include refid="eventTtl_search"></include>
+			ORDER BY WRTR_YMD DESC
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!--
+	@programName : 이벤트 조회
+	@description : 전체 이벤트 타입 별 갯수 조회
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectAll" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+	</select>
+	
+	<select id="selectWaiting" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE E.EVENT_TYPE = 'EVT01'
+	</select>
+	
+	<select id="selectCancelled" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE E.EVENT_TYPE = 'EVT02'
+	</select>
+	
+	<select id="selectScheduled" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE E.EVENT_TYPE = 'EVT03'
+	</select>
+	
+	<select id="selectProgress" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE E.EVENT_TYPE = 'EVT04'
+	</select>
+	
+	<select id="selectCompleted" resultType="int">
+		SELECT COUNT(1)
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		WHERE E.EVENT_TYPE = 'EVT05'
+	</select>
+	
+	<!--
+	@programName : 이벤트 조회
+	@description : 검색 조건 중 쿠폰 검색을 위해 전체 쿠폰을 조회하는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectCouponGroupList" resultType="couponGroupVO">
+		SELECT
+		    COUPON_CODE,
+		    MENU_NO,
+		    EVENT_NO,
+		    COUPON_NM,
+		    DSCNT_AMT,
+		    ISSU_QTY
+		FROM COUPON_GROUP
+	</select>
+	
+	<!--
+		@programName : 이벤트 조회
+		@description : 검색 조건 중 담당자 검색을 위해 전체 담당자를 조회하는 쿼리
+		@author      : 정기쁨
+		@date        : 2024. 09. 16
+	-->
+	<select id="selectMngrList" resultMap="mngrMap">
+		SELECT
+		    A.MNGR_ID,
+		    B.MBR_NM
+		FROM MNGR A, MEMBER B
+		WHERE A.MNGR_ID = B.MBR_ID
+	</select>
+	<!-- 이벤트 조회 끝 //////////////////////////////////////////////////////////////////////////// -->
+	
+	
+	<!-- 이벤트 추가 시작 ////////////////////////////////////////////////////////////////////////// -->
+	<!-- 메뉴 유형 시작 -->
+	<sql id="menuType">
+		<if test="menuType == 'MENU01' or menuType == 'MENU02' or menuType == 'MENU03' or menuType == 'MENU04'">
+			WHERE MENU_TYPE = #{menuType}
+		</if>
+	</sql>
+	<!-- 메뉴 유형 끝 -->
+	
+	<!--
+	@programName : 메뉴 유형 별로 갯수 조회
+	@description : 이벤트 추가의 메뉴 선택 모달에서 띄어질 탭 영역에 필요한 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<select id="selectTotalMENU" resultType="int">
+		SELECT COUNT(*)
+		FROM MENU 
+	</select>
+	<select id="selectMENU01" resultType="int">
+		SELECT COUNT(*)
+		FROM MENU 
+		WHERE MENU_TYPE = 'MENU01'	
+	</select>
+	<select id="selectMENU02" resultType="int">
+		SELECT COUNT(*)
+		FROM MENU 
+		WHERE MENU_TYPE = 'MENU02'	
+	</select>
+	<select id="selectMENU03" resultType="int">
+		SELECT COUNT(*)
+		FROM MENU 
+		WHERE MENU_TYPE = 'MENU03'	
+	</select>
+	<select id="selectMENU04" resultType="int">
+		SELECT COUNT(*)
+		FROM MENU 
+		WHERE MENU_TYPE = 'MENU04'	
+	</select>
+	
+	<!--
+	@programName : 메뉴 조회
+	@description : 이벤트 추가 시 메뉴를 선택하기 위해 조회하는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<select id="selectMenuList" parameterType="String" resultType="MenuVO">
+		SELECT 
+		    MENU_NO,
+		    MENU_NM,
+		    MENU_IMG_PATH,
+		    MENU_AMT
+		FROM MENU
+		<include refid="menuType"></include> 	
+	</select>
+	
+	<!--
+	@programName : 이벤트 추가
+	@description : 이벤트를 추가하는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<insert id="eventInsert" parameterType="eventVO">
+		INSERT INTO EVENT (EVENT_NO, EVENT_TYPE, EVENT_TTL, EVENT_CN, WRTR_YMD, BGNG_YMD, EXP_YMD, APRV_YN, MNGR_ID, RJCT_RSN, FILE_GROUP_NO)
+		VALUES (
+		    'E' || NVL((SELECT LPAD(TO_NUMBER(SUBSTR(MAX(EVENT_NO), 2, 5)) + 1, 5, '0') FROM EVENT), '00001'),
+		    'EVT01', <!-- 이벤트 유형 -->
+		    #{eventTtl}, <!-- 제목 -->
+		    #{eventCn}, <!-- 내용 -->
+		   	TO_CHAR(SYSDATE,'YYYYMMDD'), <!-- 등록일자 -->
+		    #{bgngYmd},<!-- 시작일자 -->
+		    #{expYmd},<!-- 마감일자 -->
+		    NULL, <!-- 승인여부 -->
+		    #{mngrId}, <!-- 담당자 아이디 -->
+		    NULL, <!-- 반려 사유 -->
+		    #{fileGroupNo} <!-- 파일그룹번호 -->
+		)
+	</insert>
+	
+	<!--
+	@programName : 추가된 이벤트 조회
+	@description : 추가한 이벤트의 eventNo 값을 가져오는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<select id="selectNewEvent" resultType="string">
+		SELECT MAX(EVENT_NO) FROM EVENT			
+	</select>
+
+	<!--
+	@programName : 파일그룹번호 조회
+	@description : 추가한 이벤트의 파일그룹번호를 가져오는 쿼리 (안씀. 기록용으로 남겨둠)
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<select id="selectFileDetail" parameterType="eventVO"  resultType="fileDetailVO">
+		SELECT * FROM FILE_DETAIL WHERE	FILE_GROUP_NO = #{fileGroupNo}		
+	</select>
+	
+	<!-- 이벤트 추가 끝  ////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- 이벤트 상세 시작  ////////////////////////////////////////////////////////////////////////// -->
+	<select id="selectEventDetail" resultMap="eventMap" parameterType="String">
+		SELECT 
+		    E.EVENT_NO AS EVENT_NO,
+		    C.COM_NM AS EVENT_TYPE, 
+		    E.EVENT_TTL, 
+		    E.EVENT_CN, 
+		    SUBSTR(E.WRTR_YMD, 1, 4) || '-' || SUBSTR(E.WRTR_YMD, 5, 2) || '-' || SUBSTR(E.WRTR_YMD, 7, 2) AS WRTR_YMD,
+		    SUBSTR(E.BGNG_YMD, 1, 4) || '-' || SUBSTR(E.BGNG_YMD, 5, 2) || '-' || SUBSTR(E.BGNG_YMD, 7, 2) AS BGNG_YMD,
+		    SUBSTR(E.EXP_YMD, 1, 4) || '-' || SUBSTR(E.EXP_YMD, 5, 2) || '-' || SUBSTR(E.EXP_YMD, 7, 2) AS EXP_YMD,
+		    E.APRV_YN, 
+		    E.MNGR_ID,
+		    M.MBR_NM, 
+		    E.RJCT_RSN, 
+		    G.MENU_NO,
+		    G.EVENT_NO,
+		    G.COUPON_NM,
+		    G.COUPON_CODE,
+		    G.DSCNT_AMT,
+		    G.ISSU_QTY,
+		    M.MENU_NM,
+		    F.FILE_GROUP_NO,
+		    F.FILE_ORIGINAL_NAME,
+		    F.FILE_SAVE_NAME,
+		    F.FILE_SAVE_LOCATE
+		FROM EVENT E
+		LEFT OUTER JOIN COUPON_GROUP G ON E.EVENT_NO = G.EVENT_NO
+		LEFT OUTER JOIN MENU M ON G.MENU_NO = M.MENU_NO
+		LEFT OUTER JOIN COM_CODE C ON E.EVENT_TYPE = C.COM_NO
+		LEFT OUTER JOIN MEMBER M ON E.MNGR_ID = M.MBR_ID
+		LEFT OUTER JOIN FILE_DETAIL F ON E.FILE_GROUP_NO = F.FILE_GROUP_NO
+		WHERE E.EVENT_NO = #{eventNo}
+	</select>
+
+	<sql id="aprvYn">
+		<if test='aprvYn == "N"'>
+			APRV_YN = #{aprvYn},
+		    EVENT_TYPE = 'EVT02',
+		    RJCT_RSN = #{rjctRsn}
+		</if>
+		<if test='aprvYn == "Y"'>
+			APRV_YN = #{aprvYn},
+		    EVENT_TYPE = 'EVT03',
+		    RJCT_RSN = #{rjctRsn}
+		</if>
+	</sql>
+	
+	<!--
+	@programName : selectFileImgList
+	@description : 파일 이미지 불러오기
+	@author      : 정기쁨
+	@date        : 2024. 09. 22
+	-->
+	<select id="selectFileImgList" parameterType="String" resultMap="eventMap">
+		SELECT 
+		    A.FILE_SAVE_LOCATE,
+		    A.FILE_SN,
+		    A.FILE_GROUP_NO		
+		FROM FILE_DETAIL A, EVENT B
+		WHERE A.FILE_GROUP_NO = B.FILE_GROUP_NO
+		AND B.EVENT_NO LIKE #{eventNo}
+	</select>
+	
+	<!--
+	@programName : fileDelete
+	@description : 파일 이미지 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="fileDelete" parameterType="long">
+		DELETE FROM FILE_DETAIL
+		WHERE FILE_GROUP_NO LIKE #{oldFileGroupNo}
+	</delete>
+	
+	<!--
+	@programName : fileGroupDelete
+	@description : 파일 그룹 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="fileGroupDelete" parameterType="long">
+		DELETE FROM FILE_GROUP
+		WHERE FILE_GROUP_NO LIKE #{oldFileGroupNo}
+	</delete>
+	
+	<!--
+	@programName : fileGroupNoUpdate
+	@description : 이벤트에 파일그룹 널처리
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<update id="fileGroupNoUpdate" parameterType="long">
+		UPDATE EVENT 
+		SET 
+			FILE_GROUP_NO = NULL
+		WHERE FILE_GROUP_NO LIKE #{oldFileGroupNo}
+	</update>
+
+	<!--
+	@programName : updateEventDtlAjax
+	@description : 이벤트 업데이트
+	@author      : 정기쁨
+	@date        : 2024. 09. 22
+	-->
+	<update id="updateEventDtlAjax" parameterType="eventVO">
+		UPDATE EVENT 
+		SET 
+			EVENT_TTL = #{eventTtl},
+			BGNG_YMD = #{bgngYmd},
+			EXP_YMD = #{expYmd},
+			EVENT_CN = #{eventCn}
+			<include refid="updateFileGroupNo"></include>
+		WHERE EVENT_NO = #{eventNo}
+	</update>
+	
+	<sql id="updateFileGroupNo">
+		<if test="fileGroupNo > 0">
+			,FILE_GROUP_NO = #{fileGroupNo}
+		</if>
+	</sql>
+	
+	<!--
+	@programName : fileGroupDelete
+	@description : 이벤트 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="eventDelete" parameterType="String">
+		DELETE FROM EVENT
+		WHERE EVENT_NO = #{eventNo}
+	</delete>
+
+	<!--
+	@programName : updateEventAjax
+	@description : 승인여부 처리
+	@author      : 정기쁨
+	@date        : 2024. 09. 22
+	-->
+	<update id="updateEventAjax" parameterType="eventVO">
+		UPDATE EVENT 
+		SET <include refid="aprvYn"></include>   		
+		WHERE EVENT_NO = #{eventNo}
+	</update>
+	<!-- 이벤트 상세 끝  ////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- 쿠폰 시작  ////////////////////////////////////////////////////////////////////////// -->
+	<!--
+	@programName : 쿠폰 그룹 추가
+	@description : 조회 한 이벤트를 가지고 쿠폰 그룹을 추가하는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 19
+	-->
+	<insert id="couponGroupInsert" parameterType="eventVO">
+		INSERT INTO COUPON_GROUP (COUPON_CODE, MENU_NO, EVENT_NO, COUPON_NM, DSCNT_AMT, ISSU_QTY)
+		VALUES (
+		    'C' || NVL((SELECT LPAD(TO_NUMBER(SUBSTR(MAX(COUPON_CODE), 2, 5)) + 1, 5, '0') FROM COUPON_GROUP), '00001'),
+		    #{menuNo},#{eventNo},#{couponNm},#{dscntAmt},#{issuQty}
+		)
+	</insert>
+	
+	<!--
+	@programName : 쿠폰 삭제
+	@description : 이벤트 수정 시 기존 쿠폰 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 22
+	-->
+	<delete id="deletCouponGroup" parameterType="eventVO">
+		DELETE FROM COUPON_GROUP
+		WHERE EVENT_NO = #{eventNo}
+	</delete>
+	
+	<!--
+	@programName : 쿠폰 발급 리스트
+	@description : 이벤트 상세 > 쿠폰발급조회 > 테이블에서 사용 되는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 24
+	-->
+	<select id="selectCouponList" resultMap="memberMap" parameterType="String">
+		SELECT 
+			(SELECT C.ISSU_SN 
+			 FROM ORDR C
+			 WHERE C.ISSU_SN = B.ISSU_SN) AS ISSU_SN,
+			B.COUPON_CODE, 
+			A.MBR_ID,
+			A.MBR_NM, 
+			B.USE_YMD, 
+			(SELECT E.BZENT_NM
+			 FROM BZENT E
+			 JOIN ORDR_DTL D ON E.BZENT_NO = D.FRCS_NO
+			 JOIN ORDR C ON C.ORDR_NO = D.ORDR_NO
+			 WHERE C.ISSU_SN = B.ISSU_SN) AS BZENT_NM,
+			 B.USE_YN
+		FROM MEMBER A 
+		RIGHT OUTER JOIN COUPON B ON A.MBR_ID = B.MBR_ID
+		WHERE B.COUPON_CODE = #{couponCode}
+	</select>
+	
+	<!--
+	@programName : 쿠폰 발급 총갯수
+	@description : 이벤트 상세 > 쿠폰발급조회 > 테이블에서 사용 되는 쿼리
+	@author      : 정기쁨
+	@date        : 2024. 09. 24
+	-->
+	<select id="selectCouponTotal" resultType="int">
+		SELECT count(*) 
+		FROM MEMBER A 
+		RIGHT OUTER JOIN COUPON B ON A.MBR_ID = B.MBR_ID
+		WHERE B.COUPON_CODE = #{couponCode}
+	</select>
+	<!-- 쿠폰 끝  ////////////////////////////////////////////////////////////////////////// -->
+
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

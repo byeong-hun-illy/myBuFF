@@ -1,0 +1,21 @@
+package com.buff.hdofc.service.impl;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.hdofc.service.HdofcFrcsCheckService;
+
+/**
+* @packageName  : com.buff.hdofc.service.impl
+* @fileName     : HdofcFrcsCheckServiceImpl.java
+* @author       : 송예진
+* @date         : 2024.09.16
+* @description  : 가맹점 점검 Service impl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.16        송예진     	  			최초 생성
+*/
+@Service
+public class HdofcFrcsCheckServiceImpl implements HdofcFrcsCheckService{
+
+}

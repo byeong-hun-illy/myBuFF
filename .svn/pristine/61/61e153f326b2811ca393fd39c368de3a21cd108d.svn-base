@@ -1,0 +1,17 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+@Data
+public class NoticeVO {
+
+	private int ntcSeq;
+	private String mngrId;
+	private String ntcTtl;
+	private String ntcCn;
+	private String wrtrDt;
+	private int inqCnt;
+	private String fixdSeq;
+	private int fileGroupNo;
+	
+}

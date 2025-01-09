@@ -1,0 +1,35 @@
+package com.buff.hdofc.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.hdofc.mapper.HdofcAnalyzeMapper;
+import com.buff.hdofc.service.HdofcAnalyzeService;
+import com.buff.vo.MenuVO;
+
+@Service
+public class HdofcAnalyzeServiceImpl implements HdofcAnalyzeService {
+	
+	@Inject
+	HdofcAnalyzeMapper hdofcAnalyzeMapper;
+	
+	@Override
+	public List<MenuVO> selectAnalyzeList(Map<String, Object> map) {
+		return this.hdofcAnalyzeMapper.selectAnalyzeList(map);
+	}
+	
+	@Override
+	public int menuTotalCnt(Map<String, Object> map) {
+		return this.hdofcAnalyzeMapper.menuTotalCnt(map);
+	}
+	
+	@Override
+	public Map<String, Object> tapMaxTotal() {
+		return this.hdofcAnalyzeMapper.tapMaxTotal();
+	}
+	
+}

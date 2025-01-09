@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	@author       : 이병훈
+	@date         : 2024.09.12
+	@description  : 공통 전반적인 SQL
+ -->
+<mapper namespace="com.buff.cust.mapper.MemberMapper">
+	
+	<resultMap type="memberVO" id="memberMap">
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mngrType" column="MNGR_TYPE"/>
+		<collection property="authList" resultMap="authMap"></collection>
+	</resultMap>
+	
+	<resultMap type="authVO" id="authMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="auth" column="AUTH"/>
+	</resultMap>
+	
+	<!-- 
+		@author       : 이병훈
+		@date         : 2024.09.13
+		@description  : 로그인 처리 SQL문
+ 	-->
+	
+		<select id="getLogin" parameterType="String" resultMap="memberMap">
+		SELECT M.MBR_ID, M.MBR_PSWD, M.MBR_NM, M.MBR_ZIP, M.MBR_ADDR, M.MBR_DADDR, 
+		       M.MBR_TELNO, M.MBR_BRDT, M.MBR_EML_ADDR, M.ENABLED, M.DEL_YN, M.JOIN_YMD, 
+		       M.MBR_TYPE, M.MBR_APRV_YN, M.MBR_IMG_PATH, M.RGN_NO, A.AUTH, B.BZENT_NO, MN.MNGR_TYPE
+		FROM   MEMBER M 
+		       LEFT OUTER JOIN AUTH A ON M.MBR_ID = A.MBR_ID
+		       LEFT JOIN BZENT B ON B.MBR_ID = M.MBR_ID
+		       LEFT JOIN MNGR MN ON MN.MNGR_ID = M.MBR_ID
+		WHERE  ENABLED = '1'
+		AND    M.MBR_ID = #{mbrId}
+		AND    M.DEL_YN = 'N'
+	</select>
+	
+	<!-- 
+	@author       : 서윤정
+	@date         : 2024.09.12
+	@description  : 고객 메인 화면, 가맹점 매장 출력
+ 	-->
+	
+	
+	
+	
+	
+			<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.18
+		@description  : 매장 조회 - 가맹점 매장 출력
+	 	-->
+	<select id="selectStore" parameterType="hashMap" resultType="bzentVO">
+   
+        SELECT 
+            B.BZENT_NM,
+            B.BZENT_NO,
+            B.BZENT_ADDR,
+            B.BZENT_DADDR,
+            B.BZENT_TELNO,
+            B.RGN_NO,
+            F.OPEN_TM,
+            F.DDLN_TM,
+            <choose>
+            	<when test="mbrId!=null and mbrId!=''">
+           		    CASE 
+				        WHEN B.BZENT_NO IN (SELECT FRCS_NO FROM FAV_FRCS WHERE MBR_ID = #{mbrId}) THEN 0
+				        ELSE 1
+				    END AS FAV_CHK, -- 즐겨찾기 했는 지 여부 2이면 즐찾함!!
+		            ROW_NUMBER() OVER (ORDER BY 
+				        CASE 
+				            WHEN B.BZENT_NO IN (SELECT FRCS_NO FROM FAV_FRCS WHERE MBR_ID =#{mbrId}) THEN 0 
+				            ELSE 1 
+				        END, 
+				        B.BZENT_NM) AS RNUM
+            	</when>
+            	<otherwise>
+		            ROW_NUMBER() OVER (ORDER BY B.BZENT_NM) AS RNUM
+            	</otherwise>
+            </choose>
+        FROM 
+            BZENT B
+        JOIN 
+            FRCS F ON B.BZENT_NO = F.FRCS_NO
+        WHERE 
+            F.FRCS_TYPE = 'FRS01'
+            <if test="rgnNo != null and rgnNo != ''">
+                AND B.RGN_NO = #{rgnNo}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (B.BZENT_NM LIKE '%' || #{keyword} || '%' OR B.BZENT_ADDR LIKE '%' || #{keyword} || '%')
+            </if>
+</select>
+
+	
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.18
+		@description  : 매장 조회 - 페이징 처리
+	 	-->
+	
+<select id="getTotal" parameterType="hashMap" resultType="int">
+    SELECT COUNT(1)
+    FROM BZENT B JOIN FRCS F ON B.BZENT_NO = F.FRCS_NO
+    WHERE B.BZENT_TYPE = 'BZ_F01'
+      AND F.FRCS_TYPE = 'FRS01'
+    <if test="rgnNo != null and rgnNo != ''">
+      AND B.RGN_NO = #{rgnNo}
+    </if>
+    <if test="keyword != null and keyword != ''">
+      AND (B.BZENT_NM LIKE '%' || #{keyword} || '%' OR B.BZENT_ADDR LIKE '%' || #{keyword} || '%')
+    </if>
+</select>
+
+
+
+
+
+	
+	<!-- 
+		@author       : 이병훈
+		@date         : 2024.09.13
+		@description  : ID찾기 SQL문
+ 	-->
+	<select id="selectId" parameterType="memberVO" resultType="String">
+		SELECT MBR_ID
+		FROM MEMBER
+		WHERE MBR_NM=#{mbrNm}
+		AND MBR_EML_ADDR=#{mbrEmlAddr}
+	</select>
+	
+	<select id="selectPswd" parameterType="memberVO" resultType="String">
+		SELECT MBR_PSWD
+		FROM MEMBER
+		WHERE MBR_ID=#{mbrId}
+		AND MBR_NM=#{mbrNm}
+		AND MBR_EML_ADDR=#{mbrEmlAddr}
+	</select>
+	
+	<update id="updatePswd" parameterType="memberVO">
+		UPDATE MEMBER
+		SET MBR_PSWD = #{mbrPswd}
+		WHERE MBR_ID = #{mbrId}
+	</update>
+	
+	
+	
+	
+	<!-- 
+		@author       : 김현빈
+		@date         : 2024.09.26
+		@description  : MEMBER테이블 INSERT SQL문
+ 	-->
+	<insert id="insertMemberSign" parameterType="memberVO">
+		INSERT INTO MEMBER (
+		       MBR_ID
+		     , MBR_PSWD
+		     , MBR_NM
+		     , MBR_ZIP
+		     , MBR_ADDR
+		     , MBR_DADDR
+		     , MBR_TELNO
+		     , MBR_BRDT
+		     , MBR_EML_ADDR
+		     , ENABLED
+		     , DEL_YN
+		     , JOIN_YMD
+		     , MBR_TYPE
+		     , MBR_APRV_YN
+		     , MBR_IMG_PATH
+		     , RGN_NO
+		     )
+		VALUES (#{mbrId}, #{mbrPswd}, #{mbrNm}, #{mbrZip}, #{mbrAddr}
+		      , #{mbrDaddr}, #{mbrTelno}, #{mbrBrdt}, #{mbrEmlAddr}, '1'
+		      , 'N', TO_CHAR(SYSDATE, 'YYYYMMDD'), #{mbrType}, 'Y', NULL, #{rgnNo})
+	</insert>
+	<!-- 
+		@author       : 김현빈
+		@date         : 2024.09.26
+		@description  : AUTH테이블 회원 유형(MBR_TYPE)에 따라 INSERT를 결정하는 SQL문
+ 	-->
+	<insert id="insertAuthSign" parameterType="memberVO">
+		<foreach collection="authList" item="authVO" index="idx" separator=" " open="INSERT ALL" close="SELECT 1 FROM DUAL">
+	        INTO AUTH (
+	                  MBR_ID
+	                , AUTH
+	               ) 
+	        VALUES (
+	                  #{authVO.mbrId}, 
+	                  #{authVO.auth}
+	               )
+	    </foreach>
+	</insert>
+	
+	<select id="checkIdDuplicate" resultType="int" parameterType="String">
+	    SELECT COUNT(*) 
+	    FROM MEMBER 
+	    WHERE MBR_ID = #{mbrId}
+	</select>
+
+	<!-- 
+		@author       : 송예진
+		@date         : 2024.10.02
+		@description  : AUTH테이블 회원 유형(MBR_TYPE)에 따라 INSERT를 결정하는 SQL문
+ 	-->
+ 	<insert id="insertRoleCust" parameterType="String"> 
+ 		INSERT INTO AUTH (MBR_ID, AUTH) 
+	        VALUES (#{mbrId},'ROLE_CUST')
+ 	</insert>
+ 	
+ 	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.06
+		@description  : 고객이 관심 매장 중복 확인하는 SQL문
+ 	-->
+ 	<select id="chkLikeStore" resultType="int">
+ 		SELECT COUNT(1)
+          FROM FAV_FRCS
+         WHERE FRCS_NO = #{bzentNo}
+           AND MBR_ID = #{mbrId}
+ 	</select>
+ 	
+ 	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.06
+		@description  : 고객이 관심 매장 중복 확인하는 SQL문
+ 	-->
+ 	
+ 	<delete id="deleteLikeStore" parameterType="hashMap">
+ 		 DELETE FROM FAV_FRCS
+          WHERE FRCS_NO = #{bzentNo} AND MBR_ID = #{mbrId}
+ 	</delete>
+ 	
+ 	<!-- 
+		@author       : 서윤정
+		@date         : 2024.10.06
+		@description  : 고객이 관심 매장 중복 확인하는 SQL문
+ 	-->
+ 	<insert id="insertLikeStore" parameterType="hashMap">
+ 		INSERT INTO FAV_FRCS(FRCS_NO, MBR_ID)
+        VALUES (#{bzentNo}, #{mbrId})
+ 	</insert>
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+ 	
+</mapper>

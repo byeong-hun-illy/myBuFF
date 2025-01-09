@@ -1,0 +1,67 @@
+package com.buff.frcs.service.impl;
+
+/**
+* @packageName  : com.buff.frcs.service.impl
+* @fileName     : FrcsStockServiceImpl.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 ServiceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20        정현종     	  			최초 생성
+*/
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsStockMapper;
+import com.buff.frcs.service.FrcsStockService;
+import com.buff.vo.GdsVO;
+
+
+@Service
+public class FrcsStockServiceImpl implements FrcsStockService {
+	
+	@Autowired
+	FrcsStockMapper frcsStockMapper;
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 가맹점 재고 현황 목록
+	*/	
+	@Override
+	public List<GdsVO> selectFrcsStockList() {
+		return this.frcsStockMapper.selectFrcsStockList();
+	}
+	
+	@Override
+	public int selectTotal(Map<String, Object> map) {
+		return this.frcsStockMapper.selectTotal(map);
+	}
+
+	@Override
+	public int selectAll(Map<String, Object> map) {
+		return this.frcsStockMapper.selectAll(map);
+	}
+
+	@Override
+	public int selectFood(Map<String, Object> map) {
+		return this.frcsStockMapper.selectFood(map);
+	}
+
+	@Override
+	public int selectPacking(Map<String, Object> map) {
+		return this.frcsStockMapper.selectPacking(map);
+	}
+
+	@Override
+	public int selectSubMart(Map<String, Object> map) {
+		return this.frcsStockMapper.selectSubMart(map);
+	}
+}

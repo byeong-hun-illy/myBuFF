@@ -1,0 +1,368 @@
+/*******************************************
+  @fileName    : sls.js
+  @author      : 이병훈
+  @date        : 2024. 10. 07
+  @description : 거래처 매출 관련 코드
+********************************************/
+
+/*******************************************
+  해당 거래처 매출 데이터 가져오기
+********************************************/
+// 매출 데이터 로드 함
+function selectSalesData(){
+	let data = {
+			currentPage : currentPage,
+			startMonth  : $("#startMonth").val(),
+			endMonth : $("#endMonth").val(),
+			selectedYear : $("#selectedYear").val(),
+			bzentNo : bzentNo
+	};
+	
+	$.ajax({
+		url : "/cnpt/sls/selectSalesAjax",
+		data : data,
+		type : "GET",
+		beforeSend : function(xhr){
+			// CSRF 헤더와 토큰을 설정
+			xhr.setRequestHeader(csrfHeader, csrfToken); 
+		},
+		success : function(res){
+			// 테이블과 페이징네이션 업데이트
+			selectSalesTable(res.articlePage.content, res.articlePage);
+			// 차트 데이터 업데이트
+			selectSalesChart(res.articlePage.content);
+			
+		}, 
+		error : function(xhr, status, error){
+			console.error("에러가 발생하였습니다.", error);
+		}
+		
+	// ajax 끝	
+	});
+// selectSalesData 함수 끝	
+}
+
+/*******************************************
+  왼쪽 구역 테이블 설정 및 페이지네이션 처리
+********************************************/
+// 테이블 및 페이징네이션 업데이트 함수
+function selectSalesTable(data, articlePage){
+	let strTbl = '';
+	
+	console.log("articlePage : ", articlePage);
+	
+	if(data.length === 0){
+		strTbl += `<tr><td class="center" colspan="3">검색 결과가 없습니다.</td><tr>`;
+	} else {
+		data.forEach(item => {
+			strTbl += `<tr>
+							<td class="center">${item.rnum}</td>
+							<td class="center">${item.clclnYmd}</td>
+							<td class="right">${item.clclnAmt.toLocaleString()}</td>
+					  </tr>`;		
+		});
+		
+	}
+	$('#table-body').html(strTbl);
+	
+	// 페이지 처리
+	let page = '';
+	
+	if (articlePage.startPage > articlePage.blockSize) {
+        page += `<a href="#page" class="page-link" data-page="${articlePage.startPage - articlePage.blockSize}">
+                    <span class="icon material-symbols-outlined">chevron_left</span></a>`;
+    }
+    for (let pnum = articlePage.startPage; pnum <= articlePage.endPage; pnum++) {
+        if (articlePage.currentPage === pnum) {
+            page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+        } else {
+            page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+        }
+    }
+    if (articlePage.endPage < articlePage.totalPages) {
+        page += `<a href="#page" class="page-link" data-page="${articlePage.startPage + articlePage.blockSize}">
+                    <span class="icon material-symbols-outlined">chevron_right</span></a>`;
+    }
+
+    $('.pagination').html(page);
+	
+// selectSalesTable 함수 끝	
+}
+
+/*******************************************
+ 선택한 파라미터에 따른 차트 업데이트 함수 
+********************************************/
+// 차트 업데이트 함수
+function selectSalesChart(data){
+	// x축 : 월 / YYYY.MM 형식
+	let months = data.map(item => item.clclnYmd.substring(0, 4) + '.' + item.clclnYmd.substring(4, 6)).reverse();
+	// y축 : 정산 금액
+	let amounts = data.map(item => item.clclnAmt);
+	
+	let ctx = document.getElementById('salesChart').getContext('2d');
+	
+	
+    // 기존 차트를 삭제하고 새로운 차트 생성
+    if (window.monthSalesChart) {
+        window.monthSalesChart.destroy();
+    }
+
+	// 새로운 차트 생성
+	window.monthSalesChart = new Chart(ctx, {
+		type : 'bar',
+		data : {
+			labels : months,
+			datasets : [{
+				label : '매출 현황',
+				data : amounts,
+				backgroundColor: 'rgba(75, 192, 192, 0.2)',
+	            borderColor: 'rgba(75, 192, 192, 1)',
+	            borderWidth: 1
+			}]
+		},
+		options : {
+			plugins: { 
+				legend: {
+				  display: false // 차트 라벨 안보이기
+				},
+				title: { // [차트 타이틀 지정 실시]
+					display: true,
+					color: '#333', // [타이틀 폰트 색상]
+					font: { // [타이틀 폰트 스타일 변경]
+						family: 'NanumSquare, sans-serif', // 폰트 설정
+						size: 18,
+						weight: 'bold',
+					},
+					padding: {top: 0, left: 0, right: 0, bottom: 20}    						
+				}
+			},
+			scales : {
+				y : {
+					grid: { // [y 축 데이터 시트 배경 선색 표시]
+						drawBorder: false,
+						color: 'rgba(0, 116, 52, 0.2)'  								
+					},
+					beginAtZero : true,
+					title : {
+						display : true,
+						text : '매출 금액'
+					},
+					ticks : {
+						color: '#999', // [y 축 폰트 색상 설정]
+						font: { // [y축 폰트 스타일 변경]
+							family: 'NanumSquare, sans-serif', // 폰트 설정
+							size: 6,
+							weight: 'bold',
+						}, 
+						// 포멧팅 함수
+						callback : function(value) {
+							return value.toLocaleString();
+						}
+					}
+				},
+				x : {
+					title : {
+						display : true,
+						text : '년/월'
+					},
+					ticks: {
+						color: '#000000', // [x 축 폰트 색상 설정]
+						font: { // [x축 폰트 스타일 변경]
+							family: 'NanumSquare, sans-serif', // 폰트 설정
+							size: 12,
+							weight: 'bold',
+						} 
+					}
+				}
+			}
+		}
+		
+	});
+// selectSalesChart 함수 끝	
+}	
+
+
+/*******************************************
+  일간 데이터 가져오기
+********************************************/
+// 일간 데이터 가져오기 함수
+function selectDailySalesData(){
+	
+	// 선택한 날짜 가져오기
+	let selectedDate = $("#selectedDate").val();
+	if(selectedDate){
+		// 날짜 형식 변환, "-"를 제거 
+		selectedDate = selectedDate.replace(/-/g, '');
+	}
+	
+	let data = {
+			currentPage : currentPage,
+			selectedDate : selectedDate
+	};
+	
+	console.log("selectedDate : ", data.selectedDate);
+	
+	$.ajax({
+		url : "/cnpt/sls/selectDailySalesAjax",
+		data : data,
+		type : "GET",
+		beforeSend : function(xhr){
+			// CSRF 헤더와 토큰 설정
+			xhr.setRequestHeader(csrfHeader, csrfToken);
+		},
+		success : function(res){
+			console.log("응답 데이터 : ", res);
+			console.log("일간 데이터 : ", res.articlePage.content);
+			// 테이블과 차트 업데이트
+			if (res.articlePage.content && res.articlePage.content.length > 0) {
+                // 테이블과 차트 업데이트
+                selectDailySalesTable(res.articlePage.content);
+                selectDailySalesChart(res.articlePage.content);
+            } else {
+                // 데이터가 없을 때 처리 -> 빈 배열 전달:
+                selectDailySalesTable([]); 
+            }
+		},
+		error : function(xhr, status, error){
+			console.error("에러가 발생했습니다. ", error);
+		}
+		
+	// ajax 끝	
+	});
+	
+// selectDailySalesData 함수 끝	
+}
+
+/*******************************************
+  일간 매출 테이블 데이터 업데이트
+********************************************/
+// 일간 매출 테이블 데이터 업데이트 함수
+function selectDailySalesTable(data){
+	let tableBody = $('#table-body');
+	// 기존 데이터 지우기
+	tableBody.empty();
+	
+	// 데이터가 없을 경우 메시지 표시
+	if(!data || data.length === 0){
+		tableBody.append('<tr><td colspan="3" class="text-center">데이터가 없습니다.</td></tr>');
+		return;
+	}
+	
+	// 데이터 추가
+	data.forEach(item => {
+		let row = `<tr>
+				<td class="center">${item.rnum}</td>
+				<td class="center">${item.clclnYmd}</td>
+				<td class="center">${item.clclnAmt.toLocaleString()} 원</td>
+			</tr>`;
+			tableBody.append(row);
+	});
+	
+// selectDailySalesTable 함수 끝
+}
+
+/*******************************************
+  일간 매출 차트 데이터 업데이트
+********************************************/
+
+// 일간 매출 차트 업데이트 함수
+function selectDailySalesChart(data){
+	let chartData = {
+			labels : [],
+			datasets : [{
+				label : '상품 별 일간 매출량',
+				data : [],
+				backgroundColor: [
+	                // 각 데이터 항목에 대한 색상
+	                'rgba(255, 99, 132, 0.2)',
+	                'rgba(54, 162, 235, 0.2)',
+	                'rgba(255, 206, 86, 0.2)',
+	                'rgba(75, 192, 192, 0.2)',
+	                'rgba(153, 102, 255, 0.2)',
+	                'rgba(255, 159, 64, 0.2)'
+	            ],
+	            borderColor: [
+	                // 각 데이터 항목에 대한 테두리 색상
+	                'rgba(255, 99, 132, 1)',
+	                'rgba(54, 162, 235, 1)',
+	                'rgba(255, 206, 86, 1)',
+	                'rgba(75, 192, 192, 1)',
+	                'rgba(153, 102, 255, 1)',
+	                'rgba(255, 159, 64, 1)'
+	            ],
+	            borderWidth: 1
+				
+			}]
+		};
+	// 차트 데이터 구성
+	data.forEach(item => {
+		console.log("item: " , item);	
+	
+		if(chartData.labels.indexOf(item.gdsCode) === -1){
+			// 상품 명 추가
+			chartData.labels.push(item.gdsNm);
+			// 수량 추가
+			chartData.datasets[0].data.push(item.qty);
+		} else {
+			let index = chartData.labels.indexOf(item.gdsNm);
+			chartData.datasets[0].data[index] += item.qty;
+		}
+	});
+	
+	// 데이터 확인
+	console.log("차트 데이터 : ", chartData);
+	
+	// 기존 차트를 삭제하고 새로운 차트 생성
+	let ctx = document.getElementById('salesChart').getContext('2d');
+	
+	 // 기존 차트가 있을 경우 제거
+    if (window.dailySalesChart) {
+        window.dailySalesChart.destroy();
+    }
+	window.dailySalesChart = new Chart(ctx, {
+		type : 'doughnut',
+		data : chartData,
+		options : {
+			responsive : true,
+			plugins : {
+				legend : {
+					position : 'top',
+					display: false // 차트 라벨 안보이기
+				},
+				title : {
+					display : false,
+				}
+			}
+		}
+		
+	});
+	
+// selectDailySalesChart 함수 끝	
+}
+/*******************************************
+  검색 조건에 따라 총 매출 금액 비동기 업데이트
+********************************************/
+// 검색조건에 따라 총 매출 금액 비동기 업데이트
+function updateTotalSalesAmount(data){
+	// 비동기 ajax로 총 금액 업데이트
+	$.ajax({
+		url : '/cnpt/sls/selectSalesAmountAjax',
+		type : 'GET',
+		data : data,
+		beforeSend : function(xhr){
+			// csrf 헤더와 토큰을 설정
+			xhr.setRequestHeader(csrfHeader, csrfToken);
+		},
+		success : function(res) {
+			//	총 금액 업데이트
+			$('#clclnTotal').text(res.toLocaleString());
+			
+		},
+		error : function(xhr, status, error){
+			console.error("검색에 따른  총 금액 가져오는 데 오류 발생 : ", error);
+		}
+	// ajax 끝	
+	});
+// updateTotalSalesAmount 함수 끝	
+}
+

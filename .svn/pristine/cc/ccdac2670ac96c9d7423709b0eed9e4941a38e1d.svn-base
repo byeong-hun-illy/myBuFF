@@ -1,0 +1,222 @@
+package com.buff.hdofc.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.com.mapper.RgnMapper;
+import com.buff.hdofc.mapper.HdofcFrcsMapper;
+import com.buff.hdofc.service.HdofcFrcsService;
+import com.buff.vo.BzentVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.FrcsVO;
+import com.buff.vo.MemberVO;
+
+/**
+* @packageName  : com.buff.service.hdofc.impl
+* @fileName     : FrcsServiceImpl.java
+* @author       : 송예진
+* @date         : 2024.09.12
+* @description  : 가맹점 Service Impl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12        송예진     	  			최초 생성
+*/
+@Service
+public class HdofcFrcsServiceImpl implements HdofcFrcsService{
+	
+	@Autowired
+	HdofcFrcsMapper frcsMapper;
+	
+	@Autowired
+	RgnMapper rgnMapper;
+
+// <----------------------------- 가맹점 조회 시작 ------------------------------>
+	/**
+	* @methodName  : selectFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.12
+	* @param 	   : 검색 조건
+	* @return      : 검색조건에 맞는 페이징 된 가맹점 리스트
+	*/
+	@Override
+	public List<FrcsVO> selectFrcs(Map<String, Object> map) {
+		return this.frcsMapper.selectFrcs(map);
+	}
+
+	/**
+	* @methodName  : selectTotalFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.12
+	* @param 	   : 검색 조건
+	* @return      : 검색조건에 맞는 가맹점 리스트 총 갯수
+	*/
+	@Override
+	public int selectTotalFrcs(Map<String, Object> map) {
+		return this.frcsMapper.selectTotalFrcs(map);
+	}
+	
+	/**
+	* @methodName  : selectAllFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.12
+	* @param 	   : 검색 조건
+	* @return      : 검색조건에 맞는 가맹점 총 갯수
+	*/
+	public int selectAllFrcs(Map<String, Object> map) {
+		return this.frcsMapper.selectAllFrcs(map);
+	};
+	
+	/**
+	 * @methodName  : selectAllFrcs
+	 * @author      : 송예진
+	 * @date        : 2024.09.12
+	 * @param 	    : 검색 조건
+	 * @return      : 검색조건에 맞는 운영 중인 가맹점 총 갯수
+	 */
+	public int selectFrs01Frcs(Map<String, Object> map) {
+		return this.frcsMapper.selectFrs01Frcs(map);
+	};
+	
+	/**
+	 * @methodName  : selectAllFrcs
+	 * @author      : 송예진
+	 * @date        : 2024.09.12
+	 * @param 	    : 검색 조건
+	 * @return      : 검색조건에 맞는 폐업된 가맹점 총 갯수
+	 */
+	public int selectFrs02Frcs(Map<String, Object> map) {
+		return this.frcsMapper.selectFrs02Frcs(map);
+	};
+	
+	/**
+	 * @methodName  : selectAllFrcs
+	 * @author      : 송예진
+	 * @date        : 2024.09.12
+	 * @param 	    : 검색 조건
+	 * @return      : 검색조건에 맞는 폐업 예정 가맹점 총 갯수
+	 */
+	public int selectFrs03Frcs(Map<String, Object> map) {
+		return this.frcsMapper.selectFrs03Frcs(map);
+	}
+	/**
+	* @methodName  : selectFrcsMngr
+	* @author      : 송예진
+	* @date        : 2024.09.12
+	* @return      : 가맹점을 맡은 관리자 리스트 
+	*/
+	public List<MemberVO> selectFrcsMngr(){
+		return this.frcsMapper.selectFrcsMngr();
+	};
+// <----------------------------- 가맹점 조회 끝 ------------------------------>
+	
+// <----------------------------- 가맹점 상세 조회 시작 ------------------------------>
+	
+	/**
+	* @methodName  : selectDtlFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.13
+	* @return      : 하나의 가맹점 정보
+	*/
+	public FrcsVO selectDtlFrcs(String frcsNo) {
+		return this.frcsMapper.selectDtlFrcs(frcsNo);
+	};
+	
+	/**
+	* @methodName  : updateBzentMbr
+	* @author      : 송예진
+	* @date        : 2024.09.14
+	* @param       : bzentVO (bzentNo, bzentNm, bzentZip, bzentAddr, bzentDaddr, bzentTelno, mbrId, mngrId)
+, mbrId,rgnNo)
+		rgnNo 추가하여 입력
+	*/
+	public int updateBzent(BzentVO bzentVO) {
+		String addr = bzentVO.getBzentAddr();
+		String rgnNo = this.rgnMapper.rgnNoSearch(addr);
+		
+		bzentVO.setRgnNo(rgnNo);
+		
+		int cnt = this.deleteRoleFrcs(bzentVO);
+		cnt+= this.insertRoleFrcs(bzentVO);
+		cnt+= this.frcsMapper.updateBzent(bzentVO);
+		return cnt;
+	};
+	
+	/**
+	 * @methodName  : updateFrcs
+	 * @author      : 송예진
+	 * @date        : 2024.09.14
+	 * @param       : frcsVO (bzentNo, opbizYmd)
+	 */
+	public int updateFrcs(FrcsVO frcsVO) {
+		return this.frcsMapper.updateFrcs(frcsVO);
+	};
+	
+	/**
+	* @methodName  : deleteRoleFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.14
+	* @param       : bzentVO(bzentNo) 이전에 가지고있는 사람 권한 삭제, 필수로 가맹점주 수정 이전에 수행할 것
+	*/
+	public int deleteRoleFrcs(BzentVO bzentVO) {
+		return this.frcsMapper.deleteRoleFrcs(bzentVO);
+	};
+	
+	/**
+	* @methodName  : insertRoleFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.14
+	* @param       : bzentVO(mbrId) 가맹점주 권한 추가
+	*/
+	public int insertRoleFrcs(BzentVO bzentVO) {
+		return this.frcsMapper.insertRoleFrcs(bzentVO);
+	};
+// <----------------------------- 가맹점 상세 조회 끝 ------------------------------>
+	
+	// <----------------------------- 가맹점 추가 시작 ------------------------------>
+	
+	/**
+	* @methodName  : selectPreFrcsMbr
+	* @author      : 송예진
+	* @date        : 2024.09.13
+	* @param map   : 검색조건 + 페이징 
+	* @return      : 상담을 마친 가맹점을 배정받지 않은 회원 리스트
+	*/
+	public List<FrcsDscsnVO> selectPreFrcsMbr(Map<String, Object> map){
+		return this.frcsMapper.selectPreFrcsMbr(map);
+	};
+	
+	/**
+	* @methodName  : selectTotalPreFrcsMbr
+	* @author      : 송예진
+	* @date        : 2024.09.13
+	* @param map   : 검색조건 + 페이징 
+	* @return      : 상담을 마친 가맹점을 배정받지 않은 회원 총 갯수
+	*/
+	public int selectTotalPreFrcsMbr(Map<String, Object> map) {
+		return this.frcsMapper.selectTotalPreFrcsMbr(map);
+	};
+	
+	/**
+	* @methodName  : insertBzentFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.16
+	* @param frcsVO
+	* @param bzentVO : 가맹점 추가
+	* @return
+	*/
+	public String insertBzentFrcs(FrcsVO frcsVO, BzentVO bzentVO) {
+		String addr = bzentVO.getBzentAddr();
+		String rgnNo = rgnMapper.rgnNoSearch(addr);
+		bzentVO.setRgnNo(rgnNo);
+		
+		int cnt = this.insertRoleFrcs(bzentVO);
+		cnt+= this.frcsMapper.insertBzent(bzentVO);
+		cnt+= this.frcsMapper.insertFrcs(frcsVO);
+		return bzentVO.getBzentNo();
+	};
+// <----------------------------- 가맹점 추가 끝 ------------------------------>
+}

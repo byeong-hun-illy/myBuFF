@@ -1,0 +1,22 @@
+package com.buff.cust.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.FaqVO;
+
+@Mapper
+public interface CustCenterMapper {
+	
+	/**
+	* @methodName  : SelectFaq
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param FaqVO : faq가 담긴 객체
+	* @return : faqVO
+	*/
+
+	public List<FaqVO> selectFaq();
+	
+}

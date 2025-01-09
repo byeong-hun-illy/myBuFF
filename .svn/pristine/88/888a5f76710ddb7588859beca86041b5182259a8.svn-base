@@ -1,0 +1,58 @@
+package com.buff.hdofc.service.impl;
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.hdofc.mapper.MngrMapper;
+import com.buff.hdofc.service.HdofcMngrService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.BzentVO;
+import com.buff.vo.MngrVO;
+import com.buff.vo.NoticeVO;
+
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
+@Service
+public class HdofcMngrServiceImpl implements HdofcMngrService {
+	
+	@Inject
+	MngrMapper mngrMapper;
+
+	/** 사원 목록 */
+	@Override
+	public Map<String, Object> selectNoticeAjax(Map<String, Object> map) {
+		
+		// 전체 갯수
+		int all = this.mngrMapper.selectAll();
+		// 담당자 조회
+		List<MngrVO> selectMngrList = this.mngrMapper.selectBoxMngr();
+		// 가맹점 조회
+		List<BzentVO> selectFrcsList = this.mngrMapper.selectBoxFrcs();
+		// 거래처 조회
+		List<BzentVO> selectCntpList = this.mngrMapper.selectBoxCntp();
+		
+		// 페이징을 위한 데이터
+		int total = this.mngrMapper.selectTotalMngrList(map); // 검색조건에 현재 게시판 갯수 √
+		int currentPage = Integer.parseInt((String) map.get("currentPage"));
+		int size = 10; // 페이징 사이즈
+		map.put("size", size);
+		List<MngrVO> mngrVOList = this.mngrMapper.selectMngrList(map);
+		log.info("selectNoticeAjax => "+total, currentPage, size);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("all", all);
+		response.put("selectMngrList", selectMngrList);
+		response.put("selectFrcsList", selectFrcsList);
+		response.put("selectCntpList", selectCntpList);
+		response.put("articlePage", new ArticlePage<MngrVO>(total, currentPage, size, mngrVOList, map));
+		
+		return response;
+	}
+
+}

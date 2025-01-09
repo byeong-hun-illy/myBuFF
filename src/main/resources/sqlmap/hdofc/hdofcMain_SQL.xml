@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.10.10
+@description  : 본사 메인
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcMainMapper">
+	
+	<!-- 갯수! -->
+	<select id="selectCnt" resultType="hdofcCntVO">
+		SELECT 
+				-- BUFF현황
+				-- 가맹점 수
+				(SELECT COUNT(1) 
+		        FROM FRCS 
+		        WHERE FRCS_TYPE='FRS01' 
+		        OR FRCS_TYPE='FRCS03') AS FRCS_CNT
+		        -- 고객 수
+		        , (SELECT COUNT(1) 
+		            FROM AUTH 
+		            WHERE AUTH='ROLE_CUST') AS CUST_CNT
+		        -- 거래처 수
+		        , (SELECT COUNT(1)
+		            FROM BZENT
+		            WHERE BZENT_NO LIKE 'CN%') AS CNPT_CNT
+		        -- 사원 수
+		        , (SELECT COUNT(1)
+		            FROM MNGR
+		            WHERE HDOF_YN='Y') AS MNGR_CNT
+		            
+		        -- 물류 관리  
+		        -- 구매 필요
+		        , (SELECT COUNT(1) 
+        			FROM STOCK 
+			        WHERE BZENT_NO='HO0001' 
+			        AND SF_STOCK_QTY > QTY) AS PUR_CNT
+			     -- 배송확정 
+		        , (SELECT COUNT(1)
+			        FROM PO
+			        WHERE BZENT_NO='HO0001'
+			        AND DELI_TYPE='DELI02'
+			        AND TO_CHAR(SYSDATE,'YYYYMMDD') > DELI_YMD) AS DELI_CNT
+			     -- 발주 승인 필요
+		        , (SELECT COUNT(1)
+		            FROM PO P
+		            JOIN STOCK_PO SP ON SP.PO_NO=P.PO_NO
+		            WHERE SP.BZENT_NO='HO0001'
+		            AND DELI_TYPE='DELI01') AS APRV_CNT
+		         -- 발주 정산 필요
+		         , (SELECT COUNT(1)
+		            FROM PO P
+		            JOIN PO_CLCLN C ON C.PO_NO=P.PO_NO
+		            WHERE P.BZENT_NO='HO0001'
+		            AND C.CLCLN_YN='N') AS CLCLN_CNT	
+		           
+		          -- 상담/문의/점검/폐업 갯수
+		          -- 상담 대기 갯수
+		          , (SELECT COUNT(1)
+					FROM FRCS_DSCSN
+					WHERE DSCSN_TYPE = 'DSC01') AS DSC_CNT
+				  -- 문의 답변 대기 갯수
+				  , (SELECT COUNT(1)
+					FROM QS
+					WHERE MNGR_ID IS NULL) AS QS_CNT
+			      -- 점검필요 갯수
+				  , (SELECT COUNT(1)
+						FROM (
+					    SELECT COUNT(1)
+						FROM FRCS F
+						LEFT OUTER JOIN FRCS_CHECK C ON C.FRCS_NO = F.FRCS_NO
+						WHERE 1=1
+						AND FRCS_TYPE = 'FRS01'
+						AND (ADD_MONTHS(SYSDATE, -6) > TO_DATE(C.CHCK_YMD) OR C.CHCK_YMD IS NULL)
+						GROUP BY C.CHCK_SEQ
+							     , F.FRCS_NO
+							     , C.CHCK_YMD
+						HAVING MAX(C.CHCK_SEQ) = (SELECT MAX(A.CHCK_SEQ)
+							                       FROM FRCS_CHECK A
+							                       WHERE F.FRCS_NO = A.FRCS_NO)
+							   OR MAX(C.CHCK_SEQ) IS NULL
+						)
+					) AS CHECK_CNT
+					-- 폐업 예정 갯수
+					, (SELECT COUNT(1)
+						FROM FRCS
+						WHERE FRCS_TYPE = 'FRS03') AS CLS_CNT
+					-- 발주 구매 가격
+					, (SELECT SUM(CLCLN_AMT+NPMNT_AMT)
+						FROM PO P
+						JOIN STOCK_PO SP ON SP.PO_NO=P.PO_NO
+						JOIN PO_CLCLN C ON P.PO_NO=C.PO_NO
+						WHERE P.BZENT_NO='HO0001'
+						AND TO_CHAR(SYSDATE,'YYYY')=SUBSTR(C.REG_YMD,1,4)) AS PUR_AMT
+					-- 발주 판매 가격
+					, (SELECT SUM(CLCLN_AMT+NPMNT_AMT)
+						FROM PO P
+						JOIN STOCK_PO SP ON SP.PO_NO=P.PO_NO
+						JOIN PO_CLCLN C ON P.PO_NO=C.PO_NO
+						WHERE SP.BZENT_NO='HO0001'
+						AND TO_CHAR(SYSDATE,'YYYY')=SUBSTR(C.REG_YMD,1,4)) AS SELL_AMT
+					, (
+						SELECT COALESCE(SUM(ROYALTY - DSCNT_AMT + NPMNT_AMT),0)
+						FROM FRCS_CLCLN
+						WHERE
+		                SUBSTR(CLCLN_YM, 1, 4) = TO_CHAR(SYSDATE, 'YYYY') 
+					) AS CLCLN_AMT
+		FROM DUAL
+	</select>
+	
+	<!-- 가맹점 별 점검 도넛 -->
+	<select id="selectChkGrade" resultType="hdofcAmtVO">
+		SELECT GRADE
+		    	, COUNT(1) AS TOTAL
+		FROM (
+		SELECT 
+		    CASE 
+		        WHEN SUM(C.CLEN_SCR + C.SRVC_SCR) >= 90 THEN 'A'
+		        WHEN SUM(C.CLEN_SCR + C.SRVC_SCR) >= 80 THEN 'B'
+		        WHEN SUM(C.CLEN_SCR + C.SRVC_SCR) >= 70 THEN 'C'
+		        WHEN SUM(C.CLEN_SCR + C.SRVC_SCR) >= 60 THEN 'D'
+		        ELSE 'F'
+		    END AS GRADE
+		FROM FRCS_CHECK C
+		GROUP BY C.FRCS_NO, 
+		         C.CHCK_SEQ
+		HAVING MAX(C.CHCK_SEQ) = (SELECT MAX(A.CHCK_SEQ)
+		                           FROM FRCS_CHECK A
+		                           WHERE C.FRCS_NO = A.FRCS_NO)
+		)
+		GROUP BY GRADE
+		ORDER BY GRADE
+	</select>
+	
+	<!-- 상담 이벤트 -->
+	<select id="selectDscsnEvent" parameterType="hashMap" resultType="frcsDscsnVO">
+		SELECT M.MBR_NM
+			, TO_CHAR(TO_DATE(D.DSCSN_PLAN_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') AS DSCSN_PLAN_YMD
+		FROM FRCS_DSCSN D
+		JOIN MEMBER M ON D.MBR_ID = M.MBR_ID
+		WHERE TO_DATE(D.DSCSN_PLAN_YMD, 'YYYYMMDD') BETWEEN 
+		      TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+		    AND 
+		        TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		AND D.DSCSN_TYPE IN ('DSC03', 'DSC04') --상담 대기와 상담 취소는 띄우지 않음
+	</select>
+	
+	<!-- 지역별 차트 -->
+	<select id="selectRgnAmt" resultType="hdofcAmtVO" parameterType="String">
+		SELECT FN_GET_COM_NM(B.RGN_NO) AS RGN_NM
+        	, SUM(ORDR_QTY * ORDR_AMT) AS TOTAL
+		FROM ORDR_DTL D
+		JOIN BZENT B ON D.FRCS_NO=B.BZENT_NO
+		JOIN ORDR O ON O.ORDR_NO=D.ORDR_NO 
+			<choose>
+				<when test="date== 'year'">
+					AND TO_CHAR(O.ORDR_DT,'YYYY')=TO_CHAR(SYSDATE,'YYYY')
+				</when>
+				<when test="date== 'month'">
+					AND TO_CHAR(O.ORDR_DT,'YYYYMM')=TO_CHAR(SYSDATE,'YYYYMM')
+				</when>
+				<otherwise>
+					AND TO_CHAR(O.ORDR_DT,'YYYYMMDD')=TO_CHAR(SYSDATE,'YYYYMMDD')
+				</otherwise>
+			</choose>
+		GROUP BY B.RGN_NO
+		ORDER BY 2 DESC
+	</select>
+	
+	<!-- 주문관련 차트  -->
+	<select id="selectOrdrAmt" resultType="hdofcAmtVO" parameterType="String">
+	    SELECT 
+	        <choose>
+	            <when test="date == 'year'">
+	                TO_CHAR(O.ORDR_DT, 'MM') AS PERIOD
+	            </when>
+	            <when test="date == 'month'">
+	                TO_CHAR(O.ORDR_DT, 'DD') AS PERIOD
+	            </when>
+	            <otherwise>
+	                TO_CHAR(O.ORDR_DT, 'HH24') AS PERIOD
+	            </otherwise>
+	        </choose>,
+	        SUM(D.ORDR_QTY * D.ORDR_AMT) AS TOTAL
+	    FROM ORDR_DTL D
+	    JOIN BZENT B ON D.FRCS_NO = B.BZENT_NO
+	    JOIN ORDR O ON O.ORDR_NO = D.ORDR_NO
+	    WHERE 
+	        <choose>
+	            <when test="date == 'year'">
+	                TO_CHAR(O.ORDR_DT, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+	            </when>
+	            <when test="date == 'month'">
+	                TO_CHAR(O.ORDR_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+	            </when>
+	            <otherwise>
+	                TO_CHAR(O.ORDR_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	            </otherwise>
+	        </choose>
+	    GROUP BY 
+	        <choose>
+	            <when test="date == 'year'">
+	                TO_CHAR(O.ORDR_DT, 'MM')
+	            </when>
+	            <when test="date == 'month'">
+	                TO_CHAR(O.ORDR_DT, 'DD')
+	            </when>
+	            <otherwise>
+	                TO_CHAR(O.ORDR_DT, 'HH24')
+	            </otherwise>
+	        </choose>
+	    ORDER BY PERIOD
+	</select>
+	
+	<!-- 상담 내역 상담 예정중인 사람들 -->
+	<select id="selectDscsn" resultType="frcsDscsnVO">
+		--SELECT * FROM(
+		    SELECT ROW_NUMBER() OVER (ORDER BY D.DSCSN_PLAN_YMD) AS RNUM
+		                , D.DSCSN_CODE
+				        , M.MBR_NM
+				        , M.MBR_TELNO
+				        , D.DSCSN_PLAN_YMD
+				        , FN_GET_COM_NM(D.RGN_NO) AS RGN_NM
+				FROM FRCS_DSCSN D
+				JOIN MEMBER M ON M.MBR_ID=D.MBR_ID
+				WHERE DSCSN_TYPE='DSC03'
+	    --) WHERE RNUM BETWEEN 1 AND 6
+	</select>
+	
+	<!-- 답변 안한 QS -->
+	<select id="selectQs" resultType="qsVO">
+		--SELECT * FROM(
+			SELECT ROW_NUMBER() OVER (ORDER BY Q.WRTR_DT) AS RNUM
+					, Q.QS_SEQ
+					, M.MBR_NM 
+					, FN_GET_COM_NM(Q.QS_TYPE) AS QS_TYPE_NM
+					, Q.QS_TTL
+					, Q.WRTR_DT
+			FROM QS Q
+			JOIN MEMBER M ON M.MBR_ID=Q.MBR_ID
+			WHERE Q.MNGR_ID IS NULL
+		--) WHERE RNUM BETWEEN 1 AND 6
+	</select>
+	
+	<!-- 진행중인 이벤트 -->
+	<select id="selectEvent" resultType="eventVO">
+		SELECT ROW_NUMBER() OVER (ORDER BY BGNG_YMD) AS RNUM
+			, EVENT_NO
+	        , EVENT_TTL
+	        , BGNG_YMD
+	        , EXP_YMD
+		FROM EVENT
+		WHERE EVENT_TYPE='EVT04'
+	</select>
+</mapper>

@@ -1,0 +1,29 @@
+package com.buff.hdofc.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.buff.com.mapper.RgnMapper;
+import com.buff.hdofc.service.HdofcFrcsService;
+
+@RequestMapping("/hdofc")
+@Controller
+public class HdofcFrcsCheckController {
+	
+	@Autowired
+	HdofcFrcsService frcsService;
+	
+	@Autowired
+	RgnMapper rgnMapper;
+	
+	@GetMapping("/frcs/checkList")
+	public String selectCheck(Model model) {
+		// 검색 조건
+		model.addAttribute("rgn", this.rgnMapper.selectRgn());
+		model.addAttribute("mngr", this.frcsService.selectFrcsMngr());
+		return "hdofc/frcs/selectFrcsCheck";
+	}
+}

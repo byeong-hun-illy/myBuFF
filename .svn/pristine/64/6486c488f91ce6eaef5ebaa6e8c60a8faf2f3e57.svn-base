@@ -1,0 +1,151 @@
+package com.buff.frcs.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.com.mapper.BankMapper;
+import com.buff.frcs.service.FrcsMyPageService;
+import com.buff.vo.BankVO;
+import com.buff.vo.BzentVO;
+import com.buff.vo.FrcsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.controller.frcs
+* @fileName     : FrcsMyPageController.java
+* @author       : 김현빈
+* @date         : 2024-09-12
+* @description  : 
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024-09-12		김현빈				?
+*/
+
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsMyPageController {
+	
+	@Inject
+	BankMapper bankMapper;
+	
+	@Inject
+	FrcsMyPageService frcsMyPageService;
+	
+	/** 가맹점 진입페이지
+	 * 요청URI : /frcs/MyPage
+	 * 요청파라미터 : 
+	 * 요청방식 : get
+	 */
+	@GetMapping("/myPage")
+	public String myPage(Model model) {
+		List<BankVO> bankVOList = this.bankMapper.selectBank();
+		model.addAttribute(bankVOList);
+		return "frcs/myPage";
+	}
+	
+	/** 가맹점 마이페이지 조회
+	 * 요청URI : /frcs/myPageAjax
+	 * 요청파라미터 : 
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/myPageAjax")
+	public FrcsVO myPageAjax(@RequestBody String mbrId) {
+		log.info("myPageAjax : -> mbrId : " + mbrId);
+		
+		FrcsVO frcsVO = this.frcsMyPageService.selectFrcsMyPage(mbrId);
+		log.info("frcsVO : -> " + frcsVO);
+		
+		return frcsVO;
+	}
+	
+	/** 가맹점 마이페이지 정보 수정
+	 * 요청URI : /frcs/updateMyPageAjax
+	 * 요청파라미터 : 
+	 * 요청방식 : post
+	 */
+	//{"openTm": "0900","ddlnTm": "0200","bzentTelno": "0559218600","mbrId": "3r1x9ega"}
+	@ResponseBody
+	@PostMapping("/updateMyPageAjax")
+	public int updateFrcsMyPage(@RequestBody FrcsVO frcsVO) {		
+//		log.info("mbrId : " + frcsVO.getBzentVO().getMbrId());
+		/*
+		FrcsVO(rnum=0, frcsNo=null, frcsType=null, frcsTypeNm=null
+		, warnCnt=0, opbizYmd=null, clsbizYmd=null, openTm=0800
+		, ddlnTm=0200, 
+			bzentVO=BzentVO(bzentNo=null, mbrId=3r1x9ega, mngrId=null
+			, bzentTelno=0559218600, bzentNm=null, rgnNo=null, rgnNm=null
+			, bzentZip=null, bzentAddr=null, bzentDaddr=null, bzentType=null
+			, actno=null, bankType=null, mngrInfo=null, mbrInfo=null))
+		 */
+		log.info("frcsVO : " + frcsVO);
+//		log.info("bzentVO : " + frcsVO.getBzentVO());
+		
+		int result = this.frcsMyPageService.updateFrcsMyPage(frcsVO);
+		log.info("result 가맹점 수정작업 : -> " + result);
+		
+		return result;
+	}
+	
+	/** 가맹점주 마이페이지 정보 수정
+	 * 요청URI : /frcs/updateOwnerMyPageAjax
+	 * 요청파라미터 : 
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/updateOwnerMyPageAjax")
+	public int updateOwnerMyPage(@RequestBody BzentVO bzentVO) {
+		log.info("bzentVO" + bzentVO);
+		
+		int result = this.frcsMyPageService.updateOwnerMyPage(bzentVO);
+		log.info("result 가맹점주 수정작업 : -> " + result);
+		
+		return result;
+	}
+	
+	/** 가맹점 폐업신청
+	 * 요청URI : /frcs/insertFrcsClsbizAjax
+	 * 요청파라미터 : 
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/insertFrcsClsbizAjax")
+	public int insertFrcsClsbiz(@RequestBody FrcsVO frcsVO) {
+		log.info("frcsVO" + frcsVO);
+		
+		int result = this.frcsMyPageService.insertFrcsClsbiz(frcsVO);
+		log.info("result 가맹점 폐업신청 : -> " + result);
+		
+		return result;
+	}
+	
+	/** 가맹점 마이페이지 관리자 정보 조회
+	 * 요청URI : /frcs/selectFrcsMngrAjax
+	 * 요청파라미터 : 
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/selectFrcsMngrAjax")
+	public FrcsVO selectFrcsMngr(@RequestBody String mbrId) {
+		log.info("selectFrcsMngrAjax : -> mbrId : " + mbrId);
+		FrcsVO frcsVO = this.frcsMyPageService.selectFrcsMngr(mbrId);
+		log.info("frcsVO : -> " + frcsVO);
+		
+		return frcsVO;
+	}
+	
+}

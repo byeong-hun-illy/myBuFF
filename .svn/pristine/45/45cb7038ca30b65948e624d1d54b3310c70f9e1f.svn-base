@@ -1,0 +1,202 @@
+package com.buff.hdofc.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.hdofc.service.HdofcEventService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.CouponGroupVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.MenuVO;
+import com.buff.vo.MngrVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.hdofc.controller
+* @fileName     : HdofcEventController.java
+* @author       : 정기쁨
+* @date         : 2024.09.14
+* @description  : 이벤트 조회, 이벤트 등록, 이벤트 삭제, 이벤트 상세조회
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.14        정기쁨     	  	   최초 생성
+*/
+@Slf4j
+@RequestMapping("/hdofc/event")
+@Controller
+public class HdofcEventController {
+
+	@Inject
+	HdofcEventService hdofcEventService;
+	
+	/**
+	* @methodName  : selectEventList
+	* @author      : 정기쁨
+	* @date        : 2024. 09. 15
+	* 이벤트 조회
+	*/
+	@GetMapping("/selectEventList")
+	public String selectEventList(Model model) {
+
+		// 전체 쿠폰 조회
+		List<CouponGroupVO> couponGroupVOList = this.hdofcEventService.selectCouponGroupList();
+		model.addAttribute("couponGroupVOList",couponGroupVOList);
+
+		// 전체 사원 조회
+		List<MngrVO> mngrVOList = this.hdofcEventService.selectMngrList();
+		model.addAttribute("mngrVOList",mngrVOList);
+		
+		return "hdofc/event/selectEventList";
+	}
+	
+	/**
+	 * @methodName  : listAjax
+	 * @author      : 정기쁨
+	 * @date        : 2024. 09. 17
+	 * @param       : currentPage - 현재 페이지
+	 * @param       : map - 검색 조건
+	 * @return      : articlePage, (구분용) 이벤트 타입에 따른 정보
+	 */
+	@ResponseBody
+	@GetMapping("/listAjax")
+	public Map<String, Object> listAjax(@RequestParam Map<String,Object> map) {
+		
+	    // 이벤트 타입 별 갯수
+	    int all = this.hdofcEventService.selectAll(map); // 전체 이벤트 갯수
+	    int waiting = this.hdofcEventService.selectWaiting(map); // 대기 중인 이벤트 갯수
+	    int cancelled = this.hdofcEventService.selectCancelled(map); // 취소 된 이벤트 갯수
+	    int scheduled = this.hdofcEventService.selectScheduled(map); // 예정 된 이벤트 갯수
+	    int progress = this.hdofcEventService.selectProgress(map); // 진행 중인 이벤트 갯수
+	    int completed = this.hdofcEventService.selectCompleted(map); // 완료 된 이벤트 갯수
+		
+	    // 페이징을 위한 데이터
+	    int total = this.hdofcEventService.selectTotal(map); // 검색조건에 현재 게시판 갯수
+	    int currentPage = Integer.parseInt((String) map.get("currentPage"));
+		int size = 10;
+		map.put("size", size);
+		List<EventVO> eventVOList = this.hdofcEventService.selectEventList(map); // 전체 이벤트 조회
+	    
+		// 응답 데이터를 담을 Map 생성
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("articlePage", new ArticlePage<EventVO>(total, currentPage, size, eventVOList, map));
+	    response.put("all",all);
+	    response.put("waiting",waiting);
+	    response.put("cancelled",cancelled);
+	    response.put("scheduled",scheduled);
+	    response.put("progress",progress);
+	    response.put("completed",completed);
+	    
+		return response;  // 여러 데이터를 포함한 Map 반환
+	}
+	
+	/**
+	* @methodName  : insertEvent
+	* @author      : 정기쁨
+	* @date        : 2024. 09. 15
+	* 이벤트 추가 페이지
+	*/
+	@GetMapping("/insertEvent")
+	public String insertEvent() {
+		return "hdofc/event/insertEvent";
+	}
+	
+	/**
+	* @methodName  : menuModalAjax
+	* @author      : 정기쁨
+	* @date        : 2024. 09. 15
+	* 메뉴 모달창
+	*/
+	@ResponseBody
+	@GetMapping("/menuModalAjax")
+	public Map<String, Object> menuModalAjax(
+			@RequestParam(value = "menuType", required = false, defaultValue = "") String menuType
+		){
+		
+		log.info(menuType);
+		
+		int total = this.hdofcEventService.selectTotalMENU();
+		int set = this.hdofcEventService.selectMENU01();
+		int hambur = this.hdofcEventService.selectMENU02();
+		int side = this.hdofcEventService.selectMENU03();
+		int drink = this.hdofcEventService.selectMENU04();
+		
+		List<MenuVO> menuVOList = this.hdofcEventService.selectMenuList(menuType);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("total", total);
+		response.put("set", set);
+		response.put("hambur", hambur);
+		response.put("side", side);
+		response.put("drink", drink);
+		response.put("menuVOList", menuVOList);
+		
+		return response;
+	}
+	
+	/**
+	* @methodName  : eventInsert
+	* @author      : 정기쁨
+	* @date        : 2024. 09. 15
+	* 이벤트 추가 페이지
+	*/
+	@PostMapping("/eventInsert")
+	public String eventInsert(
+			@ModelAttribute @Validated EventVO eventVO, 
+			BindingResult brResult
+		) {
+		log.info("EventVO : "+eventVO); // uploadFile=[org.spring...)
+		
+		String bgngYmd = eventVO.getBgngYmd().replace("-", "");
+		String expYmd = eventVO.getExpYmd().replace("-", "");
+		
+		eventVO.setBgngYmd(bgngYmd);
+		eventVO.setExpYmd(expYmd);
+		
+		// 도메인 클래스(ProdVO의 prodName 및 prodSave 멤버변수(프로퍼티)에 오류가 발생함
+		// brResult.hasErrors() => true
+		log.info("registPost -> brResult.hasErrors() : "+brResult.hasErrors());
+		
+		if(brResult.hasErrors()) { // 오류 발생
+			List<ObjectError> allErrors = brResult.getAllErrors(); // getGlobalError + getGlobalError
+			List<ObjectError> globalErrors = brResult.getGlobalErrors(); // 객체(중첩된 자바빈) VO객체 안의 List의 오류
+			List<FieldError> fieldErrors = brResult.getFieldErrors(); // 프로퍼티와 관련된 오류
+		
+			for(ObjectError ObjectError : allErrors) {
+				log.info("allError : "+ObjectError);
+			}
+			for(ObjectError ObjectError : globalErrors) {
+				log.info("allError : "+ObjectError);
+			}
+			for(FieldError ObjectError : fieldErrors) {
+				log.info("allError : "+ObjectError);
+			}
+			
+			// redirect로는 안되고 forwarding로 가야 함
+			// error가 함께 가야 되기 때문
+			return "hdofc/event/insertEvent";
+		}
+		
+		int result = this.hdofcEventService.eventInsert(eventVO);
+		log.info("eventInsert -> result : "+result);
+		
+		return "hdofc/event/selectEventList";
+	}
+}

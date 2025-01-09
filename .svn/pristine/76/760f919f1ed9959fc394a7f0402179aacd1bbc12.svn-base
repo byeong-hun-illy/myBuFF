@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-cnpt-container"] {
+	width: 250px !important;
+}
+.select2-selection[aria-labelledby="select2-mngrId-container"] .select2-dropdown {
+	width: 248px !important;
+}
+.select2-selection[aria-labelledby="select2-frcs-container"] {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-frcs-container"] .select2-dropdown {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-mngrId-container"] {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-mngrId-container"] .select2-dropdown {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-rgnNo-container"] {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-rgnNo-container"] .select2-dropdown {
+	width: 200px !important;
+}
+
+/* 테이블  */
+.mngr-info tr td {
+	width: 35%;
+}
+.bzent-list thead,
+.bzent-list tbody tr {
+	display: table;
+	width: 100%; 	
+}
+.bzent-list-tbody {
+	display: block; /* 가로세로 조절 가능 */
+	max-height: 422px; /* 보여주고 싶은 만큼 세로값 입력 */
+	overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.bge.mngrType {
+    display: block;
+    width: 60px;
+    margin: auto;
+}

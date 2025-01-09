@@ -1,0 +1,17 @@
+@charset "UTF-8";
+
+nav {
+	max-width: 1170px;margin: 0 auto;
+}
+nav .header-wrap {
+	display:flex; justify-content: space-between;
+}
+nav .header-cont {
+	display:flex; align-items:center;
+}
+nav .top-quick, .bom-quick {
+	display:flex; align-items:center;
+}
+em {
+	display: block;width: 1px;height: 15px;background-color: #ddd;margin: 0 10px;
+}

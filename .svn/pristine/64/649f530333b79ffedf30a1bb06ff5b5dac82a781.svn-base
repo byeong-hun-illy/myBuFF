@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.buff.hdofc.mapper.HdofcNoticeMapper">
+	
+	<resultMap type="noticeVO" id="noticeMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="ntcSeq" column="NTC_SEQ"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="ntcTtl" column="NTC_TTL"/>
+		<result property="ntcCn" column="NTC_CN"/>
+		<result property="wrtrDt" column="WRTR_DT"/>
+		<result property="inqCnt" column="INQ_CNT"/>
+		<result property="fixdSeq" column="FIXD_SEQ"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<association property="mngrVO" resultMap="mngrMap"></association>
+		<association property="memberVO" resultMap="memberMap"></association>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="mngrVO" id="mngrMap">
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="mngrType" column="MNGR_TYPE"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="hdofYn" column="HDOF_YN"/>
+		<result property="rtrmYmd" column="RTRM_YMD"/>
+		<association property="memberVO" resultMap="memberMap"></association>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="memberMap">
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrId" column="MBR_ID"/>
+	</resultMap>
+	
+	<resultMap type="fileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+	</resultMap>
+	
+	<!-- 공지사항 목록 시작 ////////////////////////////////////////////////////////////////////////// -->
+	<!--
+		@programName : 공지사항 조회
+		@description : 검색조건 전체 담당자 조회
+		@author      : 정기쁨
+		@date        : 2024. 09. 25
+	-->
+	<select id="selectMngrList" resultMap="mngrMap">
+		SELECT
+		    A.MNGR_ID,
+		    B.MBR_NM
+		FROM MNGR A, MEMBER B
+		WHERE A.MNGR_ID = B.MBR_ID
+	</select>
+	
+	<!--
+	@programName :공지사항 조회
+	@description : 전체 갯수 조회 (탭에서 사용)
+	@author      : 정기쁨
+	@date        : 2024. 09. 25
+	-->
+	<select id="selectAll" resultType="int">
+		SELECT COUNT(1)
+		FROM NOTICE A
+	</select>
+	
+	<!-- 검색 조건 시작 -->
+	<!-- 제목 검색 -->
+	<sql id="ntcTtl_search">
+		<if test="ntcTtl != null and ntcTtl != ''">
+			AND NTC_TTL LIKE '%' || #{ntcTtl} || '%'
+		</if>
+	</sql>
+
+	<!-- 내용 검색 -->
+	<sql id="ntcCn_search">
+		<if test="ntcCn != null and ntcCn != ''">
+			AND NTC_CN LIKE '%' || #{ntcCn} || '%'
+		</if>
+	</sql>
+	
+	<!-- 담당자 검색 -->
+	<sql id="mngrId_search">	
+		<if test="mngrId != null and mngrId != ''">
+			AND B.MNGR_ID LIKE '%' || #{mngrId} || '%'
+		</if>
+	</sql>	
+
+	<!-- 등록일자 검색 -->
+	<sql id="wrtrDt_search">
+		<if test="startWrtrDt != null and startWrtrDt != '' and  endWrtrDt != null and endWrtrDt != ''">
+		  	AND WRTR_DT BETWEEN TO_DATE(#{startWrtrDt}, 'YYYY-MM-DD') AND TO_DATE(#{endWrtrDt}, 'YYYY-MM-DD') 
+	  	</if>
+	</sql>
+	
+	<sql id="sort_notice">
+		<!-- 등록일자 순 -->
+		<if test="sort=='wrtrDtSort'">
+			ORDER BY WRTR_DT 
+		</if>
+		<!-- 조회수 순 -->
+		<if test="sort=='intCntSort'">
+			ORDER BY INQ_CNT
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby=='desc'">
+			DESC
+		</if>
+		 <if test="orderby=='asc'">
+	        ASC
+	    </if>
+	</sql>
+	
+	<!-- 검색 조건 끝 -->
+	
+	<!-- 분류 끝 -->
+	
+	<!--
+	@programName : 공지사항 조회
+	@description : 페이징의 total 갯수. 검색 조건에 현재 게시판 갯수
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectTotal" resultType="int"  parameterType="hashMap">
+		SELECT COUNT(1)
+		FROM NOTICE A
+		LEFT OUTER JOIN MNGR B ON A.MNGR_ID=B.MNGR_ID
+		LEFT OUTER JOIN MEMBER C ON B.MNGR_ID=C.MBR_ID
+		WHERE 1=1
+		<include refid="ntcTtl_search"></include>
+		<include refid="ntcCn_search"></include>
+		<include refid="mngrId_search"></include>
+		<include refid="wrtrDt_search"></include>
+	</select>
+	
+	<!--
+	@programName : 공지사항 조회
+	@description : 전체 공지사항 조회 (고정 안됨)
+	@author      : 정기쁨
+	@date        : 2024. 09. 16
+	-->
+	<select id="selectNofixd" parameterType="hashMap" resultMap="noticeMap">
+		WITH t AS (
+			SELECT 
+				ROW_NUMBER() OVER (
+					<include refid="sort_notice"/> 
+					<include refid="orderby"/>
+				) AS RNUM,
+			    A.NTC_SEQ,
+			    A.NTC_TTL,
+			    A.NTC_CN,
+			    TO_CHAR(A.WRTR_DT,'YYYYMMDD') AS WRTR_DT,
+			    A.INQ_CNT,
+			    A.FIXD_SEQ,
+			    A.FILE_GROUP_NO,
+			    B.MNGR_ID,
+			    C.MBR_NM,
+			    D.FILE_ORIGINAL_NAME,
+		   		D.FILE_SAVE_LOCATE
+			FROM NOTICE A
+			LEFT OUTER JOIN MNGR B ON A.MNGR_ID=B.MNGR_ID
+			LEFT OUTER JOIN MEMBER C ON B.MNGR_ID=C.MBR_ID
+			LEFT OUTER JOIN FILE_DETAIL D ON A.FILE_GROUP_NO=D.FILE_GROUP_NO
+			WHERE 1=1
+			AND A.FIXD_SEQ IS NULL
+			<include refid="ntcTtl_search"></include>
+			<include refid="ntcCn_search"></include>
+			<include refid="mngrId_search"></include>
+			<include refid="wrtrDt_search"></include>
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!--
+	@programName : 공지사항 조회
+	@description : 상단고정 공지사항
+	@author      : 정기쁨
+	@date        : 2024. 09. 27
+	-->
+	<select id="selectfixd" resultMap="noticeMap">
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY WRTR_DT DESC) AS RNUM,
+		    A.NTC_SEQ,
+		    A.NTC_TTL,
+		    A.NTC_CN,
+		    TO_CHAR(A.WRTR_DT,'YYYYMMDD') AS WRTR_DT,
+		    A.INQ_CNT,
+		    A.FIXD_SEQ,
+		    A.FILE_GROUP_NO,
+		    B.MNGR_ID,
+		    C.MBR_NM,
+		    D.FILE_ORIGINAL_NAME,
+		    D.FILE_SAVE_LOCATE
+		FROM NOTICE A
+		LEFT OUTER JOIN MNGR B ON A.MNGR_ID=B.MNGR_ID
+		LEFT OUTER JOIN MEMBER C ON B.MNGR_ID=C.MBR_ID
+		LEFT OUTER JOIN FILE_DETAIL D ON A.FILE_GROUP_NO=D.FILE_GROUP_NO
+		WHERE A.FIXD_SEQ IS NOT NULL
+	</select>
+	
+	
+	<!--
+		@programName : 공지사항 상단고정 해체
+		@description : 공지사항 목록 테이블의 체크박스 선택 후 버튼 클릭 시 상단고정 해체
+		@author      : 정기쁨
+		@date        : 2024. 09. 27
+	-->
+	<update id="updateFixd">
+	  UPDATE NOTICE
+	  SET FIXD_SEQ = null
+	  WHERE NTC_SEQ IN
+	  <foreach collection="noticeVOList" item="noticeVO" open="(" separator="," close=")">
+	    #{noticeVO.ntcSeq}
+	  </foreach>
+	</update>
+	
+	<!-- 공지사항 목록 끝 //////////////////////////////////////////////////////////////////////////// -->
+	
+	
+	
+	<!-- 공지사항 상세 시작 //////////////////////////////////////////////////////////////////////////// -->
+	<!--
+	@programName : 공지사항 상세 조회
+	@description : 공지사항 상세 조회
+	@author      : 정기쁨
+	@date        : 2024. 09. 26
+	-->
+	<select id="selectNoticeDtl" parameterType="String" resultMap="noticeMap">
+		SELECT
+		    A.NTC_SEQ,
+		    A.NTC_TTL,
+		    A.NTC_CN,
+		    TO_CHAR(A.WRTR_DT,'YYYY-MM-DD') AS WRTR_DT,
+		    A.INQ_CNT,
+		    A.FIXD_SEQ,
+		    A.FILE_GROUP_NO,
+		    B.MNGR_ID,
+		    C.MBR_NM,
+		    D.FILE_ORIGINAL_NAME,
+		    D.FILE_SAVE_LOCATE
+		FROM NOTICE A
+		LEFT OUTER JOIN MNGR B ON A.MNGR_ID=B.MNGR_ID
+		LEFT OUTER JOIN MEMBER C ON B.MNGR_ID=C.MBR_ID
+		LEFT OUTER JOIN FILE_DETAIL D ON A.FILE_GROUP_NO=D.FILE_GROUP_NO
+		WHERE A.NTC_SEQ = #{ntcSeq}
+	</select>
+	
+	<!--
+	@programName : 공지사항 추가
+	@description : 공지사항 추가
+	@author      : 정기쁨
+	@date        : 2024. 09. 26
+	-->
+	<insert id="noticeInsert" parameterType="noticeVO">
+	INSERT INTO NOTICE (NTC_SEQ, MNGR_ID, NTC_TTL, NTC_CN, WRTR_DT, INQ_CNT, FIXD_SEQ, FILE_GROUP_NO)
+	VALUES (
+	    NVL((SELECT MAX(NTC_SEQ) FROM NOTICE), 0) + 1,
+	    #{mngrId},
+	    #{ntcTtl},
+	    #{ntcCn},
+	    sysdate,
+	    0,
+	    <include refid="fixdSeq_boolean"></include>
+	    ${fileGroupNo}
+	)	
+	</insert>
+	
+	<!-- 고정글 체크 여부 -->
+	<sql id="fixdSeq_boolean">
+		<if test="fixdSeq == 'checked'">
+			(
+		        SELECT 'FX' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(FIXD_SEQ, 3, 3))), 0) + 1, 3, '0') 
+		        FROM NOTICE
+		    ),
+		</if>
+		<if test="fixdSeq == 'unchecked'">
+			null,
+		</if>
+	</sql>
+	
+	<select id="selectMaxNtcSeq" resultType="int">
+		SELECT MAX(NTC_SEQ) FROM NOTICE
+	</select>
+	<!-- 공지사항 상세 끝 //////////////////////////////////////////////////////////////////////////// -->
+	
+	<!--
+	@programName : updateNoticeDtlAjax
+	@description : 공지사항 업데이트
+	@author      : 정기쁨
+	@date        : 2024. 10. 12
+	-->	
+	<update id="updateNoticeDtlAjax" parameterType="noticeVO">
+		UPDATE NOTICE
+		SET
+			NTC_TTL = #{ntcTtl},
+			NTC_CN = #{ntcCn},
+			FILE_GROUP_NO = #{fileGroupNo},
+			<if test="fixdSeq == 'checked'">
+			FIXD_SEQ =	(
+			        SELECT 'FX' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(FIXD_SEQ, 3, 3))), 0) + 1, 3, '0') 
+			        FROM NOTICE
+			    )
+			</if>
+			<if test="fixdSeq == 'unchecked'">
+				FIXD_SEQ = null
+			</if>
+		WHERE NTC_SEQ = #{ntcSeq}
+	</update>
+	
+	<!--
+	@programName : fileDelete
+	@description : 파일 이미지 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="fileDelete" parameterType="long">
+		DELETE FROM FILE_DETAIL
+		WHERE FILE_GROUP_NO LIKE #{oldFileGroupNo}
+	</delete>
+	
+	<!--
+	@programName : fileGroupDelete
+	@description : 파일 그룹 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="fileGroupDelete" parameterType="long">
+		DELETE FROM FILE_GROUP
+		WHERE FILE_GROUP_NO = #{oldFileGroupNo}
+	</delete>
+	
+	<!--
+	@programName : fileGroupNoUpdate
+	@description : 공지사항에 파일그룹 널처리
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<update id="fileGroupNoUpdate" parameterType="long">
+		UPDATE NOTICE 
+		SET 
+			FILE_GROUP_NO = NULL
+		WHERE FILE_GROUP_NO LIKE #{oldFileGroupNo}
+	</update>
+	
+	<!--
+	@programName : noticeDelete
+	@description : 공지사항 삭제
+	@author      : 정기쁨
+	@date        : 2024. 09. 23
+	-->
+	<delete id="noticeDelete" parameterType="noticeVO">
+		DELETE FROM NOTICE
+		WHERE NTC_SEQ = #{ntcSeq}
+	</delete>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

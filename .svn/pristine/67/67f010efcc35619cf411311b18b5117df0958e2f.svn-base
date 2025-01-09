@@ -1,0 +1,21 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+@Data
+public class QsVO {
+
+	
+	private String qsSeq;
+	private String mbrId;
+	private String mngrId;
+	private String qsType;
+	private String qsTtl;
+	private String qsCn;
+	private String wrtrDt;
+	private String ansDt;
+	private String ansCn;
+	private int fileGroupNo;
+	
+	
+}

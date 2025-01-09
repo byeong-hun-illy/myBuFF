@@ -1,0 +1,113 @@
+@charset "UTF-8";
+
+.menu-wrap {
+	display: flex;
+	gap: var(--gap--s);
+}
+.menu-cont button {
+	height: -webkit-fill-available;
+}
+.menu-cont input {
+    width: 299px !important;
+}
+.menu-img {
+	height: 50px;
+}
+#menuNm {
+    display: flex;
+    align-items: center;
+    gap: var(--gap--s);
+}
+#menuAmt {
+    padding-right: 40px;
+}
+.event-menu-table tbody {
+  display: block;
+  max-height: 461px;
+  overflow-y: scroll;
+}
+.event-menu-table thead, 
+.event-menu-table tbody tr {
+  display: table;
+  width: 100%; 
+}
+.ck-editor__editable {
+  min-height: 15rem;
+}
+.modal-content {
+	width: 510px;
+} 
+.table-blue th {
+	width: 175px;
+}
+.file-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap--s);
+}
+.file-cont {
+	display: flex;
+    gap: var(--gap--s);
+    align-items: center;
+}
+.btn-download, .fileDelete {
+    display: inline-block;
+    height: 44px;	
+}
+.btn-download .icon {
+	color: var(--text--secondary) !important;
+}
+
+.event-detail {
+	/* display: none; */
+}
+.coupon-detail {
+	display: none;
+}
+
+/* 쿠폰발급리스트 */
+.select-coupon-list {
+  display: block; /* 가로세로 조절 가능 */
+  max-height: 461px; /* 보여주고 싶은 만큼 세로값 입력 */
+  overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.coupon-detail.table thead, 
+.coupon-detail.table tbody tr {
+  display: table;
+  width: 100%; 
+}
+
+/* 셀렉트박스 커스텀 */
+.select2-selection[aria-labelledby="select2-couponGubun-container"] {
+	width: 250px !important;
+}
+.select2-selection[aria-labelledby="select2-couponGubun-container"] .select2-dropdown {
+	width: 148px !important;
+}
+.select2-selection[aria-labelledby="select2-mbrNm-container"] {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-mbrNm-container"] .select2-dropdown {
+	width: 198px !important;
+}
+.select2-container .select2-selection--single .select2-selection__rendered {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 인풋 파일 */
+.input-file-wrap {
+	display:flex; 
+	gap: 10px;
+    align-items: center;
+}
+
+.img-info {
+	font-size: 0.9rem;
+    color: var(--gray--7);
+}
+
+
+
+

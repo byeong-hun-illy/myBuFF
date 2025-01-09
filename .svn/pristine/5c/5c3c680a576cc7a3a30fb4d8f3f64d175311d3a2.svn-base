@@ -1,0 +1,403 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<link href="/resources/hdofc/css/main.css" rel="stylesheet">
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script src="/resources/com/js/stockAjmt.js"></script>
+<!-- <sec:authentication property="principal.MemberVO" var="user"/> -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+$(function(){
+    // 첫 번째 라인 차트
+    const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+    const data = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Dataset 1',
+          data: [10, 30, 39, 20, 25, 34, -10],
+          borderColor: 'red',  // 기본 색상 설정
+          backgroundColor: 'rgba(255, 99, 132, 0.2)', // 투명도 설정
+        },
+        {
+          label: 'Dataset 2',
+          data: [18, 33, 22, 19, 11, 39, 30],
+          borderColor: 'blue', // 기본 색상 설정
+          backgroundColor: 'rgba(54, 162, 235, 0.2)', // 투명도 설정
+        }
+      ]
+    };
+
+    // 첫 번째 차트 생성
+    var myChart = new Chart(
+        document.getElementById('myChart'),
+        {
+          type: 'line',
+          data: data,
+          options: {
+            responsive: true,
+            plugins: {
+            },
+            scales: {
+              y: {
+                suggestedMin: 0, // 최소값 설정
+                suggestedMax: 50, // 최대값 설정
+              }
+            }
+          }
+        }
+    );
+
+    
+    // 도넛 
+    const doughnutData2 = {
+      labels: ["match1", "match2", "match3", "match4", "match5"],
+      datasets: [{
+        label: "TeamB Score",
+        data: [20, 35, 40, 60, 50],
+        backgroundColor: ["#FAEBD7", "#DCDCDC", "#E9967A", "#F5DEB3", "#9ACD32"],
+        borderColor: ["#E9DAC6", "#CBCBCB", "#D88569", "#E4CDA2", "#89BC21"],
+        borderWidth: 1
+      }]
+    };
+
+    const doughnutOptions = {
+      responsive: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "right",
+          labels: {
+            color: "#333",
+            font: {
+              size: 16
+            }
+          }
+        }
+      }
+    };
+
+    // 차트 생성
+    var ctx2 = document.getElementById('doughnut-chartcanvas-2').getContext('2d');
+
+    var chart2 = new Chart(ctx2, {
+      type: "doughnut",
+      data: doughnutData2,
+      options: doughnutOptions
+    });
+    
+	const allIndicator = document.querySelectorAll('.indicator li');
+	const allContent = document.querySelectorAll('.main-content li');
+	
+	allIndicator.forEach(item=> {
+	  item.addEventListener('click', function () {
+	    const content = document.querySelector(this.dataset.target);
+	
+	    allIndicator.forEach(i=> {
+	      i.classList.remove('active');
+	    })
+	
+	    allContent.forEach(i=> {
+	      i.classList.remove('active');
+	    })
+	
+	    content.classList.add('active');
+	    this.classList.add('active');
+	  })
+	})
+	
+	// DB에서 받아온 List<String> 날짜 데이터 예시
+	var dateList = ["20241001", "20241015", "20241101"];
+	
+	// FullCalendar 이벤트 리스트
+	var events = [];
+	
+	// 날짜 리스트를 반복하며 이벤트 추가
+	dateList.forEach(function(dateString) {
+	    events.push({
+	        title: '이름',  // 각 이벤트의 제목
+	        start: formatDateString(dateString)  // 변환된 날짜 사용
+	    });
+	});
+	
+	var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+    	initialView: "dayGridMonth",
+	    firstDay: 1,
+	    buttonText: {
+	        today: '오늘'  // today 버튼 텍스트를 "오늘"로 변경
+	    },
+// 	    showNonCurrentDates: false,  // 현재 달 외의 날짜를 숨김
+	    titleFormat: function (date) {
+	      year = date.date.year;
+	      month = date.date.month + 1;
+
+	      return year + "년 " + month + "월";
+	    },
+	    events: events  // 이벤트 리스트 추가
+    });
+    calendar.render();
+});
+//20241001 형태의 날짜 데이터를 YYYY-MM-DD로 변환하는 함수
+function formatDateString(dateString) {
+    var year = dateString.substring(0, 4);
+    var month = dateString.substring(4, 6);
+    var day = dateString.substring(6, 8);
+    
+    return year + "-" + month + "-" + day;  // YYYY-MM-DD 형식으로 변환
+}
+
+</script>
+
+
+
+<div class="wrap">
+<div class="row">
+	<!-- 
+		가맹점 수
+		회원 수
+		거래처 수
+		관리자 수
+	 -->
+	<div class="main-cont fcol main-info w-200">
+		<div class="main-info-title">BUFF 현황</div>
+		<div class="main-info-cont">
+			<div class="frow">
+				<div class="info-wrap" onclick="location.href='/hdofc/frcs/list'">
+					<div class="info-title">가맹점 수 <span class="material-symbols-outlined">arrow_outward</span></div>
+					<div class="info-cont">170</div>
+				</div>
+				<div class="info-wrap">
+					<div class="info-title">회원 수 <span class="material-symbols-outlined">arrow_outward</span></div>
+					<div class="info-cont">170</div>
+				</div>
+			</div>
+			<div class="frow">
+				<div class="info-wrap" onclick="location.href='/hdofc/cnpt/list'">
+					<div class="info-title">거래처 수 <span class="material-symbols-outlined">arrow_outward</span></div>
+					<div class="info-cont">60</div>
+				</div>
+				<div class="info-wrap" onclick="location.href='/hdofc/mngr/selectMngrList'">
+					<div class="info-title">사원 수 <span class="material-symbols-outlined">arrow_outward</span></div>
+					<div class="info-cont">30</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 물류 매출 -->
+	<div class="main-cont fcol" style="width: 400px;">
+		<div class="cont-title">물류 관리</div>
+			<div class="scm-wrap">
+			<!-- fcol시작 -->
+				<div class="fcol">
+					<div class="frow scm-cont" onclick="location.href='/hdofc/deal/regist'">
+						<div class="scm-dtl">
+							<div class="scm-num">
+								100
+							</div>
+							<div class="scm-title">구매필요 건</div>
+						</div>
+						<div class="scm-icon">
+							<span class="material-symbols-outlined icon-cnt">sell</span>
+						</div>
+					</div>
+					
+					<div class="frow scm-cont">
+						<div class="scm-dtl">
+							<div class="scm-num" onclick="location.href='/hdofc/deal/list?type=so'">
+								100
+							</div>
+							<div class="scm-title">판매승인 건</div>
+						</div>
+						<div class="scm-icon">
+							<span class="material-symbols-outlined icon-cnt">gavel</span>
+						</div>
+					</div>
+				</div>
+				<!-- fcol끝 -->
+			
+			<!-- fcol시작 -->
+				<div class="fcol">
+					<div class="frow scm-cont" onclick="location.href='/hdofc/deal/list?type=po'">
+						<div class="scm-dtl">
+							<div class="scm-num">
+								100
+							</div>
+							<div class="scm-title">배송확정 건</div>
+						</div>
+						<div class="scm-icon">
+							<span class="material-symbols-outlined icon-cnt">quick_reorder</span>
+						</div>
+					</div>
+					
+					<div class="frow scm-cont" onclick="location.href='/hdofc/deal/list?type=po'">
+						<div class="scm-dtl">
+							<div class="scm-num">
+								100
+							</div>
+							<div class="scm-title">정산미납 건</div>
+						</div>
+						<div class="scm-icon">
+							<span class="material-symbols-outlined icon-cnt">paid</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- fcol끝 -->
+	</div>
+	
+	<!-- 지역별 매출 -->
+	<div class="main-cont fcol" style="flex-grow: 1;">
+		<div class="cont-title">지역별 매출</div>
+		<div>
+			<canvas id="doughnut-chartcanvas-2" width="300" height="210"></canvas>
+		</div>
+	</div>
+</div>
+
+<!-- 2번쨰줄 -->
+<div class="row">
+	<!-- 
+		최근 1년 매출
+		1. 가맹점 매출
+		2. 발주 매출 (구입-판매)
+		3. 로열티
+	 -->
+	<div class="fcol w-350" style="padding: var(--pd--s);">
+		<div class="cont-title">최근 1년간 매출</div>
+		<!-- amt-cont시작 -->
+		<div class="amt-cont">
+			<div class="amt-cont-dtl">
+				<div class="amt-title">
+					상품 판매 금액
+				</div>
+				<div class="amt-dtl">
+					<p class="amt-amt">100,000,000</p>
+					<p>원</p>
+				</div>
+			</div>
+			<!-- amt-cont-dtl끝 -->
+			<div class="amt-icon">
+				<span class="material-symbols-outlined icon-amt" style="color: var(--bge--active)">trending_up</span>
+			</div>
+		</div>
+		<!-- amt-cont끝 -->
+		
+		<!-- amt-cont시작 -->
+		<div class="amt-cont">
+			<div class="amt-cont-dtl">
+				<div class="amt-title">
+					상품 구매 금액
+				</div>
+				<div class="amt-dtl">
+					<p class="amt-amt">100,000,000</p>
+					<p>원</p>
+				</div>
+			</div>
+			<!-- amt-cont-dtl끝 -->
+			<div class="amt-icon">
+				<span class="material-symbols-outlined icon-amt" style="color: var(--bge--danger)">trending_down</span>
+			</div>
+		</div>
+		<!-- amt-cont끝 -->
+	</div>
+	<div class="main-cont sls-chart" style="flex-grow: 1;">
+		<canvas id="myChart" style="display: block; box-sizing: border-box;height: 200px; width: 100%;">
+		</canvas>
+	</div>
+</div>
+<!-- 2번째 줄 끝 -->
+
+
+<!-- 3번째 줄 시작 -->
+<div class="frow" style="gap:var(--gap--l);">
+	<div class="main-container" style="flex-grow: 1;">
+		<div class="main-wrapper">
+			<ul class="indicator">
+				<li class="active" data-target="#home"><i class="ph-house"></i> 상담</li>
+				<li data-target="#profile"><i class="ph-user-circle"></i> 문의</li>
+				<li data-target="#contact"><i class="ph-phone"></i> 점검</li>
+				<li data-target="#settings"><i class="ph-gear-six"></i> 폐업</li>
+			</ul>
+			<ul class="main-content main-cont">
+				<li class="active" id="home">
+<!-- 					<h1>상담 예정</h1> -->
+					<div id="calendar"></div>					
+				</li>
+				<li id="profile">
+					<h1>문의</h1>
+					<div>상담 일정 리스트</div>
+				</li>
+				<li id="contact">
+					<h1>점검</h1>
+					<p>CSS stands for Cascading Style Sheets. It is a style sheet language that is used to control the presentation of web pages. CSS is used to define the layout, colors, fonts, and other visual elements of a web page.</p>
+					
+				</li>
+				<li id="settings">
+					<h1>폐업</h1>
+					<p>Coding is the process of writing instructions for computers to follow. It is done using programming languages, which are sets of rules that define how computers should interpret and execute code.</p>
+					
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<!-- 상담 대기 내역
+		문의 대기 내역 갯수 -->
+	<div class="fcol">
+		<div class="frow">
+			<div class="cnt-wrap">
+				<div class="cnt-cont" onclick="location.href='/hdofc/frcs/dscsn/list'">
+					<div class="cnt-icon" style="background: var(--green--3)">
+						<span class="material-symbols-outlined icon-cnt">person</span>
+					</div>
+					<div class="cnt-num">
+						100
+					</div>
+					<div class="cnt-title">상담 대기</div>
+				</div>
+				
+				<div class="cnt-cont" onclick="location.href='/hdofc/qs/selectQsList'">
+					<div class="cnt-icon" style="background: var(--green--2)">
+						<span class="material-symbols-outlined icon-cnt">person</span>
+					</div>
+					<div class="cnt-num">
+						100
+					</div>
+					<div class="cnt-title">문의 답변대기</div>
+				</div>
+			</div>
+		</div>
+		<!-- 폐업대기 가맹점, 승인 관리자 -->
+		<div class="fcol">
+			<div class="frow">
+				<div class="cnt-wrap">
+					<div class="cnt-cont" onclick="location.href='/hdofc/frcs/check/list'">
+						<div class="cnt-icon" style="background: var(--yellow--3)">
+							<span class="material-symbols-outlined icon-cnt">store</span>
+						</div>
+						<div class="cnt-num">
+							100
+						</div>
+						<div class="cnt-title">점검 예정</div>
+					</div>
+					
+					<div class="cnt-cont" onclick="location.href='/hdofc/frcs/clsbiz/list'">
+						<div class="cnt-icon" style="background: var(--red--2)">
+							<span class="material-symbols-outlined icon-cnt">store</span>
+						</div>
+						<div class="cnt-num">
+							100
+						</div>
+						<div class="cnt-title">폐업 예정</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+</div>
+<!-- wrap끝 -->

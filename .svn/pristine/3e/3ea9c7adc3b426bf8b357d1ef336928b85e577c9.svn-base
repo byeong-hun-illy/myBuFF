@@ -1,0 +1,105 @@
+package com.buff.frcs.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.frcs.service.FrcsMenuService;
+import com.buff.vo.MenuVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.controller.frcs
+* @fileName     : FrcsMenuController.java
+* @author       : 정현종
+* @date         : 2024.09.12
+* @description  : 가맹점 판매 메뉴 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12                정현종     	  		      최초 생성
+*/
+
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsMenuController {
+	
+	@Autowired
+	FrcsMenuService frcsMenuService;
+	
+	/**
+	* @methodName  : selectFrcsMenuList
+	* @author      : 정현종
+	* @date        : 2024.09.12
+	* @param  	   : 회원아이디, 메뉴 유형, 메뉴 이름
+	* @return      : 메뉴 관리 화면 URL
+	*/
+	@GetMapping("/menuList")
+	public String selectFrcsMenuList(Model model, Principal principal,
+			@RequestParam(name = "menuType", required = false, defaultValue = "") String menuType,
+	        @RequestParam(name = "keyword", required = false, defaultValue = "") String keyword) {		
+		
+		//principal == CustomUser
+		//principal.getName() : 로그인 한 아이디
+		String mbrId = principal.getName();
+		
+		// [왼쪽 목록]판매 가능 메뉴 목록
+		//WHERE  FM.FRCS_NO = (SELECT D.BZENT_NO FROM BZENT D WHERE D.MBR_ID = 샵{mbrId})
+		Map<String,Object> map = new HashMap<String, Object>();
+		map.put("mbrId", mbrId);
+		map.put("menuType", menuType);
+		map.put("keyword", keyword);
+		
+		//map{"mbrId":"aw2l8b0g"}
+		List<MenuVO> menuVOList = this.frcsMenuService.selectAllFrcsMenuList(map);
+		log.info("selectFrcsMenuList->menuVOList : " + menuVOList);
+		
+		// [오른쪽 목록]매장에서 판매하고 있는 메뉴 목록
+		List<MenuVO> frcsMenuVOList = this.frcsMenuService.selectFrcsMenuList(map);
+		log.info("selectFrcsMenuList->frcsMenuVOList : " + frcsMenuVOList);
+		
+		model.addAttribute("menuVOList", menuVOList);
+		model.addAttribute("frcsMenuVOList", frcsMenuVOList);
+		
+		return "frcs/selectFrcsMenuList"; 
+	}
+	
+	/**
+	 * @methodName  : updateFrcsMenuAjax
+	 * @author      : 정현종
+	 * @date        : 2024.09.13
+	 * @param       : 왼쪽 테이블 메뉴 번호 리스트, 오른쪽 테이블 메뉴 번호 리스트
+	 * @description : 메뉴관리에서 변경사항을 저장하는 메소드
+	 */
+	@ResponseBody
+	@PostMapping("/updateFrcsMenuAjax")
+	public int updateFrcsMenuAjax(@RequestBody Map<String, Object> menuNosMap) {
+		Map<String, Object> leftMenuNos = (Map<String, Object>) menuNosMap.get("leftMenuNos");
+		Map<String, Object> rightMenuNos = (Map<String, Object>) menuNosMap.get("rightMenuNos");
+		
+		log.info("updateFrcsMenuAjax->leftMenuNos"+leftMenuNos);
+		log.info("updateFrcsMenuAjax->rightMenuNos"+rightMenuNos);
+	    
+		int result = 0;
+		
+		result += this.frcsMenuService.stopFrcsMenu(leftMenuNos);
+		result += this.frcsMenuService.sellFrcsMenu(rightMenuNos);
+		
+	    return result;
+	}
+}

@@ -1,0 +1,67 @@
+package com.buff.cust.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.BzentVO;
+import com.buff.vo.MemberVO;
+
+/**
+* @packageName  : com.buff.mapper.cust
+* @fileName     : MemberMapper.java
+* @author       : 이병훈
+* @date         : 2024.09.12
+* @description  : 이 클래스는 데이터베이스에서 로그인 정보를 조회하기 위한 Mapper 인터페이스.
+ 				  Sql 쿼리를 실행하여 데이터베이스(DB)와 상호작용한다.
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12        이름     	  			최초 생성
+*/
+
+
+
+@Mapper
+public interface MemberMapper {
+	
+	/**
+	* @methodName  : getLogin
+	* @author      : 이병훈
+	* @date        : 2024.09.12
+	* @param mbrId : 해당하는 사용자ID
+	* @return : 로그인 성공 / 실패
+	*/
+	public MemberVO getLogin(String mbrId);
+	
+	
+
+	/**
+	* @methodName  : selectId
+	* @author      : 이병훈
+	* @date        : 2024.09.13
+	* @param memberVO : 사용자 정보가 담긴 VO객체
+	* @return 	   : 해당하는 사용자 ID
+	*/
+	public String selectId(MemberVO memberVO);
+	
+	
+	/**
+	* @methodName  : selectPswd
+	* @author      : 이병훈
+	* @date        : 2024.09.13
+	* @param memberVO : 사용자 정보가 담긴 VO객체
+	* @return	   : 해당하는 사용자 password
+	*/
+	public String selectPswd(MemberVO memberVO);
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param BzentVO : 고객메인화면 _ 가맹점 카드에 담길 VO객체
+	* @return 	   : 해당 가맹점 정보
+	*/
+	public List<BzentVO> home();
+}

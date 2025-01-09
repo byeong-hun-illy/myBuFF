@@ -1,0 +1,21 @@
+@charset "UTF-8";
+/*
+	거래처 재고 관련 페이지 css
+*/
+
+#gdsModalTableBody{
+	  display: block; /* 가로세로 조절 가능 */
+	  max-height: 500px; /* 보여주고 싶은 만큼 세로값 입력 */
+	  overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.gds-modal-table thead,
+#gdsModalTableBody tbody tr{
+	display : table;
+	width : 100%;
+}
+
+
+
+
+

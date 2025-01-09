@@ -1,0 +1,222 @@
+/*******************************************
+  @fileName    : frcsClsbiz.js
+  @author      : 송예진
+  @date        : 2024. 09. 21
+  @description : 가맹점 폐업
+********************************************/
+document.write("<script src='/resources/js/global/value.js'></script>");
+
+// @methodName  : selectFrcsClsbizListAjax
+// @author      : 송예진
+// @date        : 2024.09.21
+// @jsp         : hdofc/frcs/selectFrcsClsbiz
+// @description : 가맹점 폐업 대상 조회
+function selectFrcsClsbizListAjax(){
+	let mngrId = $('#mngrId').val();
+	let rgnNo = $('#rgnNo').val();
+	let gubun = $('#gubun').val();
+	let keyword = $('#keyword').val();
+	
+	
+	let data = {};
+
+	// 값이 빈 문자열이 아니면 data 객체에 추가
+	if (mngrId) {
+	    data.mngrId = mngrId;
+	}
+	if (rgnNo) {
+	    data.rgnNo = rgnNo;
+	}
+	if (gubun) {
+	    data.gubun = gubun;
+	}
+	if (keyword) {
+	    data.keyword = keyword;
+	}
+	
+	data.sort = sort;
+	data.orderby = orderby;
+	data.currentPage = currentPage;
+	if (type) {
+	    data.type = type;
+	}
+	
+	console.log(data);  // 최종적으로 빈 값이 제외된 data 객체
+	
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/frcs/clsbiz/listAjax",
+		type : "GET",
+		data : data,
+		success : function(res){
+			// 분류 처리
+			$('#tap-all').text(res.all);
+			$('#tap-pre').text(res.pre);
+			$('#tap-noCln').text(res.noCln);
+			$('#tap-cln').text(res.cln);
+			$('#tap-aprv').text(res.aprv);
+			
+			// 테이블 처리
+			let strTbl = '';
+			res.articlePage.content.forEach(list => {
+			// 폐업 일자
+			let clsbizYmd = strToDate(list.clsbizYmd);
+			// 정산 여부
+			let clcln = list.frcsClclnVOList[0].clclnYn==null ? `<span class='bge bge-default'>정산예정</span>` : list.frcsClclnVOList[0].clclnYn == 'N' ? `<span class='bge bge-danger'>미정산</span>` : `<span class='bge bge-active'>정산완료</span>` ;
+			// 폐업 여부
+			let clsbiz = list.frcsClsbizVO.clsbizAprvYn=='Y' ? `<span class='bge bge-active'>폐업완료</span>` : `<span class='bge bge-warning'>폐업예정</span>`;
+			// 폐업 사유 유형
+			let clsbizType = list.frcsClsbizVO.clsbizRsnType=='CR06' ? `<span class='bge bge-danger'>${list.frcsClsbizVO.clsbizRsnTypeNm}</span>` : `<span class='bge bge-default'>${list.frcsClsbizVO.clsbizRsnTypeNm}</span>`;
+			
+    		strTbl += `
+			    <tr class="frcsDtl" data-no="${list.frcsNo}">
+			        <td class="center">${list.rnum}</td>
+			        <td class="center">${clsbiz}</td>
+			        <td>${list.bzentVO.bzentNm}</td>
+			        <td class="center">${list.bzentVO.mbrVO ? list.bzentVO.mbrVO.mbrNm : '-'}</td>
+			        <td class="center">${list.bzentVO.mngrVO && list.bzentVO.mngrVO.mbrNm ? list.bzentVO.mngrVO.mbrNm : '-'}</td>
+			        <td class="center">${clsbizYmd}</td>
+			        <td>${list.bzentVO.rgnNm}</td>
+			        <td class="center">${clsbizType}</td>
+			        <td class="center">${clcln}</td>
+			    </tr>
+			`;
+			
+			});
+			$('#table-body').html(strTbl)
+			
+			// 페이징 처리
+			let page = '';
+			
+			if (res.articlePage.startPage > res.articlePage.blockSize) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_left</span>
+			        </a>
+			    `;
+			}
+			
+			// 페이지 번호 링크들 추가
+			for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+			    if (res.articlePage.currentPage === pnum) {
+			        page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+			    } else {
+			        page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+			    }
+			}
+			
+			// 'chevron_right' 아이콘 및 다음 페이지 링크 추가
+			if (res.articlePage.endPage < res.articlePage.totalPages) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_right</span>
+			        </a>
+			    `;
+			}
+			$('.pagination').html(page);
+			}
+		});			
+}
+
+
+function frcsClsbizDtlAjax(){
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/frcs/clsbiz/dtlAjax",
+		type : "GET",
+		data: { frcsNo: frcsNo },  // 객체 형태로 전송
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+			if(res.frcsClclnVOList[0].clclnYn == 'Y' && res.frcsClsbizVO.clsbizAprvYn=='N'){
+				$('#updateOneClsbiz').show();
+			} else {
+				$('#updateOneClsbiz').hide();
+			}
+			
+			console.log(res);
+			let bge = `<span class="bge ${res.frcsType === 'FRS01' ? 'bge-active' : res.frcsType === 'FRS02' ? 'bge-danger' : 'bge-warning'}">
+						  ${res.frcsTypeNm}
+						</span>`;
+			$('#cls-bzentNm').val(res.bzentVO.bzentNm);
+			$('#cls-frcsType').html(bge);
+			$('#cls-mbrNm').val(res.bzentVO.mbrVO.mbrNm);
+			
+			$('#cls-rgnNm').val(res.bzentVO.rgnNm);
+			let bzentTelNo = splitTel(res.bzentVO.bzentTelno);
+			$('#cls-bzentTelno1').val(bzentTelNo[0]);
+			$('#cls-bzentTelno2').val(bzentTelNo[1]);
+			$('#cls-bzentTelno3').val(bzentTelNo[2]);
+			
+			let mbrTelNo = splitTel(res.bzentVO.mbrVO.mbrTelno);
+			$('#cls-mbrTelno1').val(mbrTelNo[0]);
+			$('#cls-mbrTelno2').val(mbrTelNo[1]);
+			$('#cls-mbrTelno3').val(mbrTelNo[2]);
+			
+			if(res.bzentVO.mngrVO){
+				$('#mngr_exist').show();
+				$('#mngr_notExist').hide();
+				
+				$('#cls-mngrNm').val(res.bzentVO.mngrVO.mbrNm);
+				
+				let mngrTelNo = splitTel(res.bzentVO.mngrVO.mbrTelno);
+				$('#cls-mngrTelno1').val(mngrTelNo[0]);
+				$('#cls-mngrTelno2').val(mngrTelNo[1]);
+				$('#cls-mngrTelno3').val(mngrTelNo[2]);
+			} else {
+				$('#mngr_exist').hide();
+				$('#mngr_notExist').show();
+			}
+			
+			// 정산 여부
+			let clcln = res.frcsClclnVOList[0].clclnYn==null ? `<span class='bge bge-default'>정산예정</span>` : res.frcsClclnVOList[0].clclnYn == 'N' ? `<span class='bge bge-danger'>미정산</span>` : `<span class='bge bge-active'>정산완료</span>` ;
+			// 폐업 여부
+			let clsbiz = res.frcsClsbizVO.clsbizAprvYn=='Y' ? `<span class='bge bge-active'>폐업완료</span>` : `<span class='bge bge-warning'>폐업예정</span>`;
+			// 폐업 사유 유형
+			let clsbizType = res.frcsClsbizVO.clsbizRsnType=='CR06' ? `<span class='bge bge-danger'>${res.frcsClsbizVO.clsbizRsnTypeNm}</span>` : `<span class='bge bge-default'>${res.frcsClsbizVO.clsbizRsnTypeNm}</span>`;
+			
+			$('#cls-clsbiz').html(clsbiz);
+			$('#cls-clcln').html(clcln);
+			
+			let clsbizYmd = strToDate(res.clsbizYmd);
+			$('#cls-clsbizYmd').val(clsbizYmd);
+			$('#cls-clsType').html(clsbizType);
+			
+			$('#cls-clsbizRsn').html(res.frcsClsbizVO.clsbizRsn);
+			
+			}
+		});		
+}
+
+function updateAllFrcsClsbiz(){
+// 서버전송
+	$.ajax({
+		url : "/hdofc/frcs/clsbiz/updateAll",
+		type : "GET",
+		data: { frcsNo: frcsNo },  // 객체 형태로 전송
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+
+			}
+		});		
+}
+
+function updateOneFrcsClsbiz(){
+// 서버전송
+	$.ajax({
+		url : "/hdofc/frcs/clsbiz/updateOne",
+		type : "GET",
+		// csrf설정 secuity설정된 경우 필수!!
+		beforeSend:function(xhr){ 
+			xhr.setRequestHeader(csrfHeader, csrfToken); // CSRF 헤더와 토큰을 설정
+		},
+		success : function(res){
+
+			}
+		});		
+}

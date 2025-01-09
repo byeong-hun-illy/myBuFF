@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.20
+@description  : 폐업 사유 유형 정보 
+-->
+<mapper namespace="com.buff.com.mapper.ClsbizRsnMapper">
+	<!-- 은행 명과 이름 select -->
+	<select id="selectClsbizRsn" resultType="clsbizRsnVO">
+		SELECT COM_NO AS CLSBIZ_RSN_NO
+			  , COM_NM AS CLSBIZ_RSN_NM
+		  FROM COM_CODE
+		 WHERE COM_GROUP_NO= 'CR'	 
+	</select>
+</mapper>

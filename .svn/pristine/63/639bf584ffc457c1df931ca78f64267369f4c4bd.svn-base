@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC 
+"-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" 
+"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<!-- tiles 설정 -->
+<tiles-definitions>
+	<!-- main layout -->
+	<definition name="tiles-layout" template="/WEB-INF/views/tiles/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/tiles/header.jsp" />
+		<put-attribute name="aside" value="/WEB-INF/views/tiles/aside.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/tiles/footer.jsp" />
+	</definition>
+	<!-- name의 */*은 body의 value에서 1과 2에 해당
+		controller에서 forwarding 시 return "1/2";
+		
+		mav.setViewName("book/create");
+	 -->
+	<definition name="*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="hdofc/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/hdofc/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="frcs/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/frcs/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="cnpt/*/*" extends="tiles-layout">
+		<put-attribute name="body" value="/WEB-INF/views/cnpt/{1}/{2}.jsp" />
+	</definition>
+	
+	<!-- /////////////////////////////////////////////////////////////// -->
+	<!-- main layout2 -->
+	<definition name="tiles-layout2" template="/WEB-INF/views/tilesLogin/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/tilesLogin/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/tilesLogin/footer.jsp" />
+	</definition>
+	<!-- name의 *은 body의 value에서 1에 해당
+		controller에서 forwarding 시 return "1";
+		
+		return "home";
+	 -->
+	<definition name="*" extends="tiles-layout2">
+		<put-attribute name="body" value="/WEB-INF/views/{1}.jsp" />
+	</definition>
+	
+	
+	<!-- /// 고객  tiles 시작 /// -->
+	<!-- main layout -->
+	<definition name="tilesCust-layout" template="/WEB-INF/views/tilesCust/index.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/tilesCust/header.jsp" />
+	    <put-attribute name="aside" value="/WEB-INF/views/tilesCust/aside.jsp" /> 
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/tilesCust/footer.jsp" />
+	</definition>
+	
+	<!-- return "cust/mypage/list"; -->
+	<definition name="cust/*/*" extends="tilesCust-layout">
+		<put-attribute name="body" value="/WEB-INF/views/cust/{1}/{2}.jsp" />
+	</definition>
+	<!-- /// 고객  tiles 끝 /// -->
+	
+	
+</tiles-definitions>
+
+
+
+
+
+
+
+
+
+
+

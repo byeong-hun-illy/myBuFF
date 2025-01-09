@@ -1,0 +1,88 @@
+package com.buff.hdofc.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.com.mapper.RgnMapper;
+import com.buff.hdofc.service.HdofcFrcsCheckService;
+import com.buff.hdofc.service.HdofcFrcsService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.FrcsCheckVO;
+import com.buff.vo.FrcsVO;
+
+@PreAuthorize("hasRole('ROLE_HDOFC')")
+@RequestMapping("/hdofc")
+@Controller
+public class HdofcFrcsCheckController {
+	
+	@Autowired
+	HdofcFrcsService frcsService;
+	
+	@Autowired
+	RgnMapper rgnMapper;
+	
+	@Autowired
+	HdofcFrcsCheckService checkService;
+	
+	/**
+	* @methodName  : selectCheck
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @return      : 점검 조회 리스트로 이동
+	*/
+	@GetMapping("/frcs/check/list")
+	public String selectCheck(Model model) {
+		// 검색 조건
+		model.addAttribute("rgn", this.rgnMapper.selectRgn());
+		model.addAttribute("mngr", this.frcsService.selectFrcsMngr());
+		return "hdofc/frcs/selectFrcsCheck";
+	}
+
+
+	/**
+	* @methodName  : insertCheckForm
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @return      : 점검 추가 페이지
+	*/
+	@GetMapping("/frcs/check/regist")
+	public String insertCheckForm(Model model) {
+		// 검색 조건
+		model.addAttribute("rgn", this.rgnMapper.selectRgn());
+		model.addAttribute("mngr", this.frcsService.selectFrcsMngr());
+		return "hdofc/frcs/insertFrcsCheck";
+	}
+
+	@ResponseBody
+	@GetMapping("/frcs/checkList")
+	public Map<String, Object> selectFrcs(@RequestParam Map<String, Object> map){
+		int size = 5;
+	    int total = this.checkService.selectTotalFrcs(map);
+	    map.put("size", size);
+	    List<FrcsCheckVO> frcsCheckList = this.checkService.selectFrcs(map);
+	    int currentPage = Integer.parseInt((String) map.get("currentPage"));
+	    
+	    // 분류 숫자 계산
+	    int all = this.checkService.selectAllFrcs(map);
+	    int chk = this.checkService.selectChkFrcs(map);
+	    // 응답 데이터를 담을 Map 생성
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("articlePage", new ArticlePage<FrcsCheckVO>(total, currentPage, size, frcsCheckList, map));
+	    response.put("all", all);
+	    response.put("chk", chk);
+	    
+	    return response; // 여러 데이터를 포함한 Map 반환
+	}
+}

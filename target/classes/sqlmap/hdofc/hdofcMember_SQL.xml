@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.10.10
+@description  : 회원 관리
+ sql
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcMemberMapper">
+	
+	<resultMap type="memberVO" id="memberMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+	</resultMap>
+	
+	<!--
+ 		@programName : 회원 리스트 select
+ 		@description : 회원 리스트 select
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="selectMemberList" parameterType="hashMap" resultMap="memberMap">
+		SELECT *
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY TO_NUMBER(JOIN_YMD) 
+				   <!-- 내림차순 -->
+				   <if test="sortJoinYmd == 'DESC'">
+					   DESC
+				   </if>
+				   <!-- 오름차순 -->
+				   <if test="sortJoinYmd == 'ASC'">
+					   ASC
+				   </if>
+				   ) AS RNUM
+				 , C.COM_NM AS RGN_NM
+				 , M.MBR_ID           -- 회원 아이디
+			     , M.MBR_PSWD         -- 회원 비밀번호
+			     , M.MBR_NM           -- 회원 이름
+			     , M.MBR_ZIP          -- 우편번호
+			     , M.MBR_ADDR         -- 주소
+			     , M.MBR_DADDR        -- 상세주소
+			     , M.MBR_TELNO        -- 전화번호
+			     , M.MBR_BRDT         -- 생년월일
+			     , M.MBR_EML_ADDR     -- 이메일 주소
+			     , M.ENABLED          -- 권한 사용 여부
+			     , M.DEL_YN           -- 탈퇴 여부
+			     , M.JOIN_YMD         -- 가입 일자
+			     , M.MBR_TYPE         -- 회원 유형
+			     , M.MBR_APRV_YN      -- 회원승인여부
+			     , M.MBR_IMG_PATH     -- 회원 이미지 경로
+			     , M.RGN_NO           -- 지역 번호
+			FROM   MEMBER M 
+			LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = M.RGN_NO 
+			WHERE  M.MBR_TYPE = 'MBR01'		-- 회원 유형 WHERE조건
+			<!-- 회원명 필터링 -->
+			<if test="mbrNm != null and mbrNm != ''">
+				AND M.MBR_NM LIKE '%' || #{mbrNm} || '%'
+			</if>
+			<!-- 지역 필터링 -->
+			<if test="rgnNo != null and rgnNo != ''">
+				AND M.RGN_NO = #{rgnNo}
+			</if>
+			<!-- 탈퇴여부 필터링 -->
+			<if test="delYn != null and delYn != ''">
+				AND M.DEL_YN  = #{delYn}
+			</if>
+			<!-- 시작일 필터링 -->
+			<if test="bgngYmd != null and bgngYmd != ''">
+			<![CDATA[
+				AND TO_DATE(M.JOIN_YMD, 'YYYY-MM-DD') >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND TO_DATE(M.JOIN_YMD, 'YYYY-MM-DD') <= #{expYmd}
+			]]>
+			</if>
+		)
+		WHERE  RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10)
+	</select>
+	
+	<!--
+ 		@programName : 회원명 필터링 select
+ 		@description : 회원명 필터링 select
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="selectMbrNmList" resultType="memberVO">
+		SELECT MBR_ID 
+			 , MBR_NM
+		FROM   MEMBER 
+		WHERE  MBR_TYPE = 'MBR01' 
+	</select>
+	
+	<!--
+ 		@programName : 전체 회원 인원수
+ 		@description : 전체 회원 인원수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="totalMember" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM   MEMBER
+		WHERE  MBR_TYPE = 'MBR01'
+		<!-- 회원명 필터링 -->
+		<if test="mbrNm != null and mbrNm != ''">
+			AND MBR_NM LIKE '%' || #{mbrNm} || '%'
+		</if>
+		<!-- 지역 필터링 -->
+		<if test="rgnNo != null and rgnNo != ''">
+			AND RGN_NO = #{rgnNo}
+		</if>
+		<!-- 탈퇴여부 필터링 -->
+		<if test="delYn != null and delYn != ''">
+			AND DEL_YN  = #{delYn}
+		</if>
+		<!-- 시작일 필터링 -->
+		<if test="bgngYmd != null and bgngYmd != ''">
+		<![CDATA[
+			AND TO_DATE(JOIN_YMD, 'YYYY-MM-DD') >= #{bgngYmd}
+		]]>
+		</if>
+		<!-- 종료일 필터링 -->
+		<if test="expYmd != null and expYmd != ''">
+		<![CDATA[
+			AND TO_DATE(JOIN_YMD, 'YYYY-MM-DD') <= #{expYmd}
+		]]>
+		</if>
+	</select>
+	
+	<!--
+ 		@programName : 탈퇴 유형 별 인원수
+ 		@description : 탈퇴 유형 별 인원수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="tapMaxTotal" resultType="hashMap">
+		SELECT MAX(T.tapAll) tapAll
+		     , MAX(T.tapWaiting) tapWaiting
+		     , MAX(T.tapProgress) tapProgress
+		FROM
+		(
+		    SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress
+		    FROM   MEMBER M 
+		    WHERE  M.MBR_TYPE = 'MBR01'
+		    UNION ALL
+		    SELECT 0,COUNT(*),0
+		    FROM   MEMBER M 
+		    WHERE  M.MBR_TYPE = 'MBR01'
+		    AND    M.DEL_YN = 'N'
+		    UNION ALL
+		    SELECT 0,0,COUNT(*)
+		    FROM   MEMBER M 
+		    WHERE  M.MBR_TYPE = 'MBR01'
+		    AND    M.DEL_YN = 'Y'
+		) T
+	</select>
+	
+	<!--
+ 		@programName : 회원 관리 상세보기
+ 		@description : 회원 관리 상세보기
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="selectMemberDetail" parameterType="String" resultType="memberVO">
+		SELECT MBR_ID           -- 회원 아이디
+		     , MBR_PSWD         -- 회원 비밀번호
+		     , MBR_NM           -- 회원 이름
+		     , MBR_ZIP          -- 우편번호
+		     , MBR_ADDR         -- 주소
+		     , MBR_DADDR        -- 상세주소
+		     , MBR_TELNO        -- 전화번호
+		     , MBR_BRDT         -- 생년월일
+		     , MBR_EML_ADDR     -- 이메일 주소
+		     , ENABLED          -- 권한 사용 여부
+		     , DEL_YN           -- 탈퇴 여부
+		     , JOIN_YMD         -- 가입 일자
+		     , MBR_TYPE         -- 회원 유형
+		     , MBR_APRV_YN      -- 회원승인여부
+		     , MBR_IMG_PATH     -- 회원 이미지 경로
+		     , RGN_NO           -- 지역 번호
+		FROM   MEMBER M 
+		WHERE  MBR_TYPE = 'MBR01'		-- 회원 유형 WHERE조건
+		AND    MBR_ID = #{mbrId}
+	</select>
+	
+</mapper>

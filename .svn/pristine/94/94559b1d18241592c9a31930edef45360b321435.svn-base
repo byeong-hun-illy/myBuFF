@@ -1,0 +1,25 @@
+package com.buff.frcs.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.OrdrVO;
+
+/**
+* @packageName  : com.buff.frcs.mapper
+* @fileName     : FrcsSlsMapper.java
+* @author       : 정현종
+* @date         : 2024.10.03
+* @description  : 가맹점 매출 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.10.03        정현종     	  			최초 생성
+*/
+public interface FrcsSlsMapper {
+
+	public List<OrdrVO> selectFrcsPeriodSlsList(Map<String, Object> map);
+
+	public int selectTotalFrcsPeriodSlsList(Map<String, Object> map);
+
+}

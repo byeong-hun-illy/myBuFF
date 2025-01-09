@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.hdofc.mapper.HdofcCnptMapper">
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="bzentTypeNm" column="BZENT_TYPE_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrVO" resultMap="mbrMap"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+	</resultMap>
+
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+	
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!   거래처 조회 시작   !!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 거래처 조회
+ 		@description : 거래처 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectCnpt" resultMap="bzentMap" parameterType="hashMap">
+		SELECT *
+		FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_cnpt"/> <include refid="orderby"/>) AS RNUM
+					, C.COM_NM AS BZENT_TYPE_NM
+					, O.COM_NM AS RGN_NM
+					, B.REG_YMD
+					, B.BZENT_NO
+					, B.MBR_ID
+					, B.MNGR_ID
+					, B.BZENT_TELNO
+					, B.BZENT_NM
+					, B.RGN_NO
+					, B.BZENT_ZIP
+					, B.BZENT_ADDR
+					, B.BZENT_DADDR
+					, B.BZENT_TYPE
+					, M.MBR_NM
+					, M.MBR_ZIP
+					, M.MBR_ADDR
+					, M.MBR_DADDR
+					, M.MBR_TELNO
+					, M.MBR_BRDT
+					, M.MBR_EML_ADDR
+					, M.MBR_IMG_PATH
+					, N.MBR_NM AS MNGR_NM
+					, N.MBR_ZIP AS MNGR_ZIP
+					, N.MBR_ADDR AS MNGR_ADDR
+					, N.MBR_DADDR AS MNGR_DADDR
+					, N.MBR_TELNO AS MNGR_TELNO
+					, N.MBR_BRDT AS MNGR_BRDT
+					, N.MBR_EML_ADDR AS MNGR_EML_ADDR
+		  FROM BZENT B 
+		  JOIN COM_CODE C ON B.BZENT_TYPE=C.COM_NO
+		  JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+		  LEFT OUTER JOIN MEMBER M ON B.MBR_ID = M.MBR_ID
+		  LEFT OUTER JOIN MEMBER N ON B.MNGR_ID = N.MBR_ID
+		  WHERE BZENT_TYPE LIKE 'BZ_C%'
+		  <include refid="cnpt_search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_cnpt">
+		<!-- 유형 상태 순 -->
+		<if test="sort == 'bzentType'">
+			ORDER BY B.BZENT_TYPE
+		</if>
+		<!-- 거래처 이름 순 -->
+		<if test="sort == 'bzentNm'">
+			ORDER BY B.BZENT_NM
+		</if>
+		<!-- 담당자 이름 순 -->
+		<if test="sort == 'mbrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'mngrNm'">
+			ORDER BY N.MBR_NM
+		</if>
+		<!-- 지역순 -->
+		<if test="sort == 'rgnNo'">
+			ORDER BY B.RGN_NO
+		</if>
+		<!-- 등록일자순 -->
+		<if test="sort == 'regYmd'">
+			ORDER BY B.REG_YMD
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="cnpt_search">
+		<!-- 거래처 이름 검색 -->
+		<if test="bzentNm != null">
+			AND B.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+		</if>
+		<!-- 담당자 이름 검색 -->
+		<if test="mbrNm != null">
+			AND M.MBR_NM LIKE '%'||#{mbrNm}||'%'
+		</if>
+		<!-- 관리자 검색 -->
+		<if test="mngrId != null">
+			AND B.MNGR_ID = #{mngrId}
+		</if>
+		<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND B.RGN_NO = #{rgnNo}
+		</if>
+		<!-- 운영 -->
+		<if test="bzentType != null and bzentType != ''">
+			AND B.BZENT_TYPE = #{bzentType}
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND B.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND B.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 추가 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 거래처 조회 갯수
+ 		@description : 거래처 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectTotalCnpt" resultType="int" parameterType="hashMap">
+		  SELECT COUNT(1)
+		  FROM BZENT B 
+		  JOIN COM_CODE C ON B.BZENT_TYPE=C.COM_NO
+		  JOIN COM_CODE O ON B.RGN_NO=O.COM_NO
+		  LEFT OUTER JOIN MEMBER M ON B.MBR_ID = M.MBR_ID
+		  LEFT OUTER JOIN MEMBER N ON B.MNGR_ID = N.MBR_ID
+		  WHERE BZENT_TYPE LIKE 'BZ_C%'
+		  <include refid="cnpt_search"/>
+	</select>
+	
+<!-- 거래처 담당자 찾기 -->
+<!-- 정렬 조건 시작 -->
+	<sql id="sort_mbr">
+		<!-- 최신순 -->
+		<if test="sort == 'mbrId'">
+			ORDER BY M.MBR_ID
+		</if>
+		<if test="sort == 'mbrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<if test="sort == 'rgnNo'">
+			ORDER BY M.RGN_NO
+		</if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="mbr_search">
+		<!-- 전체 -->
+		<if test="gubun == null and keyword != null">
+			AND (M.MBR_NM LIKE '%'||#{keyword}||'%'
+  			OR M.MBR_ID LIKE '%'||#{keyword}||'%')
+		</if>
+		<!-- 아이디 검색 -->
+		<if test="gubun == 'mbrId'">
+			AND M.MBR_ID LIKE '%'||#{keyword}||'%'
+		</if>
+		<!-- 이름 검색 -->
+		<if test="gubun == 'mbrNm'">
+			AND M.MBR_NM LIKE '%'||#{keyword}||'%'
+		</if>
+		<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND M.RGN_NO = #{rgnNo}
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND B.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND B.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	<!--
+ 		@programName : 거래처 조회
+ 		@description : 거래처 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectCnptMbr" resultType="memberVO" parameterType="hashMap">
+		SELECT *
+		FROM(
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_mbr"/> <include refid="orderby"/>) AS RNUM
+					, M.MBR_ID
+			        , M.MBR_NM
+			        , M.MBR_TELNO
+			        , M.RGN_NO
+			        , R.COM_NM AS RGN_NM
+			        , M.MBR_EML_ADDR
+			FROM MEMBER M
+			JOIN COM_CODE R ON M.RGN_NO=R.COM_NO
+			WHERE M.MBR_TYPE='MBR03'
+			AND NOT EXISTS (
+			    SELECT 1
+			    FROM BZENT B
+			    WHERE B.MBR_ID = M.MBR_ID
+			)
+		  <include refid="mbr_search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!--
+ 		@programName : 거래처 조회 갯수
+ 		@description : 거래처 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectTotalCnptMbr" resultType="int" parameterType="hashMap">
+	    SELECT COUNT(1)
+		FROM MEMBER M
+		JOIN COM_CODE R ON M.RGN_NO=R.COM_NO
+		WHERE M.MBR_TYPE='MBR03'
+		AND NOT EXISTS (
+		    SELECT 1
+		    FROM BZENT B
+		    WHERE B.MBR_ID = M.MBR_ID
+		)
+	  <include refid="mbr_search"/>
+	</select>
+	
+	<insert id="insertCnpt" parameterType="bzentVO">
+		<selectKey order="BEFORE" resultType="String" keyProperty="bzentNo">
+		 	SELECT 'CN' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(BZENT_NO, 3))), 0) + 1, 4, '0')
+			FROM BZENT
+			WHERE BZENT_TYPE LIKE 'BZ_C%'
+		 </selectKey>
+		INSERT INTO BZENT(BZENT_NO
+		 <if test="mbrId != null">
+			, MBR_ID
+		</if>
+		 <if test="mngrId != null">
+			, MNGR_ID
+		</if>
+			, BZENT_TELNO
+		 	, BZENT_NM, RGN_NO, BZENT_ZIP, BZENT_ADDR
+		 <if test="bzentDaddr != null">
+			 , BZENT_DADDR
+		</if>
+		 , BZENT_TYPE)
+		 VALUES(#{bzentNo}
+		 <if test="mbrId != null">
+		 		, #{mbrId}
+		 </if>
+		 <if test="mngrId != null">
+			, #{mngrId}
+		</if>
+				, #{bzentTelno}
+		 		, #{bzentNm}
+		 		, #{rgnNo}
+		 		, #{bzentZip}
+		 		, #{bzentAddr}
+		 <if test="bzentDaddr != null">
+			, #{bzentDaddr}
+		</if>
+		 		, #{bzentType}
+		 	)
+	</insert>
+	
+	<!--
+ 		@description : 수정 시/추가 시  권한 추가
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+ 		@param       : bzentVO (mbrId)
+	-->
+	<insert id="insertRoleCnpt" parameterType="bzentVO">
+		INSERT INTO AUTH(MBR_ID, AUTH)
+		VALUES(#{mbrId}, 'ROLE_CNPT')
+	</insert>
+	
+	<!--
+ 		@description : 수정 시  권한 삭제
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+ 		@param       : bzentVO (mbrId)
+	-->
+	<delete id="deleteRoleCnpt" parameterType="bzentVO">
+		DELETE
+		FROM AUTH
+		WHERE AUTH='ROLE_CNPT'
+		AND MBR_ID IN (SELECT MBR_ID FROM BZENT WHERE BZENT_NO=#{bzentNo})
+	</delete>
+	
+		<!--
+ 		@description : 사업체 - 가맹점 정보 변경
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+ 		@param       : bzentVO (bzentNo, bzentNm, bzentZip, bzentAddr, bzentDaddr, bzentTelno, mbrId, mngrId)
+, mbrId, rgnNo)
+	-->
+	<update id="updateBzent" parameterType="bzentVO">
+		UPDATE BZENT
+		SET BZENT_NM = #{bzentNm}
+		, BZENT_ZIP = #{bzentZip}
+		, BZENT_ADDR = #{bzentAddr}
+		<if test="bzentDaddr != null">
+		, BZENT_DADDR = #{bzentDaddr}
+		</if>
+		, RGN_NO = #{rgnNo}
+		, BZENT_TELNO = #{bzentTelno}
+		<include refid="memberUorD"/>
+		WHERE BZENT_NO = #{bzentNo}
+	</update>
+	
+	<sql id="memberUorD">
+		<if test="mbrId != null">
+			, MBR_ID = #{mbrId}
+		</if>
+		<if test="mbrId == null">
+			, MBR_ID = NULL
+		</if>
+		<if test="mngrId != null">
+			, MNGR_ID = #{mngrId}
+		</if>
+		<if test="mngrId == null">
+			, MNGR_ID = NULL
+		</if>
+	</sql>
+	
+	<!--
+ 		@description : 거래처 상세
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<select id="selectCnptDtl" parameterType="String" resultMap="bzentMap">
+		SELECT B.BZENT_NO
+				, B.BZENT_NM
+				, B.BZENT_TYPE
+				, T.COM_NM AS BZENT_TYPE_NM
+				, B.BZENT_TELNO
+				, B.BZENT_ADDR
+				, B.BZENT_DADDR
+				, B.BZENT_ZIP
+				, B.MBR_ID
+				, B.MNGR_ID
+				, M.MBR_ID
+				, M.MBR_NM
+				, M.MBR_TELNO
+				, M.MBR_EML_ADDR
+				, N.MBR_ID AS MNGR_ID
+				, N.MBR_NM AS MNGR_NM
+				, N.MBR_TELNO AS MNGR_TELNO
+				, N.MBR_EML_ADDR AS MNGR_EML_ADDR
+				, B.REG_YMD
+		FROM BZENT B
+		JOIN COM_CODE T ON T.COM_NO=B.BZENT_TYPE
+		LEFT OUTER JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+		LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+		WHERE B.BZENT_NO=#{bzentNo}
+	</select>
+	
+		
+	<!--
+ 		@description : 거래처 삭제 (거래처 재고 없는것만 삭제)
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 24
+	-->
+	<delete id="deleteCnpt" parameterType="String">
+		DELETE
+		FROM BZENT
+		WHERE BZENT_NO=#{bzentNo}
+        AND BZENT_NO NOT IN(SELECT DISTINCT BZENT_NO
+                                FROM STOCK 
+                                WHERE BZENT_NO=#{bzentNo})
+	</delete>
+</mapper>

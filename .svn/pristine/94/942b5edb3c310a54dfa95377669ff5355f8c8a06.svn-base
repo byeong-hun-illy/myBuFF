@@ -1,0 +1,19 @@
+package com.buff.hdofc.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+* @packageName  : com.buff.hdofc.mapper
+* @fileName     : HdofcFrcsCheckMapper.java
+* @author       : 송예진
+* @date         : 2024.09.16
+* @description  : 가맹점 점검 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.16        송예진     	  			최초 생성
+*/
+@Mapper
+public interface HdofcFrcsCheckMapper {
+
+}

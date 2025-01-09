@@ -1,0 +1,392 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="/resources/cnpt/js/sls.js"></script>
+<link href="/resources/cnpt/css/sls.css" rel="stylesheet">
+<link href="/resources/hdofc/css/main.css" rel="stylesheet">
+<sec:authentication property="principal.MemberVO" var="user"/>
+<script>
+let currentPage = 1;
+let sort = 'poNo';
+let orderby = 'desc';
+let bzentNo = "${user.bzentNo}";
+console.log("bzentNo : ", bzentNo);
+let allSales = <c:out value="${allSales}" default="0" />;
+console.log("allSales : ", allSales);
+let total = <c:out value="${total}" default="0" />;
+
+// ChartDataLabels 플러그인 명시적으로 등록
+Chart.register(ChartDataLabels);
+
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+$(document).ready(function(){
+	select2Custom();
+	let period = 'monthlyTab';
+
+	// 서버에서 가져온 값
+	const totalAmount = parseInt($("#clclnTotal").text().trim(), 10);
+	const formatAmount = totalAmount.toLocaleString();
+	document.getElementById('clclnTotal').textContent = formatAmount; // HTML에 표시
+	
+	// 초기화 - 월간 차트 디폴트
+	updateView('monthlyTab');
+	
+	// 라디오 버튼 클릭시 이벤트 핸들러
+	$('input[name="period"]').on('change', function(){
+		const selectedPeriod = $(this).attr('id');
+		updateView(selectedPeriod);
+	});
+	
+    // 월간 검색 필드 보여주기
+    $(".search-startMonth, .search-endMonth, .search-year").show(); 
+    // 일자 필드 숨기기
+    $(".search-date").hide(); 
+	// 차트 제목 디폴트 설정
+    $("#monthlyChartTitle").show();
+	// 요약보기 디폴트 설정
+	$(".search-date-summary").hide();
+	$(".search-year-summary").show(); 
+	selectSalesData();
+	
+
+	// 검색 버튼 이벤트 핸들러
+	$('#searchBtn').on('click', function() {
+		// 페이지 초기화
+	    currentPage = 1;
+		
+		// 일자 선택 형식 변경
+	    let selectedDate = $('#selectedDate').val();
+	    if (selectedDate) {
+	        // '-'를 제거하여 'YYYYMMDD' 형식으로 변환
+	        selectedDate = selectedDate.replace(/-/g, '');
+	    }
+		console.log("selectedDate : ", selectedDate);
+		
+		// 데이터 준비
+	    let data = {
+	        currentPage: currentPage,
+	        startMonth: $("#startMonth").val(),
+	        endMonth: $("#endMonth").val(),
+	        selectedYear: $("#selectedYear").val(), 
+	        selectedDate : selectedDate
+	    };
+	    console.log("검색 조건 : ", data);
+		
+	    // 현재 활성화된 라디오버튼에 따라 함수 호출
+	    if ($('#dailyTab').is(':checked')) {
+	        selectDailySalesData(); // 일간 매출 데이터 요청
+	    } else {
+	        selectSalesData(data); // 월간 매출 데이터 요청
+	    }	 	
+	    
+	    // 검색 조건에 따른 총 금액 변화 ajax 함수 호출
+	   	updateTotalSalesAmount(data);
+		
+		// 검색 조건 초기화
+	    $("#startMonth").val('');
+	    $("#endMonth").val('');
+	    $("#selectedYear").val('');
+	    $("#selectedDate").val('');
+
+	    // 페이지 링크 초기화
+	    $('.page-link').removeClass('active'); 
+	    // 첫 페이지 링크 활성화
+	    $('.page-link[data-page="1"]').addClass('active'); 
+		
+	    // 페이지네이션 리셋
+	    $('.pagination').html(''); // 페이지네이션 초기화
+	
+	// 검색 버튼 이벤트 끝 
+	});
+
+	//검색영역 요약보기
+	$('.search-toggle').on('click',function(){
+	   	if ($(this).hasClass('active')){
+	   		$(this).removeClass('active');
+	   		$('.search-toggle').html(`요약보기<span class="icon material-symbols-outlined">Add</span>`);
+	   		$('.search-original').slideDown(300);
+	   		$('.search-summary').slideUp(300);
+	   	} else {
+	   		$(this).addClass('active');
+	   		$('.search-toggle').html(`전체보기<span class="icon material-symbols-outlined">Remove</span>`);
+	   		$('.search-original').slideUp(300);
+	   		$('.search-summary').slideDown(300);
+	   	} 
+		
+	   	/* 아래 부분은 구현하는 페이지에 맞춰서 작성해주세요!! */
+		// 인풋 데이터 가져오기
+	   	let startYmd = $('#startMonth').val();                     
+		let endYmd = $('#endMonth').val();
+		let selectedYear = $('#selectedYear').val();
+		let selectedDate = $('#selectedDate').val();
+		
+		if(startYmd=='' && endYmd ==''){
+			$('#dateSummary').text('전체');
+		}else {
+			$('#dateSummary').text(startYmd + " ~ " + endYmd);
+		}
+		
+		// 년도 선택 입력
+		if(selectedYear==''){
+			$('#selectYearSummary').text('전체');
+		}else {
+			$('#selectYearSummary').text(selectedYear);
+		}
+		
+		// 일자 선택 입력
+		if(selectedDate==''){
+			$('#selectDateSummary').text('전체');
+		}else {
+			$('#selectDateSummary').text(selectedDate);
+		}
+		
+	// 요약 보기 끝	
+	})
+	
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		selectSalesData();
+	});
+	
+	
+	// 초기화 버튼 클릭시 목록 처음으로
+	$("#resetBtn").on("click", function(){
+		// 초기화 시 전체 매출 금액 가져오기
+	    updateTotalSalesAmount({ bzentNo: bzentNo });
+		location.reload();
+	});
+	
+});
+
+// 뷰 업데이트 함수
+function updateView(period) {
+    resetTableAndChart(); // 테이블과 차트 초기화
+
+    if (period === 'monthlyTab') {
+        $(".search-startMonth, .search-endMonth, .search-year").show();
+        $(".search-date").hide();
+        $("#monthlyChartTitle").show();
+        $("#dailyChartTitle").hide();
+        $("#month-text").show();
+        $("#daily-text").hide();
+        selectSalesData(); // 월간 데이터 조회
+    } else {
+        $(".search-startMonth, .search-endMonth, .search-year").hide();
+        $(".search-date").show();
+        $("#monthlyChartTitle").hide();
+        $("#dailyChartTitle").show();
+        $("#selectedDate").show();
+        $("#month-text").hide();
+        $("#daily-text").show();
+        $(".startSummary, .endSummary, .search-year-summary").hide();
+        $(".search-date-summary").show();
+        selectDailySalesData(); // 일간 데이터 조회
+    }
+}
+
+//테이블과 차트 초기화 함수
+function resetTableAndChart() {
+    $('#table-body').empty();
+    if (window.dailySalesChart) window.dailySalesChart.destroy();
+    if (window.monthSalesChart) window.monthSalesChart.destroy();
+}
+	
+</script>
+
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="crow mb-2" style="position:relative; left:10px;">
+         <h1 class="m-0">매출 현황</h1>
+		 <div class="radio" style="position:relative; bottom:8px">
+			<div class="form_toggle row-vh d-flex flex-row" style="gap:var(--gap--s);">
+				<div class="form_radio_btn">
+					<input id="monthlyTab" type="radio" name="period" value="year" checked>
+					<label for="monthlyTab">월간</label>
+				</div>
+				<div class="form_radio_btn">
+					<input id="dailyTab" type="radio" name="period" value="month">
+					<label for="dailyTab">일간</label>
+				</div>
+			</div>
+		</div>	
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- wrap -->
+<div class="wrap">
+	<div class="crow col-md-4">
+	<!-- 저번달 정산 총 금액 -->
+		<div class="amt-cont">
+			<div class="amt-cont-dtl">
+				<div class="amt-title">
+					매출 총 금액
+				</div>
+				<div class="amt-dtl">
+					<p class="amt-amt" id="clclnTotal">${totalSalesAmount}</p>
+					<p>원</p>
+				</div>
+			</div>
+			<!-- amt-cont-dtl끝 -->
+			<div class="amt-icon">
+				<span class="material-symbols-outlined icon-amt" style="color: var(--bge--warning)">send_money</span>
+			</div>
+		</div>
+	</div>
+	<div class="search-section">
+		<!-- cont: 검색 영역 -->
+		<div class="cont search-original">
+			<div class="search-wrap">
+				<!-- 이벤트 기간 검색조건 -->
+				<div class="search-cont search-startMonth">
+					<p class="search-title">시작 년/월</p>
+					<div class="search-date-wrap">
+  							<input type="month" id="startMonth" name="startMonth">
+					</div>
+				</div>
+				<div class="search-cont search-endMonth">
+					<p class="search-title">끝 년/월</p>
+					<div class="search-date-wrap">
+  							<input type="month" id="endMonth" name="endMonth">
+					</div>
+				</div>
+				<div class="search-cont search-year">
+				    <p class="search-title">년도 선택</p>
+				    <div class="search-date-wrap select-custom" style="width:100px;">
+				        <select id="selectedYear" name="selectedYear">
+				            <option value="">전체</option>
+				            <option value="2024">2024</option>
+				            <option value="2023">2023</option>
+				            <option value="2022">2022</option>
+				            <option value="2021">2021</option>
+				        </select>
+				    </div>
+				</div>
+				<div class="search-cont search-date">
+				    <p class="search-title">일자 선택</p>
+				    <div class="search-date-wrap">
+				        <input type="date" id="selectedDate" name="selectedDate" style="display:none;">
+				    </div>
+				</div>
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 영역 -->
+		
+		<!-- cont:  검색 접기 영역 -->
+		<div class="cont search-summary">
+			<div class="search-wrap">
+				<!-- 시작 년월 기간 검색조건 -->
+				<div class="search-cont startSummary">
+					<p class="search-title">시작 년/월<span class="summary" id="startSummary"></span></p>
+				</div>
+				<div class="divide-border startSummary"></div>
+				<!-- 끝 년월 기간 검색조건 -->
+				<div class="search-cont endSummary">
+					<p class="search-title">끝 년/월<span class="summary" id="endSummary"></span></p>
+				</div>
+				<div class="divide-border endSummary"></div>
+				<!-- 끝 년월 기간 검색조건 -->
+				<div class="search-cont search-year-summary">
+					<p class="search-title">년도 선택<span class="summary" id="selectYearSummary"></span></p>
+				</div>
+				<div class="divide-border search-year-summary"></div>
+				<!-- 끝 년월 기간 검색조건 -->
+				<div class="search-cont search-date-summary">
+					<p class="search-title">일자 선택<span class="summary" id="selectDateSummary"></span></p>
+				</div>
+				<div class="divide-border search-date-summary"></div>
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 영역 -->
+		
+		<!-- 검색 버튼 영역 -->
+		<div class="search-control">
+			<div class="search-control-btns">
+				<div class="search-toggle">
+					요약보기<span class="icon material-symbols-outlined">Add</span>
+				</div>
+				<div class="search-reset" id="resetBtn">
+					초기화<span class="icon material-symbols-outlined">restart_alt</span>
+				</div>
+				<div>
+					<button class="btn btn-default search" id="searchBtn">검색 <span class="icon material-symbols-outlined">search</span></button>
+				</div>		
+			</div>
+		</div>
+		<!-- /.검색 버튼 영역 -->
+	</div>
+	<!-- /.search-section -->		
+	<!-- table cont -->
+	<div class="crow d-flex">
+	  <div class="cont col">
+		<!-- cont: 해당 단가  설명 -->
+			<!-- table-wrap 단가 정보-->
+			<div class="table-wrap">
+				<div class="table-title">
+					<div id="monthlyChartTitle" class="cont-title" style="display: none;">
+				        <span class="material-symbols-outlined title-icon">bar_chart</span><p id="month-text">월간 매출 현황 차트</p>
+				    </div>
+				    <div id="dailyChartTitle" class="cont-title" style="display: none;">
+				        <span class="material-symbols-outlined title-icon">donut_small</span><p id="daily-text">일간 매출 현황 차트</p>
+				    </div>
+				</div>
+				<div class="bar"></div>
+				<div class="crow d-flex">
+					<div class="chart-wrap" style="flex: 0 0 100%; height: 550px;">
+					  	<canvas id="salesChart"></canvas>
+					</div>
+				</div>
+			</div>
+	<!-- /.table-wrap -->
+	</div>
+	  <div class="cont col">
+		<div class="table-wrap">
+			<div class="tap-btn-wrap">
+				<div class="tap-wrap">
+					<div data-type=''  class="tap-cont active">
+						<span class="tap-title">전체</span>
+						<span class="bge bge-default" id="clclnTotal">${allSales}</span>
+					</div>
+				</div>
+			</div>
+			<!-- /tap-btn-wrap -->
+			<table class="table-default" id="salesListTable">
+				<thead>
+					<tr>
+						<th class="center" style="width: 20%;">번호</th>
+						<th class="center" style="width: 200px;">매출일자</th>
+						<th class="center" style="width: 100px;">정산액</th>
+					</tr>
+				</thead>
+				<tbody id="table-body" class="table-sales">
+					<!-- selectEventAjax()를 통해 나타날 영역 -->
+				</tbody>
+			</table>
+			<div class="pagination-wrap">
+				<div class="pagination">
+					<!-- selectAjax()를 통해 나타날 영역 -->
+				</div>
+			</div>
+		</div>
+	  </div>	
+	<!-- table cont 끝 -->
+	</div>	
+<!-- wrap 끝 -->	
+</div>

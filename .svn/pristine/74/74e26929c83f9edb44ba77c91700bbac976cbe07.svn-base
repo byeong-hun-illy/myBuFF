@@ -1,0 +1,31 @@
+package com.buff.cust.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.BzentVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MenuVO;
+
+@Mapper
+public interface CustHomeMapper {
+
+
+	public List<EventVO> selectEvent();
+
+	public int insertDscsnPost(FrcsDscsnVO frcsDscsnVO);
+
+	public int checkId(String mbrId);
+
+	public List<BzentVO> selectOrdrStore(Map<String, Object> map);
+
+	public List<MenuVO> selectMenu(String menuGubun);
+
+	public List<MenuVO> selectOrdrMenu(Map<String, Object> map);
+
+
+	
+}

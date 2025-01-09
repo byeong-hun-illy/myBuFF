@@ -1,0 +1,82 @@
+package com.buff.cust.service.impl;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.vo.FaqVO;
+import com.buff.vo.NoticeVO;
+import com.buff.vo.QsVO;
+
+/**
+* @packageName  : com.buff.cust.service.impl
+* @fileName     : CustCenterServiceImpl.java
+* @author       : 서윤정
+* @date         : 2024.09.17
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.17        이름     	  			최초 생성
+*/
+@Service
+public class CustCenterServiceImpl implements CustCenterService {
+	
+	@Inject
+	CustCenterMapper centerMapper;
+	
+	
+	/**
+	* @methodName  : selectFaq
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : FAQ 리스트 목록
+	*/
+	@Override
+	public List<FaqVO> selectFaq(String faqCategory) {
+		return this.centerMapper.selectFaq(faqCategory);
+	}
+	
+	
+	/**
+	* @methodName  : selectFaq
+	* @author      : 서윤정
+	* @date        : 2024.09.17
+	* @param  	   : 
+	* @return      : 공지사항 리스트 목록
+	*/
+
+	@Override
+	public List<NoticeVO> selectNotice(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		return this.centerMapper.selectNotice(map);
+	}
+
+
+	@Override
+	public NoticeVO selectNoticeDetail(int ntcSeq) {
+		// TODO Auto-generated method stub
+		return this.centerMapper.selectNoticeDetail(ntcSeq);
+	}
+
+
+	@Override
+	public int insertQsPost(QsVO qsVO) {
+		// TODO Auto-generated method stub
+		return this.centerMapper.insertQsPost(qsVO);
+	}
+
+
+
+
+
+}

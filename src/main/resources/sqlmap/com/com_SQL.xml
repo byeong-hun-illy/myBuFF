@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.09.22
+@description  : 지역 구분 
+-->
+<mapper namespace="com.buff.com.mapper.ComMapper">
+	<!-- rgnNo 찾기 -->
+	<select id="rgnNoSearch" resultType="String" parameterType="String">
+		SELECT COM_NO AS RGN_NO
+		FROM COM_CODE
+		WHERE COM_GROUP_NO = 'RGN'
+		AND COM_EXPLN=SUBSTR(#{addr},1,2)
+	</select>
+
+	<select id="selectCom" resultType="comVO" parameterType="String">
+		SELECT COM_NO
+				, COM_NM
+		FROM COM_CODE
+		WHERE COM_GROUP_NO = #{groupNo}
+	</select>
+	
+	<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!   상품 추가 시작   !!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	
+	<!-- 	
+		@author       : 송예진
+		@date         : 2024.09.25
+		@description  : 상품 추가 
+	-->
+	<insert id="insertGds" parameterType="gdsVO">
+		<selectKey keyProperty="gdsCode" order="BEFORE" resultType="String">
+			SELECT  PR.FIX|| LPAD(MAX(TO_NUMBER(SUBSTR(G.GDS_CODE,4)))+1,3,0)
+			FROM GDS G, (SELECT SUBSTR(GDS_CODE,1,3) AS FIX FROM GDS WHERE GDS_TYPE=#{gdsType}) PR
+			WHERE GDS_TYPE = #{gdsType}
+            GROUP BY PR.FIX
+		</selectKey>
+		INSERT INTO GDS(GDS_CODE, GDS_NM, GDS_TYPE, UNIT_NM, REG_YMD, MBR_ID)
+		VALUES(#{gdsCode}, #{gdsNm}, #{gdsType}, #{unitNm}, TO_CHAR(SYSDATE, 'YYYYMMDD'), #{mbrId})
+	</insert>
+	
+	<!-- 	
+		@author       : 송예진
+		@date         : 2024.09.25
+		@description  : 상품 추가 
+		-->
+	<insert id="insertGdsAmt" parameterType="gdsAmtVO">
+		<selectKey keyProperty="amtSeq" order="BEFORE" resultType="String">
+			SELECT NVL(MAX(TO_NUMBER(AMT_SEQ)),0)+1
+			FROM GDS_AMT
+			WHERE BZENT_NO=#{bzentNo}
+			AND GDS_CODE=#{gdsCode}
+		</selectKey>
+		INSERT INTO GDS_AMT(AMT_SEQ, GDS_CODE, BZENT_NO, AMT, AJMT_DT)
+		VALUES(#{amtSeq}, #{gdsCode}, #{bzentNo}, #{amt}, SYSDATE)
+	</insert>
+	
+	<!-- 	
+		@author       : 송예진
+		@date         : 2024.09.28
+		@description  : 최근 단가 삭제
+		실수로 입력을 잘못한 경우 그 사업체의 최근 상품의 단가를 삭제한다
+		-->
+	<delete id="deleteGdsAmt" parameterType="gdsAmtVO">
+		DELETE
+		FROM GDS_AMT
+		WHERE AMT_SEQ = (SELECT MAX(TO_NUMBER(AMT_SEQ))
+						FROM GDS_AMT
+						WHERE BZENT_NO=#{bzentNo}
+						AND GDS_CODE=#{gdsCode})
+		AND BZENT_NO=#{bzentNo}
+		AND GDS_CODE=#{gdsCode}
+	</delete>
+	
+	<!-- 
+		최저가 정보!!!!
+		상품 번호를 입력하면 최저가 List를 가져옴 
+		return 값 ajmtDt, amt
+	-->
+	<select id="selectMinAmt" parameterType="String" resultType="gdsAmtVO">
+	<![CDATA[
+		-- 재고가 변경된 일자를 가져옴
+		WITH DATE_LIST AS (
+		    SELECT DISTINCT AJMT_DT
+		    FROM GDS_AMT
+		    WHERE GDS_CODE = #{gdsCode}
+		),
+		-- 해당 기간 이전의 BZENT_NO별 MAX(AMT_SEQ)의 단가들을 가져온다
+		LATEST_AMT AS (
+		    SELECT DT.AJMT_DT, G.GDS_CODE, G.BZENT_NO, G.AMT
+		    FROM DATE_LIST DT
+		    JOIN GDS_AMT G 
+		      ON G.AJMT_DT <= DT.AJMT_DT
+		     AND G.GDS_CODE = #{gdsCode}
+		    JOIN (
+		        SELECT DT_IN.AJMT_DT, GDS_CODE, BZENT_NO, MAX(AMT_SEQ) AS MAX_AMT_SEQ
+		        FROM DATE_LIST DT_IN
+		        JOIN GDS_AMT GA ON GA.GDS_CODE = #{gdsCode}
+		                        AND GA.AJMT_DT <= DT_IN.AJMT_DT
+		        GROUP BY DT_IN.AJMT_DT, GDS_CODE, BZENT_NO
+		    ) MA ON G.GDS_CODE = MA.GDS_CODE
+		         AND G.BZENT_NO = MA.BZENT_NO
+		         AND G.AMT_SEQ = MA.MAX_AMT_SEQ
+		         AND G.AJMT_DT <= DT.AJMT_DT
+		         AND DT.AJMT_DT = MA.AJMT_DT
+		),
+		-- 해당 기간 이전의 BZENT_NO별 MAX(AMT_SEQ)의 단가들을 가져와 그 중의 최저가를 일자별로 가져온다.
+		MIN_AMT_PER_DATE AS (
+		    SELECT AJMT_DT, MIN(AMT) AS MIN_AMT
+		    FROM LATEST_AMT
+		    GROUP BY AJMT_DT
+		),
+		-- 만약에 전에 일자가 같은 최저가인 경우 이전행을 리턴한다
+		-- LAG함수 : 이전 행의 값을 리턴
+		-- ORDER BY AJMT_DT는 AJMT_DT를 기준으로 정렬하여 이전 값이 어떤 값인지 결정
+		FILTERED_MIN_AMT AS (
+		    SELECT AJMT_DT, MIN_AMT,
+		           LAG(MIN_AMT) OVER (ORDER BY AJMT_DT) AS PREV_MIN_AMT
+		    FROM MIN_AMT_PER_DATE
+		)
+		-- 필터된 값을 가져오면서 만약에 PREV_MIN_AMT가 이전값을 가지고있으면(LAG함수로인해) 보이지 않게하고
+		-- 만약에 변경된 값에대한 경우 그 값은 PREV_MIN_AMT <> MIN_AMT이기 때문에 출력하게 한다
+		SELECT AJMT_DT
+			, MIN_AMT AS AMT
+		FROM FILTERED_MIN_AMT
+		WHERE PREV_MIN_AMT IS NULL OR PREV_MIN_AMT <> MIN_AMT
+		ORDER BY AJMT_DT
+		]]>
+	</select>
+	
+	<!-- 발주 등록시 영업중이 아니고 clsbiz_ymd가 지났다면 발주 등록 불가능처리를 위해 종료일 가져옴-->
+	<select id="selectFrcsInfo" parameterType="String" resultType="String">
+		SELECT F.CLSBIZ_YMD
+		FROM FRCS F
+		JOIN BZENT B ON B.BZENT_NO=F.FRCS_NO
+		WHERE B.MBR_ID=#{mbrId}
+	</select>
+	
+	<!-- 	
+		@author       : 송예진
+		@date         : 2024.10.11
+		@description  : 메뉴 검색
+		메뉴를 검색한다
+		위치마다 navType은 ALL, CNPT, FRCS, HDOFC로 나뉜다
+		-->
+	<select id="selectNav" parameterType="String" resultType="navVO">
+		SELECT
+            NAV_URL
+		    , SUBSTR(SYS_CONNECT_BY_PATH(NAV_NM, ' > '), 4) AS PATH
+		FROM
+		    NAV
+		WHERE
+		    NAV_TYPE = #{navType}
+		AND
+			NAV_URL IS NOT NULL
+		START WITH
+		    TOP_NAV_CODE IS NULL -- 루트 노드 조건 (상위 항목이 없는 경우)
+		CONNECT BY
+		    PRIOR NAV_CODE = TOP_NAV_CODE -- 계층 구조 조건
+		ORDER BY PATH
+	</select>
+</mapper>

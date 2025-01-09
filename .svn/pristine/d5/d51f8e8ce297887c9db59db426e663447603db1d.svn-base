@@ -1,0 +1,7 @@
+package com.buff.cust.service;
+
+public interface CustMyPageService {
+
+//	public List<MemberVO> myPageMain();
+
+}

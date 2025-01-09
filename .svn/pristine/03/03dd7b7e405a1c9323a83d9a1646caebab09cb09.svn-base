@@ -1,0 +1,64 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<sec:authentication property="principal.MemberVO" var="user" />
+
+<sec:authorize access="isAuthenticated()">
+	<sec:authentication property="principal.memberVO" var="user"/>
+</sec:authorize>
+
+<script type="text/javascript">
+let mbrId = "${user.mbrId}";
+
+
+function noLogin(){
+	var Toast = Swal.mixin({
+	      toast: true,
+	      position: 'center-center',
+	      showConfirmButton: false,
+	      timer: 2000
+	    });
+	
+	Toast.fire({
+		icon:'warning',
+		title:'로그인 후 이용가능합니다.'
+	});
+}
+</script>
+
+<div class="wrap">
+	<!-- 
+	하나의 이벤트를 위한 이벤트 상세 화면
+	하나의 이벤트에는 여러개의 이벤트 그룹
+	 -->
+	<c:forEach var="couponGroupVO" items="${eventVO.couponGroupVOList}">
+	 <c:forEach var="couponVO" items="couponGroupVO.couponVOList">
+	     <form id="insertEventCoupon" action="/cust/insertEventCoupon" method="post">
+	        <input type="text" name="couponCode" value="${couponGroupVO.couponCode}" />
+	        <input type="text" name="mbrId" value="${user.mbrId}" />
+	        <input type="text" name="useYn" value="N" />
+	        <input type="text" name="useYmd" value="" />
+	        <input type="text" name="eventNo" value="${eventVO.eventNo}" />
+			<div class="cont-title"><span class="icon material-symbols-outlined">account_circle</span>${eventVO.eventTtl}</div> 
+			<div class="cont-date">${eventVO.bgngYmd} ~ ${eventVO.expYmd}</div> 
+			<div class="cont">
+				
+				<div class="img-cont">
+					이미지 파일
+				</div>
+				
+			</div>
+			<div class="cont">
+				     <sec:authorize access="isAuthenticated()">
+						<button  type="submit" class="btn-default" id="btnCoupon">쿠폰 발급</button>
+					</sec:authorize>
+				
+					<sec:authorize access="isAnonymous()">
+						<button onclick="noLogin()">쿠폰 발급</button>
+					</sec:authorize>
+			</div>
+			<sec:csrfInput/>
+		</form>
+		</c:forEach>
+	</c:forEach>
+</div> 

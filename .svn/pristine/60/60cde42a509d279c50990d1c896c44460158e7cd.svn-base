@@ -1,0 +1,55 @@
+package com.buff.hdofc.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.FrcsCheckVO;
+
+/**
+* @packageName  : com.buff.hdofc.service
+* @fileName     : HdofcFrcsCheckService.java
+* @author       : 송예진
+* @date         : 2024.09.16
+* @description  : 가맹점 점검 service interface
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.16        송예진     	  			최초 생성
+*/
+public interface HdofcFrcsCheckService {
+	/**
+	* @methodName  : selectFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @param map   : 페이징 + 검색조건
+	* @return      : 점검이 필요한 가맹점 조회
+	*/
+	public List<FrcsCheckVO> selectFrcs(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectTotalFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @param map   : 검색 조건
+	* @return      : 페이징에 필요한 전체 페이지 갯수
+	*/
+	public int selectTotalFrcs(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectAllFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @param map   : 검색 조건
+	* @return      : 분류별 갯수 파악을 위한 전체 가맹점 갯수
+	*/
+	public int selectAllFrcs(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectChkFrcs
+	* @author      : 송예진
+	* @date        : 2024.09.19
+	* @param map   : 검색 조건
+	* @return      : 분류별 갯수 파악을 위한 점검이 필요한 가맹점 갯수
+	*/
+	public int selectChkFrcs(Map<String, Object> map);
+}

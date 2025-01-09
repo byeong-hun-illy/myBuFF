@@ -1,0 +1,36 @@
+package com.buff.cust.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MemberVO;
+import com.buff.vo.OrdrVO;
+import com.buff.vo.QsVO;
+
+public interface CustMyPageMapper {
+
+	public List<QsVO> myQs(String mbrId);
+
+	public List<FrcsDscsnVO> myDscsn(String mbrId);
+
+	public List<OrdrVO> myOrdr(String mbrId);
+
+	public List<EventVO> myCoupon(String mbrId);
+
+	public EventVO insertEventCoupon(String eventNo);
+
+	public MemberVO myStore(String mbrId);
+
+	/**
+     * @methodName  : insertEventCouponPost
+     * @author      : 서윤정
+     * @date        : 2024.10.02
+     * @param mbrId
+     * @return      : 고객 쿠폰 쿠폰 발급
+     */
+	public int insertEventCouponPost(Map<String, Object> map);
+	  
+
+}

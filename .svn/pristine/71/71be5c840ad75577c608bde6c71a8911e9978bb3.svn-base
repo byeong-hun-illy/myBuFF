@@ -1,0 +1,14 @@
+package com.buff.com.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.ComVO;
+
+@Mapper
+public interface ComMapper {
+	public String rgnNoSearch(String addr);
+	
+	public List<ComVO> selectCom(String groupNo);
+}

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.09.13
+@description  : 본사 관리자 관련  
+-->
+<mapper namespace="com.buff.hdofc.mapper.MngrMapper">
+	<resultMap type="mngrVO" id="mngrMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="mngrType" column="MNGR_TYPE"/>
+		<result property="mngrTypeNm" column="MNGR_TYPE_NM"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="hdofYn" column="HDOF_YN"/>
+		<result property="rtrmYmd" column="RTRM_YMD"/>
+		<result property="frcsNames" column="FRCS_NAMES"/>
+		<result property="cnptNames" column="CNPT_NAMES"/>
+		<association property="memberVO" resultMap="mbrMap"/>
+		<association property="authVO" resultMap="authMap"></association>
+		<collection property="bzentVOList" resultMap="bzentMap"></collection>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		<association property="memberVO" resultMap="mbrMap"></association>
+	</resultMap>
+
+	<resultMap type="authVO" id="authMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="auth" column="AUTH"/>
+	</resultMap>
+
+	<!--
+ 		@programName : 본사 관리자 조회
+ 		@description : 재직 중인 관리자만 조회
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 13
+	-->
+	<select id="selectMngr" parameterType="hashMap" resultMap="mngrMap">
+		WITH t AS (
+			SELECT ROW_NUMBER() OVER (<include refid="sort_mngr"/> <include refid="orderby"/>) AS RNUM
+				, C.COM_NM AS RGN_NM
+				, M.MBR_NM
+				, M.MBR_ZIP
+				, M.MBR_ADDR
+				, M.MBR_DADDR
+				, M.MBR_TELNO
+				, M.MBR_BRDT
+				, M.MBR_EML_ADDR
+				, M.MBR_IMG_PATH
+				, N.MNGR_ID
+				, N.MNGR_TYPE
+				, N.JNCMP_YMD
+				, N.HDOF_YN
+				, N.RTRM_YMD
+			FROM MNGR N, MEMBER M, COM_CODE C
+			WHERE N.MNGR_ID=M.MBR_ID
+			AND C.COM_NO=M.RGN_NO
+			AND N.HDOF_YN = 'Y'
+			<include refid="search"/>
+			<include refid="rgn_search"/>
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.rnum BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	
+	<sql id="sort_mngr">
+		<if test="sort == 'mngrId'">
+			ORDER BY M.MBR_ID
+		</if>
+		<if test="sort == 'mngrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<if test="sort == 'rgnNo'">
+			ORDER BY M.RGN_NO
+		</if>
+		<if test="sort == 'jncmp'">
+			ORDER BY N.JNCMP_YMD
+		</if>
+	</sql>
+	<!--
+ 		@programName : 본사 관리자 조회
+ 		@description : 재직 중인 관리자 총 갯수
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 13
+	-->
+	<select id="selectTotalMngr" parameterType="hashMap" resultType="int">
+			SELECT COUNT(1)
+			FROM MNGR N, MEMBER M
+			WHERE N.MNGR_ID=M.MBR_ID
+			AND N.HDOF_YN = 'Y'
+			<include refid="search"/>
+			<include refid="rgn_search"/>
+	</select>
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="search">
+		<!-- 전체 -->
+		<if test="gubun == null and keyword != null">
+			AND (M.MBR_NM LIKE '%'||#{keyword}||'%'
+  			OR N.MNGR_ID LIKE '%'||#{keyword}||'%')
+		</if>
+		<!-- 가맹점 이름 검색 -->
+		<if test="gubun == 'mngrId'">
+			AND N.MNGR_ID LIKE '%'||#{keyword}||'%'
+		</if>
+		<!-- 가맹점주 이름 검색 -->
+		<if test="gubun == 'mbrNm'">
+			AND M.MBR_NM LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<!-- 지역 검색 -->
+	<sql id="rgn_search">
+		<if test="rgnNo != null">
+			AND M.RGN_NO = #{rgnNo}
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--
+		@programName : 사업체 담당하고 있는 담당자 조회
+		@description : select를 위함
+		@author      : 송예진
+		@date        : 2024. 09. 24
+	-->	
+	<select id="selectMngrSelect" resultType="memberVO">
+		SELECT M.MBR_ID
+				, M.MBR_NM
+        FROM MEMBER M, MNGR N
+        WHERE M.MBR_ID=N.MNGR_ID
+	</select>
+	
+	<!--
+		@programName : 검색조건에 현재 게시판 갯수
+		@description : select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<select id="selectTotalMngrList" parameterType="hashMap" resultType="int">
+		WITH t AS (
+			SELECT 
+			    A.MBR_ID, A.MBR_TYPE, A.MBR_NM,
+			    B.MNGR_TYPE, B.JNCMP_YMD, B.HDOF_YN, B.RTRM_YMD,
+			    LISTAGG(CASE WHEN D.COM_NO = 'BZ_F01' 
+			                 THEN C.BZENT_NM END, ', ') 
+			        WITHIN GROUP (ORDER BY C.BZENT_NM) AS FRCS_NAMES,
+			    LISTAGG(CASE WHEN D.COM_NO IN ('BZ_C01', 'BZ_C02', 'BZ_C03') 
+			                 THEN C.BZENT_NM END, ', ') 
+			        WITHIN GROUP (ORDER BY C.BZENT_NM) AS CNPT_NAMES
+			FROM MEMBER A
+			LEFT OUTER JOIN MNGR B ON A.MBR_ID = B.MNGR_ID
+			LEFT OUTER JOIN BZENT C ON B.MNGR_ID = C.MNGR_ID
+			LEFT OUTER JOIN COM_CODE D ON C.BZENT_TYPE = D.COM_NO
+			WHERE A.MBR_TYPE = 'MBR04'
+			<include refid="mngrId_search"/>
+			<include refid="hdofYn_search"/>
+			<include refid="jncmpYmd_search"/>
+			<include refid="mngrType_search"/>
+			GROUP BY A.MBR_ID, A.MBR_TYPE, A.MBR_NM,B.MNGR_TYPE, B.JNCMP_YMD, B.HDOF_YN, B.RTRM_YMD
+		)
+		SELECT COUNT(1)
+		FROM t
+		WHERE 1=1
+		<include refid="frcs_search"/>
+		<include refid="bzent_search"/>
+	</select>
+	
+	<!--
+		@programName : 사원 관리 중 사원이 맡고 있는 사업체들의 목록까지 조회
+		@description : select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<!-- <select id="selectMngrList" parameterType="hashMap" resultMap="mngrMap">
+		WITH t AS (
+			SELECT 
+				ROW_NUMBER() OVER (<include refid="mngrList_sort"/> <include refid="orderby"/>) AS RNUM,
+			    A.MBR_ID, A.MBR_TYPE, A.MBR_NM,
+			    B.MNGR_ID, B.MNGR_TYPE, B.JNCMP_YMD, B.HDOF_YN, B.RTRM_YMD,
+			    LISTAGG(CASE WHEN D.COM_NO = 'BZ_F01' 
+			                 THEN C.BZENT_NM END, ', ') 
+			        WITHIN GROUP (ORDER BY C.BZENT_NM) AS FRCS_NAMES,
+			    LISTAGG(CASE WHEN D.COM_NO IN ('BZ_C01', 'BZ_C02', 'BZ_C03') 
+			                 THEN C.BZENT_NM END, ', ') 
+			        WITHIN GROUP (ORDER BY C.BZENT_NM) AS CNPT_NAMES
+			FROM MEMBER A
+			LEFT OUTER JOIN MNGR B ON A.MBR_ID = B.MNGR_ID
+			LEFT OUTER JOIN BZENT C ON B.MNGR_ID = C.MNGR_ID
+			LEFT OUTER JOIN COM_CODE D ON C.BZENT_TYPE = D.COM_NO
+			WHERE A.MBR_TYPE = 'MBR04'
+			<include refid="mngrId_search"/>
+			<include refid="hdofYn_search"/>
+			<include refid="jncmpYmd_search"/>
+			<include refid="mngrType_search"/>
+			<include refid="approvedType_search"/>
+			GROUP BY A.MBR_ID, A.MBR_TYPE, A.MBR_NM, B.MNGR_ID, B.MNGR_TYPE, B.JNCMP_YMD, B.HDOF_YN, B.RTRM_YMD
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.rnum BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+		<include refid="frcs_search"/>
+		<include refid="bzent_search"/>
+	</select> -->
+	
+	<select id="selectMngrList" parameterType="hashMap" resultMap="mngrMap">
+		SELECT *
+		FROM (
+		    SELECT ROW_NUMBER() OVER (<include refid="mngrList_sort"/> <include refid="orderby"/>) AS RNUM,
+		           t.*
+		    FROM (
+		        SELECT A.MBR_ID,
+		               A.MBR_TYPE,
+		               A.MBR_NM,
+		               B.MNGR_ID,
+		               B.MNGR_TYPE,
+		               B.JNCMP_YMD,
+		               B.HDOF_YN,
+		               B.RTRM_YMD,
+		               LISTAGG(CASE WHEN D.COM_NO = 'BZ_F01' THEN C.BZENT_NM END, ', ') WITHIN GROUP (ORDER BY C.BZENT_NM) AS FRCS_NAMES,
+		               LISTAGG(CASE WHEN D.COM_NO IN ('BZ_C01', 'BZ_C02', 'BZ_C03') THEN C.BZENT_NM END, ', ') WITHIN GROUP (ORDER BY C.BZENT_NM) AS CNPT_NAMES
+		        FROM MEMBER A
+		        LEFT OUTER JOIN MNGR B ON A.MBR_ID = B.MNGR_ID
+		        LEFT OUTER JOIN BZENT C ON B.MNGR_ID = C.MNGR_ID
+		        LEFT OUTER JOIN COM_CODE D ON C.BZENT_TYPE = D.COM_NO
+		        WHERE A.MBR_TYPE = 'MBR04'
+		        <include refid="mngrId_search"/>
+				<include refid="hdofYn_search"/>
+				<include refid="jncmpYmd_search"/>
+				<include refid="mngrType_search"/>
+				<include refid="approvedType_search"/>
+		        GROUP BY A.MBR_ID, A.MBR_TYPE, A.MBR_NM, B.MNGR_ID, B.MNGR_TYPE, B.JNCMP_YMD, B.HDOF_YN, B.RTRM_YMD
+		    ) t
+		    WHERE 1=1
+		    <include refid="frcs_search"/>
+			<include refid="bzent_search"/>
+		) filtered
+		WHERE RNUM BETWEEN (('1' - 1) * 10) + 1 AND '1' * 10
+	</select>
+	
+	<!-- 검색 조건 모음 -->
+	<sql id="frcs_search">
+		<if test="frcs != null and frcs != ''">
+		AND FRCS_NAMES LIKE '%' || #{frcs} || '%'
+		</if>
+	</sql>
+	<sql id="bzent_search">
+		<if test="cnpt != null and cnpt != ''">
+		AND CNPT_NAMES LIKE '%' || #{cnpt} || '%'
+		</if>
+	</sql>
+	<sql id="mngrList_sort">
+		<if test="sort == 'jncmpYmdSort'">
+			ORDER BY t.JNCMP_YMD
+		</if>
+		<if test="sort == 'mngrTypeSort'">
+			ORDER BY t.MNGR_TYPE
+		</if>
+	</sql>
+	<sql id="mngrId_search">
+		<if test="mngrId != null and mngrId != ''">
+		AND B.MNGR_ID = #{mngrId}
+		</if>
+	</sql>
+	<sql id="hdofYn_search">
+		<if test="hdofYn != null and hdofYn != ''">
+		AND B.HDOF_YN = #{hdofYn}
+		</if>
+	</sql>
+	<sql id="jncmpYmd_search">
+		<if test="startJncmpYmd != null and startJncmpYmd != '' and endJncmpYmd != null and endJncmpYmd != ''" >
+		AND B.JNCMP_YMD BETWEEN REPLACE(#{startJncmpYmd}, '-', '') AND REPLACE(#{endJncmpYmd}, '-', '')
+		</if>
+	</sql>
+	<sql id="mngrType_search">
+		<if test="mngrType != null and mngrType != ''">
+		AND B.MNGR_TYPE = #{mngrType}
+		</if>
+	</sql>
+	<sql id="approvedType_search">
+		<if test="approvedType == 'yes'">
+		AND B.MNGR_TYPE IS NOT NULL
+		</if>
+		<if test="approvedType == 'no'">
+		AND B.MNGR_TYPE IS NULL
+		</if>
+	</sql>
+	
+	<!--
+		@programName : selectTapNum
+		@description : 사원 총 인원수, 승인 전/후 인원수
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<select id="selectTapNum" resultType="Map">
+		SELECT 
+		    SUM(CASE WHEN A.MBR_TYPE = 'MBR04' THEN 1 ELSE 0 END) AS MEM_COUNT,
+		    SUM(CASE WHEN B.AUTH = 'ROLE_HDOFC' THEN 1 ELSE 0 END) AS AUTH_COUNT,
+		    COUNT(CASE WHEN A.MBR_TYPE = 'MBR04' AND C.MNGR_TYPE IS NULL THEN 1 END) AS MNGR_COUNT
+		FROM MEMBER A
+		LEFT JOIN AUTH B ON A.MBR_ID = B.MBR_ID
+		LEFT JOIN MNGR C ON A.MBR_ID = C.MNGR_ID
+	</select>
+	
+	<!--
+		@programName : selectBoxMngr
+		@description : 담당자 조회 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<select id="selectBoxMngr" resultMap="mngrMap">
+		SELECT 
+		    a.mngr_id, 
+		    b.mbr_nm
+		FROM mngr a
+		JOIN member b ON a.mngr_id = b.mbr_id
+	</select>
+	
+	<!--
+		@programName : selectBoxFrcs
+		@description : 가맹점 조회 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<select id="selectBoxFrcs" resultType="bzentVO">
+		SELECT A.BZENT_NM
+		FROM BZENT A, COM_CODE B
+		WHERE A.BZENT_TYPE = B.COM_NO
+		AND B.COM_NO = 'BZ_F01'
+	</select>
+	
+	<!--
+		@programName : selectBoxCntp
+		@description : 거래처 조회 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 29
+	-->	
+	<select id="selectBoxCntp" resultType="bzentVO">
+		SELECT A.BZENT_NM
+		FROM BZENT A, COM_CODE B
+		WHERE A.BZENT_TYPE = B.COM_NO
+		AND B.COM_NO != 'BZ_H01'
+		AND B.COM_NO != 'BZ_F01'
+	</select>
+	
+	<!--
+		@programName : selectMngrDtl
+		@description : 사원 상세 조회 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 30
+	-->	
+	<select id="selectMngrDtl" parameterType="String" resultMap="mngrMap">
+		SELECT 
+			A.MNGR_ID, A.MNGR_TYPE, A.JNCMP_YMD, A.HDOF_YN, A.RTRM_YMD,
+			B.MBR_NM, B.MBR_ZIP, B.MBR_ADDR, B.MBR_DADDR, B.MBR_TELNO, B.MBR_BRDT, B.MBR_EML_ADDR
+		FROM MNGR A, MEMBER B
+		WHERE A.MNGR_ID = B.MBR_ID
+		AND A.MNGR_ID = #{mngrId}
+	</select>
+	
+	<!--
+		@programName : selectMngrBzent
+		@description : 사원이 관리하는 업체 정보 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 30
+	-->	
+	<select id="selectMngrBzent" parameterType="String" resultMap="bzentMap">
+		SELECT
+			A.BZENT_NO,
+			A.MBR_ID,
+			A.MNGR_ID,
+			A.BZENT_TELNO,
+			A.BZENT_NM,
+			A.BZENT_ZIP,
+			A.BZENT_ADDR,
+			A.BZENT_DADDR,
+			A.BZENT_TYPE,
+			B.MBR_NM
+		FROM BZENT A, MEMBER B
+		WHERE A.MBR_ID = B.MBR_ID
+		AND A.MNGR_ID = #{mngrId}
+	</select>
+	
+	<!--
+		@programName : updateMngrInfo
+		@description : 사원 정보 update를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 30
+	-->	
+	<update id="updateMngrInfo" parameterType="memberVO">
+		UPDATE MEMBER
+		SET 
+		    MBR_ZIP = #{mbrZip},
+		    MBR_ADDR = #{mbrAddr},
+		    MBR_DADDR = #{mbrDaddr},
+		    MBR_TELNO = #{mbrTelno},
+		    MBR_EML_ADDR = #{mbrEmlAddr}
+		WHERE MBR_ID = #{mbrId}
+	</update>
+	
+	<!--
+		@programName : updateMngrBzent
+		@description : 사원이 관리하는 업체 정보 update를 위함
+		@author      : 정기쁨
+		@date        : 2024. 09. 30
+	-->	
+	<update id="updateMngrBzent" parameterType="bzentVO">
+		UPDATE BZENT
+		SET 
+		    MNGR_ID = #{mngrId} <!-- null 이면 관리 업체 삭제 됨 -->
+		WHERE BZENT_NO = #{bzentNo}
+	</update>
+	
+	<update id="deleteMngrBzent" parameterType="hashMap">
+	    UPDATE BZENT
+	    SET 
+	        MNGR_ID = NULL <!-- null 이면 관리 업체 삭제 됨 -->
+	    WHERE BZENT_NO IN
+	        <foreach collection="selectedArr" item="selected" open="(" separator="," close=")">
+	            #{selected}
+	        </foreach>
+	    AND MNGR_ID = #{mngrId}
+	</update>
+	
+	<!--
+		@programName : selectMngrBzent
+		@description : 업체 전체 수, 가맹점 수, 거래처 수
+		@author      : 정기쁨
+		@date        : 2024. 09. 30
+	-->	
+	<select id="selectBzentNum" resultType="Map">
+		SELECT
+		    COUNT(BZENT_TYPE) AS TOTAL_NUM,
+		    COUNT(CASE WHEN BZENT_TYPE LIKE '%BZ_F%' THEN BZENT_TYPE END) AS FRCS_NUM,
+		    COUNT(CASE WHEN BZENT_TYPE LIKE '%BZ_C%' THEN BZENT_TYPE END) AS CNPT_NUM
+		FROM BZENT
+		WHERE MNGR_ID IS NULL
+	</select>
+	
+	<!--
+		@programName : selectBzentList
+		@description : 업체 정보 select를 위함
+		@author      : 정기쁨
+		@date        : 2024. 10. 01
+	-->	
+	<select id="selectBzentList" parameterType="hashMap" resultMap="bzentMap">
+		SELECT
+		    A.BZENT_NO,
+		    A.BZENT_NM,
+		    B.COM_NM AS RGN_NM,
+		    C.MBR_NM,
+		    A.BZENT_TYPE
+		FROM BZENT A, COM_CODE B, MEMBER C
+		WHERE A.RGN_NO = B.COM_NO
+		AND A.MBR_ID = C.MBR_ID
+		AND A.MNGR_ID IS NULL
+		<include refid="bzentType_search"></include>
+		<include refid="bzentRgn_search"></include>
+		<include refid="bzentNm_search"></include>
+		ORDER BY A.BZENT_NM <include refid="orderby"/>
+	</select>
+	
+	<sql id="bzentRgn_search">
+		<if test="rgnNo != null and rgnNo != ''">
+			AND A.RGN_NO = #{rgnNo}
+		</if>
+	</sql>
+	<sql id="bzentType_search">
+		<if test="bzentType != null and bzentType != ''">
+			AND A.BZENT_TYPE LIKE '%' ||  #{bzentType} || '%'
+		</if>
+	</sql>
+	<sql id="bzentNm_search">
+		<if test="bzentNm != null and bzentNm != ''">
+			AND A.BZENT_NM LIKE '%' ||  #{bzentNm} || '%'
+		</if>
+	</sql>
+	
+	<!--
+		@programName : updateAuth
+		@description : 사원 권한 insert를 위함
+		@author      : 정기쁨
+		@date        : 2024. 10. 02
+	-->	
+	<insert id="updateAuth" parameterType="String">
+	    INSERT INTO AUTH (MBR_ID, AUTH)
+	    VALUES (
+	        #{mbrId},
+	        'ROLE_HDOFC'
+	    )
+	</insert>
+	
+	<!--
+		@programName : updateMngr
+		@description : 사원 insert를 위함
+		@author      : 정기쁨
+		@date        : 2024. 10. 02
+	-->	
+	<insert id="updateMngr" parameterType="String">
+	    INSERT INTO MNGR (MNGR_ID, MNGR_TYPE, JNCMP_YMD, HDOF_YN, RTRM_YMD)
+	    VALUES (
+	        #{mbrId},
+	        'HM01',
+	        TO_CHAR(SYSDATE, 'YYYYMMDD'),
+	        'Y',
+	       	NULL
+	    )
+	</insert>
+	
+	<!-- myPage 정보조회 시 사용(회원정보와 관리자정보)
+		@programName : selectMngrInfo
+		@author      : 송예진
+		@date        : 2024. 10. 10
+		 -->
+	<select id="selectMngrInfo" parameterType="String" resultMap="mngrMap">
+		SELECT B.MNGR_ID
+		       , LISTAGG(CASE 
+		                  WHEN B.BZENT_TYPE = 'BZ_F01' 
+		                  THEN B.BZENT_NM 
+		               END, ', ') WITHIN GROUP (ORDER BY B.BZENT_NM) AS FRCS_NAMES
+		       , LISTAGG(CASE 
+		                  WHEN B.BZENT_TYPE IN ('BZ_C01', 'BZ_C02', 'BZ_C03') 
+		                  THEN B.BZENT_NM 
+		               END, ', ') WITHIN GROUP (ORDER BY B.BZENT_NM) AS CNPT_NAMES
+		       , M.MBR_NM
+		       , M.MBR_ZIP
+		       , M.MBR_ADDR
+		       , M.MBR_DADDR
+		       , M.MBR_TELNO
+		       , M.MBR_EML_ADDR
+		       , N.MNGR_TYPE
+		       , FN_GET_COM_NM(N.MNGR_TYPE) AS MNGR_TYPE_NM
+		       , N.JNCMP_YMD
+		FROM MEMBER M
+		LEFT JOIN BZENT B ON M.MBR_ID = B.MNGR_ID
+		JOIN MNGR N ON M.MBR_ID = N.MNGR_ID
+		WHERE M.MBR_ID = #{mbrId}
+		GROUP BY B.MNGR_ID
+		         , M.MBR_NM
+		         , M.MBR_ZIP
+		         , M.MBR_ADDR
+		         , M.MBR_DADDR
+		         , M.MBR_TELNO
+		         , M.MBR_EML_ADDR
+		         , N.MNGR_TYPE
+		         , N.JNCMP_YMD
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

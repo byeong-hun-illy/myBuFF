@@ -1,0 +1,276 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec"
+	uri="http://www.springframework.org/security/tags"%>
+<script type="text/javascript" src="/resources/js/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<sec:authorize access="isAuthenticated()">
+	<sec:authentication property="principal.memberVO" var="user" />
+</sec:authorize>
+
+<script type="text/javascript">
+	let mbrId = "${user.mbrId}";
+
+	function closeModal() {
+		$("#pswdCheck").modal("hide");
+	}
+
+	$(function() {
+		console.log("개똥이");
+		// 	1. 마이페이지에 오면 모달이 띄워져 있음
+		$("#pswdCheck").modal("show");
+
+		// 현재 수정하고 있는 영역을 저장할 전역변수 설정(업체 : bzent / 담당자 : mbr)
+		let editTarget = "";
+
+		// 	비밀번호 확인 버튼 클릭시 이벤트 핸들러
+		//ModalBtnCheck : 버튼
+		$("#ModalBtnCheck").on(
+				"click",
+				function() {
+
+					var inputPswd = $("#pswdInput").val();
+
+					//inputPswd : java
+					console.log("inputPswd : " + inputPswd);
+
+					// 비밀번호 검증 Ajax 비동기 처리
+					$.ajax({
+						url : "/find/checkPswd",
+						type : "POST",
+						data : {
+							"inputPswd" : inputPswd
+						},
+						beforeSend : function(xhr) {
+							xhr.setRequestHeader("${_csrf.headerName}",
+									"${_csrf.token}");
+						},
+						success : function(res) {
+							console.log("res : ", res);
+
+							if (res === "success") {
+
+								// 	비밀번호 일치 -> 모달창 닫고 수정모드로 전환
+								Swal.fire({
+									icon : 'success',
+									title : '비밀번호 확인 성공',
+									position : 'top-end',
+									timer : 3000,
+									showConfirmButton : false
+								});
+								closeModal();
+
+							} else {
+								// 	비밀번호 불일치
+								Swal.fire({
+									icon : 'error',
+									title : 'Error!',
+									text : '비밀번호가 일치하지 않습니다..',
+									position : 'top-end',
+									timer : 3000,
+									showConfirmButton : false
+								});
+								closeModal();
+							}//end if
+						},
+						error : function(xhr, status, error) {
+							console.log("xhr: ", xhr);
+							console.log("status: ", status);
+							console.log("error: ", error);
+						}
+
+					});
+
+					// 모달창 이벤트 핸들러 끝.	
+				});
+
+	});//end 달러function
+</script>
+
+
+
+<div class="content-header">
+	<div class="container-fluid">
+		<div class="row mb-2">
+			<div class="col-sm-6">
+				<h1 class="m-0">마이페이지 > 기본정보</h1>
+			</div>
+			<!-- /.col -->
+		</div>
+		<!-- /.row -->
+	</div>
+	<!-- /.container-fluid -->
+</div>
+<hr>
+
+
+<!-- ///// 마이페이지 영역 시작 ///// -->
+<!-- 1. 기본정보 -->
+<%-- <div class="cont">
+	<div class="cont-title">${user.mbrNm}님반갑습니다.!</div>
+	<div class="title-wrap">
+		<a href="/myPage/updateCustInfo">나의 정보 변경 <span
+			class="icon material-symbols-outlined">arrow_forward_ios</span></a>
+	</div>
+	<div class="title-wrap">
+		<a href="/myPage/updateWishlist">나의 관심 목록 <span
+			class="icon material-symbols-outlined">arrow_forward_ios</span></a>
+	</div>
+</div> --%>
+
+
+<div class="cont">
+
+
+<!-- ///// 메뉴 영역 시작 ///// -->
+<div class="card card-primary card-outline">
+	<div class="card-header">
+		<h3 class="card-title">
+			<span class="icon material-symbols-outlined">account_circle</span> ${user.mbrNm}님반갑습니다.
+		</h3><br>
+		<div class="title-wrap">
+		<a href="/myPage/updateCustInfo">나의 정보 변경 <span
+			class="icon material-symbols-outlined">arrow_forward_ios</span></a>
+	</div>
+	<div class="title-wrap">
+		<a href="/myPage/updateWishlist">나의 관심 목록 <span
+			class="icon material-symbols-outlined">arrow_forward_ios</span></a>
+	</div>
+	</div>
+	<div class="card-body">
+		<div class="row">
+			<div class="col-5 col-sm-3">
+				<div class="nav flex-column nav-tabs h-100" id="vert-tabs-tab"
+					role="tablist" aria-orientation="vertical">
+					
+					
+					<a class="nav-link active" id="vert-tabs-main-tab" data-toggle="pill" href="#vert-tabs-main" role="tab"
+						aria-controls="vert-tabs-main" aria-selected="true">기본 정보</a> 
+						
+					<a class="nav-link" id="vert-tabs-home-tab" data-toggle="pill" href="#vert-tabs-home" role="tab"
+						aria-controls="vert-tabs-home" aria-selected="false">주문 내역 조회</a> 
+						
+					<a class="nav-link" id="vert-tabs-profile-tab" data-toggle="pill" href="#vert-tabs-profile" role="tab"
+						aria-controls="vert-tabs-profile" aria-selected="false">보유 쿠폰 조회</a>
+						
+					<a class="nav-link" id="vert-tabs-messages-tab" data-toggle="pill"
+						href="#vert-tabs-messages" role="tab"
+						aria-controls="vert-tabs-messages" aria-selected="false">문의 내역 조회</a>
+						
+					<a class="nav-link" id="vert-tabs-settings-tab" data-toggle="pill"
+						href="#vert-tabs-settings" role="tab"
+						aria-controls="vert-tabs-settings" aria-selected="false">상담 내역 조회</a>
+				</div>
+			</div>
+			<div class="col-7 col-sm-9">
+				<div class="tab-content" id="vert-tabs-tabContent">
+					<div class="tab-pane text-left fade active show" id="vert-tabs-main" role="tabpanel" aria-labelledby="vert-tabs-main-tab">
+	<!-- cont: 해당 영역의 설명 -->
+				<div class="cont">
+					<!-- table-wrap -->
+					<div class="table-wrap">
+						<div class="table-title">
+							<div class="cont-title"><span class="icon material-symbols-outlined">account_circle</span>기본 정보</div> 
+							<div class="btn-wrap">
+								<button type="button" class="btn-default">버튼</button>
+								<button type="button" class="btn-active">변경</button>
+							</div>
+						</div>
+						<table class="table-blue">
+							<tr>
+								<th>이름</th>
+								<td>${user.mbrNm}</td>
+								<th>이메일</th>
+								<td>${user.mbrEmlAddr}</td>
+							</tr>
+							<tr>
+								<th>생년월일 </th>
+								<td>${user.mbrBrdt}</td>
+								<th>핸드폰 번호</th>
+								<td>${user.mbrTelno}</td>
+							</tr>
+						</table>
+					</div>
+					<!-- table-wrap -->
+				</div>
+				<!-- /.cont: 해당 영역의 설명 -->
+					
+					
+					
+					
+					</div>
+					<div class="tab-pane fade" id="vert-tabs-home" role="tabpanel" aria-labelledby="vert-tabs-home-tab">
+					주문 내역 조회
+					</div>
+					<div class="tab-pane fade" id="vert-tabs-profile" role="tabpanel" aria-labelledby="vert-tabs-profile-tab">
+					보유 쿠폰 조회
+					</div>
+					<div class="tab-pane fade" id="vert-tabs-messages" role="tabpanel" aria-labelledby="vert-tabs-messages-tab">
+					문의 내역 조회
+					</div>
+					<div class="tab-pane fade" id="vert-tabs-settings" role="tabpanel" aria-labelledby="vert-tabs-settings-tab">
+					상담 내역조회
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<!-- ///// 메뉴 영역 시작 ///// -->
+
+<!-- 2. 최근 주문 내역 -->
+
+<!-- 3. aside 처리 : tiles 처리 -->
+<!-- ///// 마이페이지 영역 끝 ///// -->
+
+
+
+
+
+
+
+
+
+
+<!-- 
+1. 마이페이지에 오면 모달이 띄워져 있음
+
+2. 확인 버튼을 클릭
+ -->
+<!-- 비밀번호 확인 모달 -->
+<div class="modal fade" id="pswdCheck">
+	<div class="modal-dialog">
+		<div class="modal-content">
+
+			<!-- 						Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">비밀번호 확인</h4>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+
+			<!-- 						Modal body -->
+			<div class="modal-body">
+				<div class="form-group">
+					<label for="pswdInput">비밀번호를 입력하세요.</label> <input type="password"
+						class="text-input" id="pswdInput" name="pswdInput"
+						placeholder="비밀번호를 입력하세요." />
+				</div>
+			</div>
+
+			<!-- 						Modal footer -->
+			<div class="modal-footer">
+				<button type="button" id="ModalBtnCheck" class="btn-active">확인</button>
+			</div>
+
+		</div>
+	</div>
+	<!-- modal창 끝-->
+</div>
+

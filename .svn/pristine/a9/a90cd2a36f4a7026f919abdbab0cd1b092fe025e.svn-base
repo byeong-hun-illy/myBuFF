@@ -1,0 +1,16 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src='/resources/frcs/js/main.js'></script>
+<script>
+let bzentNo = '<c:out value="${user.bzentNo}"/>';
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+$(function(){
+	$('#ordr').on('click', function(){
+		updateOrdrAjax();
+	})
+})
+</script>
+<button type="button" class="btn btn-default" id="ordr">주문출고관리</button>

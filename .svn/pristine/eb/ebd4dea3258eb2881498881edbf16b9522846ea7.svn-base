@@ -1,0 +1,97 @@
+package com.buff.hdofc.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.hdofc.mapper.HdofcFrcsClsbizMapper;
+import com.buff.hdofc.service.HdofcFrcsClsbizService;
+import com.buff.vo.FrcsVO;
+
+@Service
+public class HdofcFrcsClsbizServiceImpl implements HdofcFrcsClsbizService{
+	
+	@Autowired
+	HdofcFrcsClsbizMapper clsbizMapper;
+	
+	/**
+	* @methodName  : selectFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param map   : 검색 조건 페이징
+	* @return      : 폐업 예정/완료된 가맹점 조회
+	*/
+	public List<FrcsVO> selectFrcsClsbiz(Map<String, Object> map){
+		return this.clsbizMapper.selectFrcsClsbiz(map);
+	};
+	
+	/**
+	* @methodName  : selectTotalFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param map   : 검색 조건
+	* @return      : 폐업 예정/완료된 가맹점 총 갯수
+	*/
+	public int selectTotalFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectTotalFrcsClsbiz(map);
+	};
+	
+	/////////////////       조회 구분을 위한 갯수                ////////////////
+	// 총 갯수
+	public int selectAllFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectAllFrcsClsbiz(map);
+	};
+	
+	// 폐업 예정 갯수(아직 폐업일이 지나지 않음)
+	public int selectPreFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectPreFrcsClsbiz(map);
+	};
+	
+	// 폐업 미정산 갯수
+	public int selectNoClnFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectNoClnFrcsClsbiz(map);
+	};
+	
+	// 폐업 정산 완료된 폐업 승인되지 않은 갯수
+	public int selectClnFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectClnFrcsClsbiz(map);
+	};
+	
+	// 폐업 정산 완료된 폐업 승인된 완전 폐업상태인 갯수
+	public int selectAprvFrcsClsbiz(Map<String, Object> map) {
+		return this.clsbizMapper.selectAprvFrcsClsbiz(map);
+	};
+	
+	/**
+	* @methodName  : selectFrcsClsbizDtl
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param frcsNo
+	* @return      : 폐업 상세
+	*/
+	public FrcsVO selectFrcsClsbizDtl(String frcsNo) {
+		return this.clsbizMapper.selectFrcsClsbizDtl(frcsNo);
+	};
+	
+	/**
+	* @methodName  : updateOneFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @return      : 단일 폐업
+	*/
+	public int updateOneFrcsClsbiz(String frcsNo) {
+		return this.clsbizMapper.updateOneFrcsClsbiz(frcsNo);
+	}
+	
+	/**
+	* @methodName  : updateFrcsType
+	* @author      : 송예진
+	* @date        : 2024.09.22
+	* @return      : 가맹점 상태 폐업 변경
+	*/
+	public int updateFrcsType(String frcsNo) {
+		return this.clsbizMapper.updateFrcsType(frcsNo);
+	};
+}

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsMenuSlsMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.12
+	@description  : 가맹점 판매메뉴 관리 sql
+-->
+
+	<resultMap type="menuVO" id="menuMap">
+		<result property="rnum" column="RNUM"/>
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		<result property="sumOrdrAmt" column="SUM_ORDR_AMT"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+
+	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+ 	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+        <result property="ordrNo" column="ORDR_NO"/>
+        <result property="frcsNo" column="FRCS_NO"/>
+        <result property="menuNo" column="MENU_NO"/>
+        <result property="ordrQty" column="ORDR_QTY"/>
+        <result property="ordrAmt" column="ORDR_AMT"/>
+        
+        <association property="ordrVO" resultMap="ordrMap"/>
+    </resultMap>
+	
+	<resultMap type="ordrVO" id="ordrMap">
+        <result property="rnum" column="RNUM"/>
+        <result property="month" column="MONTH"/>
+        <result property="ordrNo" column="ORDR_NO"/>
+        <result property="ordrDt" column="ORDR_DT"/>
+        <result property="ordrType" column="ORDR_TYPE"/>
+        <result property="spmtYn" column="SPMT_YN"/>
+        <result property="mbrId" column="MBR_ID"/>
+        <result property="issuSn" column="ISSU_SN"/>
+    </resultMap>
+	
+	<!-- 검색조건  -->
+	<sql id="menuSlsSearch">
+        <if test="menuType != null and menuType != ''">
+        	AND M.MENU_TYPE = #{menuType} 
+        </if>
+        <if test="menuNm != null and menuNm != ''">
+        	AND M.MENU_NM LIKE '%' || #{menuNm} || '%'
+        </if>
+    </sql>
+    
+    <!-- 매출 리스트 -->
+    <select id="selectFrcsMenuSlsList" parameterType="hashMap" resultMap="menuMap">
+	    SELECT M.MENU_NM		<!-- 메뉴 명 -->
+			 , M.MENU_IMG_PATH  <!-- 메뉴 이미지 -->
+			 , M.MENU_TYPE		<!-- 메뉴 유형 -->
+			 , SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT <!-- 주문 금액 합계 -->
+			 , ROW_NUMBER() OVER (ORDER BY SUM(OD.ORDR_QTY * OD.ORDR_AMT) DESC) AS RNUM <!-- 번호 -->
+	    FROM   MENU M
+	    INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+	    WHERE 1=1
+	    <include refid="menuSlsSearch"/>
+	    <!-- 날짜 조건 -->
+	    <if test="startYmd != null and startYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+            ]]>
+        </if>
+        <if test="endYmd != null and endYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT < TO_DATE(#{endYmd}, 'YYYY-MM-DD')
+            ]]>
+        </if>
+	    GROUP BY M.MENU_NO, M.MENU_NM, M.MENU_IMG_PATH, M.MENU_TYPE
+	</select>
+    
+    <!-- 전체  메뉴 갯수 -->
+    <select id="selectTotalFrcsMenuSlsList" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(DISTINCT M.MENU_NO) 
+	    FROM   MENU M
+	    INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+	    WHERE 1=1
+	</select>
+
+	<!-- 단품 메뉴 갯수 -->
+    <select id="selectTotalSingle" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(DISTINCT M.MENU_NO)
+	    FROM MENU M
+	    INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE M.MENU_TYPE = 'MENU02'
+	</select>
+	
+	<!-- 세트 메뉴 갯수 -->
+    <select id="selectTotalSet" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(DISTINCT M.MENU_NO) 
+	    FROM MENU M
+	    INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE M.MENU_TYPE = 'MENU01'
+	</select>
+	
+	<!-- 사이드 메뉴 갯수 -->
+    <select id="selectTotalSide" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(DISTINCT M.MENU_NO) 
+	    FROM MENU M
+		INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE M.MENU_TYPE = 'MENU03'
+	</select>
+	
+	<!-- 음료 메뉴 갯수 -->
+    <select id="selectTotalDrink" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(DISTINCT M.MENU_NO) 
+	    FROM MENU M
+	    INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+	    INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.FRCS_NO = (SELECT BZENT_NO FROM BZENT B WHERE MBR_ID = #{mbrId}) AND FM.MENU_NO = OD.MENU_NO)
+	    INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE M.MENU_TYPE = 'MENU04'
+	</select>
+	
+	<!-- 메뉴별 매출 비율 차트(전체) -->
+	<select id="selectFrcsMenuSlsListAjax" parameterType="hashMap" resultMap="menuMap">
+		SELECT M.MENU_TYPE
+		     , SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT
+		FROM   MENU M
+		INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE 1=1
+		AND   FM.FRCS_NO = #{bzentNo}
+	    <if test="startYmd != null and startYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+            ]]>
+        </if>
+        <if test="endYmd != null and endYmd != ''">
+            <![CDATA[
+                AND O.ORDR_DT < TO_DATE(#{endYmd}, 'YYYY-MM-DD')
+            ]]>
+        </if>
+        <if test="menuType != null and menuType != ''">
+        		AND M.MENU_TYPE = #{menuType} 
+        </if>        
+		GROUP BY M.MENU_TYPE
+		ORDER BY M.MENU_TYPE
+	</select>
+	
+	<!-- 메뉴별 매출 비율 차트(세트,단품,사이드,음료) -->
+	<select id="selectFrcsMenuTypeSlsListAjax" parameterType="hashMap" resultMap="menuMap">
+		SELECT M.MENU_TYPE
+		     , M.MENU_NM
+		     , SUM(OD.ORDR_QTY * OD.ORDR_AMT) AS SUM_ORDR_AMT
+		FROM   MENU M
+		INNER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO)
+		INNER JOIN ORDR_DTL OD ON (FM.FRCS_NO = OD.FRCS_NO AND FM.MENU_NO = OD.MENU_NO)
+		INNER JOIN ORDR O ON (OD.ORDR_NO = O.ORDR_NO)
+		WHERE 1=1
+		AND   FM.FRCS_NO = #{bzentNo} 
+		<if test="startYmd != null and startYmd != ''">
+	        <![CDATA[
+	            AND O.ORDR_DT >= TO_DATE(#{startYmd}, 'YYYY-MM-DD')
+	        ]]>
+    	</if>
+    	<if test="endYmd != null and endYmd != ''">
+	        <![CDATA[
+	            AND O.ORDR_DT < TO_DATE(#{endYmd}, 'YYYY-MM-DD')
+	        ]]>
+    	</if>
+    	<if test="menuType != null and menuType != ''">
+   			AND M.MENU_TYPE = #{menuType} 
+    	</if>
+		GROUP BY M.MENU_TYPE, M.MENU_NM
+	</select>
+	
+</mapper>

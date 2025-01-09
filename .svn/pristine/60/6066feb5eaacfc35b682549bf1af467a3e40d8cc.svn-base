@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustHomeMapper">
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 본사 메뉴 조회
+	 	-->
+	
+	<select id="selectMenu" parameterType="String" resultType="menuVO">
+		SELECT MENU_NM
+			 , MENU_IMG_PATH
+			 , MENU_AMT
+			 , MENU_EXPLN
+			 , RLS_YMD
+		  FROM MENU
+		  <if test="menuGubun != null and menuGubun != ''">
+	        WHERE MENU_TYPE = #{menuGubun}
+	      </if>
+	</select>
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객-가맹점 상담신청 
+		
+		FrcsDscsnVO(rnum=null, dscsnCode=null, mbrId=tieawu5d, mngrId=null
+		, dscsnPlanYmd=2024-09-25, rgnNo=RGN21, dscsnCn=null, dscsnType=null
+		, dscsnTypeNm=null, rgnNm=null, mngrVO=null, mbrVO=null)
+	 	-->
+	<insert id="insertDscsnPost" parameterType="String">
+		<selectKey resultType="String" order="BEFORE" keyProperty="dscsnCode">
+			SELECT 'DS' || (NVL(MAX(CAST(SUBSTR(DSCSN_CODE, 3) AS INTEGER)), 0) + 1) AS DSCSN_CODE
+   		   FROM FRCS_DSCSN
+		</selectKey>
+	
+		INSERT INTO FRCS_DSCSN(DSCSN_CODE
+							  ,MBR_ID
+							  ,DSCSN_PLAN_YMD
+							  ,RGN_NO)
+		VALUES(#{dscsnCode}
+			 , #{mbrId}
+			 , REPLACE(#{dscsnPlanYmd},'-','')
+			 , #{rgnNo})
+	
+	</insert>
+	
+	
+
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.21
+		@description  : 고객-가맹점 상담신청 _ 상담 중복체크 
+		
+		public int checkId(String mbrId); 
+		-->
+	<select id="checkId" parameterType="String" resultType="int">
+		SELECT COUNT(1)
+		  FROM FRCS_DSCSN
+		 WHERE MBR_ID= #{mbrId}
+		   AND DSCSN_TYPE IN ('DSC01')
+	</select>
+	
+
+	<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 고객- 이벤트 조회
+	 	-->
+	
+	<select id="selectEvent" resultType="eventVO">
+		SELECT  EVENT_NO
+			  , EVENT_TTL
+			  , EVENT_CN
+			  , BGNG_YMD
+			  , EXP_YMD 
+	      FROM EVENT
+	</select>
+
+
+
+
+</mapper>

@@ -1,0 +1,10 @@
+package com.buff.cust.service;
+
+import java.util.List;
+
+import com.buff.vo.FaqVO;
+
+public interface CustCenterService {
+	
+	public List<FaqVO> selectFaq();
+}

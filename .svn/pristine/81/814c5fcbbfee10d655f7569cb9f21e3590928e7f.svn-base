@@ -1,0 +1,50 @@
+package com.buff.hdofc.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.hdofc.mapper.HdofcAdjustmentMapper;
+import com.buff.hdofc.service.HdofcAdjustmentService;
+import com.buff.vo.PoVO;
+
+/**
+* @packageName  : com.buff.hdofc.service.impl
+* @fileName     : HdofcAdjustmentServiceImpl.java
+* @author       : 정현종
+* @date         : 2024.10.01
+* @description  : 본사 발주 정산 서비스 임플
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.10.01        정현종     	  			최초 생성
+*/
+@Service
+public class HdofcAdjustmentServiceImpl implements HdofcAdjustmentService {
+	
+	@Autowired
+	HdofcAdjustmentMapper hdofcAdjustmentMapper;
+	
+	@Override
+	public List<PoVO> selectHdofcSettleList(Map<String, Object> map) {
+		return this.hdofcAdjustmentMapper.selectHdofcSettleList(map);
+	}
+
+	@Override
+	public int selectHdofcTotalSettle(Map<String, Object> map) {
+		return this.hdofcAdjustmentMapper.selectHdofcTotalSettle(map);
+	}
+
+	@Override
+	public List<PoVO> selectHdofcgetPayList(Map<String, Object> map) {
+		return this.hdofcAdjustmentMapper.selectHdofcgetPayList(map);
+	}
+
+	@Override
+	public int selectHdofcTotalGetPay(Map<String, Object> map) {
+		return this.hdofcAdjustmentMapper.selectHdofcTotalGetPay(map);
+	}
+
+}

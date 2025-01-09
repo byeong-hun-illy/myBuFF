@@ -1,0 +1,123 @@
+@charset "UTF-8";
+
+/* table style */
+.table-wrap {
+	overflow-x: auto;
+}
+.table-default {
+	width: 100%; 
+	white-space: nowrap
+}
+.table-default tr {
+	border-top: 1px solid var(--border--secondary); 
+	border-bottom: 1px solid var(--border--secondary); 
+}
+.table-default th,
+.table-default td {
+	padding: 20px 10px;
+}
+.table-default th {
+	color: var(--text--secondary);
+}
+.table-default td {
+	color: var(--text--primary);
+}
+.table-default th.center,
+.table-default td.center {
+	text-align: center;
+}
+.table-default tbody tr:hover {
+	background-color: var(--blue--05);
+	cursor: pointer;
+}
+
+/* tap style */
+.tap-wrap {
+	display: flex;
+	gap: var(--gap--m);
+}
+.tap-btn-wrap {
+	display: flex;
+    justify-content: space-between;
+}
+.tap-cont {
+    padding-top: 5px;
+	padding-bottom: var(--pd--m);
+	cursor: pointer;
+}
+.tap-cont.active {
+	border-bottom: 1px solid var(--border--accent);
+}
+.tap-cont.active .tap-title {
+	color: var(--text--primary);
+	font-weight: 700;
+}
+.tap-title {
+	color: var(--text--secondary);
+	font-weight: 300;
+}
+
+/* pagination */
+.pagination-wrap {
+	text-align: center;
+	padding: var(--pd--m);
+}
+.pagination {
+  display: inline-block;
+}
+.pagination a {
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color .3s;
+  border-radius: var(--radius--s);
+}
+.pagination a.active {
+  background-color: var(--blue--5);
+  color: var(--gray--0);
+}
+.pagination a:hover:not(.active) {background-color: var(--blue--2);}
+.pagination .icon {
+	font-size:  18px;
+}
+
+/* ------------------------- 예진 수정 ------------------------------- */
+/* table-title */
+.table-title{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--gap--s);
+}
+/* table-blue 시작 */
+.table-blue {
+	border-top: 1px solid var(--blue--8);
+    width: -webkit-fill-available;
+}
+.table-blue tr {
+	border-bottom: 1px solid var(--gray--2);
+}
+.table-blue th, td {
+    padding: var(--pd--s) var(--pd--m);
+    vertical-align: middle;  
+}
+.table-blue th {
+	background-color: var(--blue--05);
+	width: 150px;
+	text-align: left;
+	font-weight: bold;
+	font-size: var(--primary--size);
+}
+.table-blue .text-input {
+	width: -webkit-fill-available;
+	border: 1px solid var(--gray--2);
+	border-radius: var(--radius--m);
+	padding: var(--pd--s);
+}
+.table-blue textarea {
+	width: -webkit-fill-available;
+    padding: 20px;
+	font-size: 16px;
+	border-radius: var(--radius--m);
+	border: 1px solid var(--gray--2);
+}

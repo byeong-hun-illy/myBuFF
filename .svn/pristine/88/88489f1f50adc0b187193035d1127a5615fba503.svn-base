@@ -1,0 +1,82 @@
+package com.buff.cnpt.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.cnpt.mapper.CnptGdsMapper;
+import com.buff.cnpt.service.CnptGdsService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.GdsVO;
+
+/**
+* @packageName  : com.buff.cnpt.service.impl
+* @fileName     : CnptGdsServiceImpl.java
+* @author       : 이병훈
+* @date         : 2024.09.23
+* @description  : 거래처 상품 재고 관련 서비스 Impl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.23        이병훈     	  			최초 생성
+*/
+@Service
+public class CnptGdsServiceImpl implements CnptGdsService {
+	
+	@Autowired
+	CnptGdsMapper cnptGdsMapper;
+	
+	
+	/**
+	* @methodName  : selectGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 거래처 상품 재고 현황
+	*/
+	@Override
+	public List<GdsVO> selectCnptGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectCnptGds(map);
+	}
+	
+	/**
+	* @methodName  : downloadExcel
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 서버 응답
+	* @return      : 엑셀 다운로드 
+	*/
+	@Override
+	public void downloadExcel(HttpServletResponse response) {
+		
+
+	}
+	/**
+	* @methodName  : selectTotalGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 검색조건 페이지 총 갯수
+	*/
+	@Override
+	public int selectTotalGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectTotalGds(map);
+	}
+
+	/**
+	* @methodName  : selectAllGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 전체 상품 수
+	*/
+	@Override
+	public int selectAllGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectAllGds(map);
+	}
+
+}

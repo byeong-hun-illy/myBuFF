@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsMenuMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.12
+	@description  : 가맹점 판매 메뉴 sql
+ -->
+
+ 	<resultMap type="menuVO" id="menuMap">
+ 		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+ 	</resultMap>
+ 	
+	<!--
+ 		@programName : 가맹점 판매 가능 메뉴 조회
+ 		@description : 가맹점 판매 가능 메뉴 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 13
+	-->
+	<select id="selectAllFrcsMenuList" parameterType="hashMap" resultMap="menuMap">    
+	    SELECT M.MENU_NO			<!-- 메뉴 번호 -->       
+		     , M.MENU_NM			<!-- 메뉴 이름 -->       
+		     , M.MENU_IMG_PATH		<!-- 메뉴 사진 경로 -->    
+		     , M.MENU_AMT			<!-- 메뉴 금액 -->       
+		     , M.MENU_EXPLN			<!-- 메뉴 설명 -->       
+		     , M.MENU_TYPE			<!-- 메뉴 유형 -->       
+		     , M.RLS_YMD			<!-- 출시 일자 -->       
+		     , M.REG_YMD			<!-- 등록 일자 -->       
+		     , M.NTSL_TYPE			<!-- 판매 유형 -->       
+		     , FM.FRCS_NO			<!-- 가맹점 번호 -->      
+		     , FM.NTSL_YN			<!-- 판매 여부 -->       
+		     , FM.MENU_REG_YMD		<!-- 가맹점 메뉴 등록 일자 -->
+		FROM   MENU M
+		LEFT OUTER JOIN FRCS_MENU FM ON (M.MENU_NO = FM.MENU_NO) 
+		WHERE (FM.FRCS_NO IS NULL OR (FM.NTSL_YN = 'N' AND FM.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})))
+		AND    M.NTSL_TYPE = 'NTSL02'  <!-- 본사 판매중 유형만 조회하기 -->
+		AND    M.MENU_TYPE != 'MENU01' <!-- 세트메뉴는 조회하지 않음 -->
+		
+		<if test="menuType != null and menuType != ''">
+			AND M.MENU_TYPE = #{menuType}
+		</if>
+		
+		<if test="keyword !=null and keyword != ''">
+			AND M.MENU_NM LIKE '%' || #{keyword} || '%'
+		</if>
+		
+		ORDER BY M.RLS_YMD DESC, M.MENU_NO ASC
+	</select>
+
+ 	<!--
+ 		@programName : 가맹점 판매 메뉴 조회
+ 		@description : 가맹점 판매 메뉴 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 12
+ 		
+ 		public List<MenuVO> selectAllFrcsMenuList(Map<String,Object> map);
+ 		
+ 		//map{"mbrId":"aw2l8b0g"}
+	-->
+	<select id="selectFrcsMenuList" parameterType="hashMap" resultMap="menuMap">    
+	    SELECT M.MENU_NO		<!-- 메뉴 번호 -->       	
+		     , M.MENU_NM		<!-- 메뉴 이름 -->       	
+		     , M.MENU_IMG_PATH	<!-- 메뉴 사진 경로 -->    	
+		     , M.MENU_AMT		<!-- 메뉴 금액 -->       	
+		     , M.MENU_EXPLN		<!-- 메뉴 설명 -->       	
+		     , M.MENU_TYPE		<!-- 메뉴 유형 -->       	
+		     , M.RLS_YMD		<!-- 출시 일자 -->       	
+		     , M.REG_YMD		<!-- 등록 일자 -->       	
+		     , M.NTSL_TYPE		<!-- 판매 유형 -->       	
+		     , FM.FRCS_NO		<!-- 가맹점 번호 -->      	
+		     , FM.NTSL_YN		<!-- 판매 여부 -->       	
+		     , FM.MENU_REG_YMD	<!-- 가맹점 메뉴 등록 일자 -->	
+		FROM   MENU M 
+		LEFT JOIN FRCS_MENU FM  ON (M.MENU_NO = FM.MENU_NO)
+		WHERE  FM.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		AND    M.MENU_TYPE != 'MENU01' <!-- 세트메뉴는 조회하지 않음 -->
+		AND    M.NTSL_TYPE = 'NTSL02' <!-- 본사 판매중 유형만 조회하기 -->
+		AND    FM.NTSL_YN = 'Y' <!-- 판매 : Y -->
+		
+		<if test="menuType != null and menuType != ''">
+			AND M.MENU_TYPE = #{menuType}
+		</if>
+		
+		<if test="keyword !=null and keyword != ''">
+			AND M.MENU_NM LIKE '%' || #{keyword} || '%'
+		</if>
+		
+		ORDER BY TO_DATE(M.RLS_YMD, 'YYYYMMDD') DESC, M.MENU_NO ASC
+	</select>
+	
+	<!--
+    @programName : 판매 메뉴 삭제
+    @description : 선택한 메뉴를 판매목록에서 삭제하는 쿼리 
+    @author      : 정현종
+    @date        : 2024. 09. 13
+	-->
+	<update id="stopFrcsMenu" parameterType="frcsMenuVO">
+	    UPDATE FRCS_MENU
+	    SET    NTSL_YN = 'N'
+	    WHERE  FRCS_NO = #{frcsNo}
+	    AND    MENU_NO = #{menuNo}
+	</update>
+	
+	<update id="setMenuRemove" parameterType="frcsMenuVO">
+        UPDATE FRCS_MENU
+        SET NTSL_YN = 'N'
+        WHERE MENU_NO IN (
+            SELECT S.SET_NO
+            FROM MENU_SET S
+            WHERE S.MENU_NO = #{menuNo}
+        )
+        AND FRCS_NO = #{frcsNo}
+	</update>
+
+	<!--
+    @programName : 판매 메뉴 추가
+    @description : 선택한 메뉴를 판매목록에 추가하는 쿼리
+    @author      : 정현종
+    @date        : 2024. 09. 13
+    
+    map{"bzentNo":"FR0303",
+    "rightMenuNos":[BG0001, BG0002, BG0003, BG0004, BG0005, BG0006, BG0007, BG0008, BG0009, BG0010, BG0011, BG0012, BG0013, DK0002, SD0001, SD0002, SD0003, SD0004, SD0005, SD0006, SD0007, SD0008, SD0009, SD0010, SD0011, SD0012, ST0001, ST0002, ST0003, ST0004, ST0005, ST0006, ST0007, ST0008, ST0009, ST0010, ST0011, ST0012, ST0013, DK0001, DK0003]
+	}
+	-->
+	<update id="sellFrcsMenu" parameterType="frcsMenuVO">
+        <!-- 첫 번째 MERGE: MENU_NO 업데이트 또는 삽입 -->
+        MERGE INTO FRCS_MENU M
+        USING (SELECT #{menuNo} AS MENU_NO, #{frcsNo} AS FRCS_NO FROM DUAL) S
+        ON (M.MENU_NO = S.MENU_NO AND M.FRCS_NO = S.FRCS_NO)
+        WHEN MATCHED THEN
+            UPDATE SET M.NTSL_YN = 'Y'
+            	, M.MENU_REG_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        WHEN NOT MATCHED THEN
+            INSERT (FRCS_NO, MENU_NO, NTSL_YN, MENU_REG_YMD)
+            VALUES (#{frcsNo}, #{menuNo}, 'Y', TO_CHAR(SYSDATE, 'YYYYMMDD'))
+	</update> 
+	
+	<update id="setMenuAdd" parameterType="frcsMenuVO">
+	         <!-- 두 번째 UPDATE: SET_NO 연관된 항목 업데이트 -->
+        UPDATE FRCS_MENU
+        SET NTSL_YN = 'Y'
+        	, MENU_REG_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        WHERE MENU_NO IN (
+            SELECT S.SET_NO
+            FROM MENU_SET S
+            WHERE S.MENU_NO = #{menuNo}
+        )
+        AND FRCS_NO = #{frcsNo}
+	</update>
+	
+	<select id="selectFrcsMenuCount" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(*)
+	    FROM FRCS_MENU
+	    WHERE FRCS_NO = #{bzentNo}
+	    AND MENU_NO IN (
+	        <foreach item="menuNo" collection="rightMenuNos" separator=",">
+	            #{menuNo}
+	        </foreach>
+	    )
+	</select>
+</mapper>

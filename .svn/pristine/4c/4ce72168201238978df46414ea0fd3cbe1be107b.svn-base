@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.09.22
+@description  : 거래처 상품 관련 sql
+ -->
+<mapper namespace="com.buff.cnpt.mapper.CnptGdsMapper">
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>	
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	 <resultMap type="stockAjmtVO" id="stockAjmtMap">
+    	<result property="ajmtNo" column="AJMT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="ajmtType" column="AJMT_TYPE"/>
+		<result property="qty" column="QTY"/>
+		<result property="ajmtYmd" column="AJMT_YMD"/>
+		<result property="ajmtRsn" column="AJMT_RSN"/>
+    </resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="ntslTypeNm" column="NTSL_TYPE_NM"/>
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap" />
+		<collection property="stockPoVOList" resultMap="stockPoMap" />
+		<collection property="stockAjmtVOList" resultMap="stockAjmtMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+	</resultMap>
+	
+	
+	<!--
+ 		@programName : 거래처 상품 조회
+ 		@description : 거래서 재고 현황 화면
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectCnptGds" parameterType="hashMap" resultMap="gdsMap">
+		SELECT * FROM(
+			    SELECT ROW_NUMBER() OVER (
+			    	<include refid="sort_gds"/> <include refid="orderby"/>	
+			    ) AS RNUM
+					, G.GDS_CODE
+				    , COALESCE(S.QTY,0) AS QTY
+				    , COALESCE(S.SF_STOCK_QTY,0) AS SF_STOCK_QTY
+				    , G.GDS_NM
+				    , G.GDS_TYPE
+				    , T.COM_NM AS GDS_TYPE_NM
+				    , G.UNIT_NM
+				    , A.AMT
+				    , G.REG_YMD
+				    , COALESCE(S.NTSL_TYPE,'GDNT01') AS NTSL_TYPE
+				    , COALESCE(N.COM_NM, '입고전') AS NTSL_TYPE_NM
+				FROM GDS G
+				INNER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE AND S.BZENT_NO=#{bzentNo}
+				JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+				LEFT OUTER JOIN COM_CODE N ON N.COM_NO = S.NTSL_TYPE
+				INNER JOIN (
+				    SELECT A1.GDS_CODE
+				            , A1.BZENT_NO
+				            , A1.AMT
+				            , A1.AMT_SEQ
+				    FROM GDS_AMT A1
+				    JOIN (
+				        SELECT GDS_CODE
+				                , BZENT_NO
+				                , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+				        FROM GDS_AMT
+				        GROUP BY GDS_CODE, BZENT_NO
+				    ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+				) A ON S.GDS_CODE = A.GDS_CODE AND S.BZENT_NO = A.BZENT_NO
+				WHERE 1=1
+			  <include refid="search"/>
+		 )
+		 WHERE RNUM BETWEEN ((#{currentPage, jdbcType=INTEGER} - 1) * #{size, jdbcType=INTEGER}) + 1 
+		 AND #{currentPage, jdbcType=INTEGER} * #{size, jdbcType=INTEGER}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_gds">
+		<!-- 수량 순 -->
+		<if test="sort == 'qty'">
+			ORDER BY S.QTY
+		</if>
+		<!-- 단가 순 -->
+		<if test="sort == 'amt'">
+			ORDER BY A.AMT
+		</if>
+		<!-- 단위 순 -->
+		<if test="sort == 'unitNm'">
+			ORDER BY G.UNIT_NM
+		</if>
+		<!-- 판매여부순 -->
+		<if test="sort == 'ntslYn'">
+			ORDER BY S.NTSL_YN
+		</if>
+		<!-- 유형순 -->
+		<if test="sort == 'gdsType'">
+			ORDER BY G.GDS_TYPE
+		</if>
+		<!-- 상품이름 순 -->
+		<if test="sort == 'gdsNm'">
+			ORDER BY G.GDS_NM
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="search">
+		<!-- 소유형 검색 -->
+	    <if test="gdsType != null and gdsType != ''">
+	        AND G.GDS_TYPE = #{gdsType}
+	    </if>
+		<!-- 상품이름 검색 -->
+		<if test="gdsNm != null and gdsNm != ''">
+			AND G.GDS_NM LIKE '%' || #{gdsNm} || '%'
+		</if>
+		<!-- 판매 여부 -->
+		<if test="ntslType != null and ntslType != ''">
+			<choose>
+				<when test="ntslType == 'GDNT01'">
+					AND S.NTSL_TYPE IS NULL
+				</when>
+				<otherwise>
+					AND S.NTSL_TYPE = #{ntslType}
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--
+ 		@programName : 검색 조건 상품 총 갯수 조회
+ 		@description : 검색조건에 따른 검색 페이지 총 갯수
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectTotalGds" resultType="int" parameterType="hashmap">
+		SELECT COUNT(1)
+		FROM GDS G
+		JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+			 JOIN GDS_AMT GA ON G.GDS_CODE = GA.GDS_CODE
+			                 AND S.BZENT_NO = GA.BZENT_NO
+		WHERE 1=1
+		  AND B.BZENT_NO=#{bzentNo}
+		<include refid="search"/>
+	</select>
+	
+	<!--
+ 		@programName : 총 상품 개수 전체
+ 		@description : 검색 조건 전체 상품 수
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectAllGds" resultType="int" parameterType="hashMap">
+		SELECT COUNT(DISTINCT G.GDS_CODE) AS CNT
+		FROM GDS G
+		JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+		JOIN GDS_AMT GA ON S.GDS_CODE = GA.GDS_CODE
+		WHERE B.BZENT_NO = #{bzentNo}
+		 <if test="gubun != null and gubun != ''">
+	        <choose>
+	            <when test="gubun == 'gdsNm'">
+	                AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+	            </when>
+	        </choose>
+	    </if>
+	</select>
+	
+	<!--
+ 		@programName : 재고 현황 엑셀 다운로드
+ 		@description : 해당 거래처의 보유재고 현황을 조회
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="selectExcel" resultMap="gdsMap" parameterType="hashMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY G.GDS_CODE) AS RNUM
+			 , G.GDS_CODE
+		     , G.GDS_NM
+		     , G.UNIT_NM
+		     , S.QTY
+		     , GA.AMT
+		     , GA.AJMT_DT
+		 FROM GDS G
+		 JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		 JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+		 JOIN GDS_AMT GA ON G.GDS_CODE = GA.GDS_CODE
+		                AND S.BZENT_NO = GA.BZENT_NO
+		WHERE B.BZENT_NO = #{bzentNo}                
+	</select>
+
+	<!--
+ 		@programName : 거래처 상품 단가 변동 추이 조회
+ 		@description : 6개월 간의 상품 단가 변동 추이 그래프 화면
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="selectAmtTrend" resultMap="gdsAmtMap" parameterType="hashMap">
+		SELECT GA.GDS_CODE
+		      , GA.BZENT_NO
+		      , GA.AMT
+		      , TO_CHAR(GA.AJMT_DT, 'YYYY-MM-DD') AS AJMT_DT
+		      , SP.QTY
+		      , SP.GDS_AMT
+		      , SP.SPMT_YMD
+		   FROM GDS_AMT GA
+		   LEFT JOIN STOCK_PO SP ON GA.GDS_CODE = SP.GDS_CODE
+		                    AND GA.BZENT_NO = SP.BZENT_NO
+		  WHERE GA.GDS_CODE = #{gdsCode}
+		    AND GA.BZENT_NO = #{bzentNo}
+		    AND GA.AJMT_DT >= ADD_MONTHS(SYSDATE, -6)
+		ORDER BY GA.AJMT_DT ASC
+	</select>
+	
+	<!--
+ 		@programName : 해당 거래처 재고 유무확인
+ 		@description : 거래처 재고 유무확인
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 26
+	-->
+	<select id="selectHasStock" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM STOCK
+		WHERE BZENT_NO = #{bzentNo}
+	</select> 
+	
+	<!--
+ 		@programName : 거래처 유형 가져오기
+ 		@description : 거래처 번호에 따른 거래처 유형 가져오기
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 26
+	-->
+	<select id="selectBzentType" resultType="String" parameterType="String">
+		SELECT BZENT_TYPE
+		  FROM BZENT
+		 WHERE BZENT_NO = #{bzentNo} 
+	</select>
+	
+	<!--
+ 		@programName : 상품 상세
+ 		@description : 상품 상세 페이지를 위한 SQL문
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 26
+	-->
+	<select id="selectGdsDtl" parameterType="stockVO" resultMap="gdsMap">
+		SELECT G.GDS_CODE
+				    , COALESCE(S.QTY,0) AS QTY
+				    , COALESCE(S.SF_STOCK_QTY,0) AS SF_STOCK_QTY
+				    , G.GDS_NM
+				    , G.GDS_TYPE
+				    , T.COM_NM AS GDS_TYPE_NM
+				    , G.UNIT_NM
+				    , A.AMT
+				    , G.REG_YMD
+				    , COALESCE(S.NTSL_TYPE,'GDNT01') AS NTSL_TYPE
+				    , COALESCE(N.COM_NM, '입고전') AS NTSL_TYPE_NM
+	                , A.AMT_SEQ
+	                , A.AJMT_DT
+	                , G.MBR_ID
+	                , M.MBR_NM
+	                , M.MBR_TYPE
+	                , M.MBR_TELNO
+	                , M.MBR_EML_ADDR
+	                , MT.COM_NM AS MBR_TYPE_NM
+			FROM GDS G
+			JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+			JOIN MEMBER M ON M.MBR_ID = G.MBR_ID
+			JOIN COM_CODE MT ON MT.COM_NO = M.MBR_TYPE
+			JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE AND S.BZENT_NO=#{bzentNo}
+			JOIN COM_CODE N ON N.COM_NO = S.NTSL_TYPE
+			JOIN GDS_AMT A ON S.GDS_CODE = A.GDS_CODE AND S.BZENT_NO = A.BZENT_NO
+			WHERE G.GDS_CODE=#{gdsCode}
+			ORDER BY A.AMT_SEQ ASC
+	</select>
+	
+	<!-- 상품을 지울 수 있는지 여부 확인 -->
+	<select id="selectUpdateChk" parameterType="stockVO" resultType="int">
+		SELECT COUNT(1)
+		FROM STOCK
+		WHERE GDS_CODE = #{gdsCode}
+	</select>
+	
+	<!-- 상품 추가 (재고 테이블) -->
+		<!--
+ 		@programName : 싱품 추가 프로그램
+ 		@description : 싱품 추가 (상품 테이블, 상품단가 테이블) com_mapper에 등록되어있음
+ 		@author      : 이병훈 
+ 		@date        : 2024. 09. 27
+	-->
+	<insert id="insertStock" parameterType="gdsAmtVO">
+		INSERT INTO STOCK(GDS_CODE, BZENT_NO)
+		VALUES(#{gdsCode, jdbcType=VARCHAR}, #{bzentNo})
+	</insert>
+	
+	<!-- 상품 수정 -->
+	<update id="updateGds" parameterType="gdsVO">
+		UPDATE GDS
+		SET GDS_NM = #{gdsNm}
+		  , GDS_TYPE = #{gdsType}
+		  , UNIT_NM = #{unitNm}
+		WHERE GDS_CODE = #{gdsCode}  
+	</update>
+	
+	<!-- 상품 단가 추가 -->
+	<insert id="insertGdsAmt" parameterType="gdsAmtVO">
+	    INSERT INTO GDS_AMT (GDS_CODE, BZENT_NO, AMT, AJMT_DT)
+	    VALUES (#{gdsCode}, #{bzentNo}, #{amt}, SYSDATE)
+	</insert>
+	
+	<!-- 상품 삭제 -->
+	<delete id="deleteGds" parameterType="hashMap">
+		DELETE
+		FROM GDS
+		WHERE GDS_CODE = #{gdsCode}
+		AND BZENT_NO = #{bzentNo}
+	</delete>
+	
+	<!-- 재고 테이블에서 상품 삭제 -->
+	<delete id="deleteStock" parameterType="hashMap">
+		DELETE
+		FROM STOCK
+		WHERE GDS_CODE =#{gdsCode}
+		AND BZENT_NO = #{bzentNo}	
+	</delete>
+	
+	<!-- GDS_AMT 테이블 삭제 -->
+	<delete id="deleteGdsAmt" parameterType="hashMap">
+	    DELETE 
+	    FROM GDS_AMT 
+	    WHERE GDS_CODE = #{gdsCode}
+	    AND BZENT_NO = #{bzentNo}
+	</delete>
+	
+	<delete id="deleteStockAjmt" parameterType="hashMap">
+		DELETE 
+	    FROM STOCK_AJMT
+	    WHERE GDS_CODE = #{gdsCode}
+	    AND BZENT_NO = #{bzentNo}
+	</delete>
+	
+	
+	<!-- 상품 판매타입 변경 -->
+	<update id="updateNtsl" parameterType="stockVO">
+		UPDATE STOCK
+		SET  NTSL_TYPE = #{ntslType}
+		WHERE GDS_CODE = #{gdsCode}
+		AND BZENT_NO = #{bzentNo}   
+	</update>
+	
+	<!-- 판매중 상품 총 갯수 -->
+	<select id="selectSellingCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(DISTINCT G.GDS_CODE) AS CNT
+		FROM GDS G
+		JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+		JOIN GDS_AMT GA ON S.GDS_CODE = GA.GDS_CODE
+		WHERE B.BZENT_NO = #{bzentNo}
+		AND NTSL_TYPE = 'GDNT03'
+	</select>
+	
+	<!-- 미판매중인 상품 총 갯수 -->
+	<select id="selectNotSellingCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(DISTINCT G.GDS_CODE) AS CNT
+		FROM GDS G
+		JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+		JOIN BZENT B ON S.BZENT_NO = B.BZENT_NO
+		JOIN GDS_AMT GA ON S.GDS_CODE = GA.GDS_CODE
+		WHERE B.BZENT_NO = #{bzentNo}
+		AND NTSL_TYPE = 'GDNT02'
+	</select>
+	
+</mapper>

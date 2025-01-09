@@ -1,0 +1,142 @@
+@charset "UTF-8";
+
+/* 기본 태그 초기화 */
+* {box-sizing: border-box;}
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font: inherit;
+	vertical-align: baseline;
+	color: var(--text--primary);
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+html {
+	font-size: 17px;
+}
+body {
+	font-family: var(--brand-font);
+	line-height: 1;
+}
+h1 {
+	font-size: var(--page--title--size) !important;
+	font-weight: var(--page--title--weight);
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+a {
+	text-decoration: none; 
+	outline: none;
+	color: var(--gray--9);
+}
+a:hover {
+	color: var(--green--5) !important;
+	font-weight: bold !important;
+}
+
+/* 인풋 디자인 */
+input {
+	border: 1px solid var(--gray--15);
+	height: webkit-fill-available;
+	padding: 10px 20px !important;
+	border-radius: 4px;
+	font-size: var(--primary--size);
+	background-color: var(--gray--0);
+	color: var(--text--primary);
+}
+input:disabled {
+	background-color: var(--gray--1);
+}
+input[type="date"] {
+	-webkit-user-select: none !important; 
+	-moz-user-select: -moz-none !important;
+	-ms-user-select: none !important;
+	user-select: none !important;
+}
+input:focus, select:focus {
+	outline: 1px solid var(--border--focus);
+}
+input[type='radio'] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  padding: 0 !important;
+}
+input[type='radio']:checked {
+  background-color: #4FD66E; 
+  border: 3px solid white;
+  box-shadow: 0 0 0 1.6px #4FD66E;
+}
+
+select {
+	color: var(--text--primary);	
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+textarea {
+	border: 1px solid var(--gray--15);
+    height: webkit-fill-available;
+    padding: 10px 20px !important;
+    border-radius: 4px;
+    font-size: var(--primary--size);
+    background-color: var(--gray--0);
+    color: var(--text--primary);
+    width: 100%;	
+    outline: none;
+}
+
+textarea:focus-visible {
+	border: 1px solid var(--green--5);
+}
+
+
+/* 부트스트랩 초기화 */
+.container-fluid {
+    padding-right: 0;
+    padding-left: 0;
+    margin: 0 auto;
+}
+.row {
+    -ms-flex-wrap: none !important;
+    flex-wrap: none !important;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+
+
+
+
+

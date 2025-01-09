@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.10.04
+@description  : 판매상품 관리 소모량 조회와 안전재고 설정
+ sql
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcStockAjmtMapper">
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		
+		<collection property="stockAjmtVOList" resultMap="stockAjmtMap" />
+	</resultMap>
+	
+	<resultMap type="stockAjmtVO" id="stockAjmtMap">
+		<result property="ajmtNo" column="AJMT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="ajmtType" column="AJMT_TYPE"/>
+		<result property="qty" column="QTY"/>
+		<result property="ajmtYmd" column="AJMT_YMD"/>
+		<result property="ajmtRsn" column="AJMT_RSN"/>
+	</resultMap>
+	
+	 <!--
+ 		@programName : 판매 상품 소모량 리스트 조회
+ 		@description : 판매 상품 소모량 리스트 조회
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 04
+	-->
+	<select id="selectStockAjmtList" parameterType="hashMap" resultMap="gdsMap">
+		WITH T AS ( 
+			SELECT ROW_NUMBER() OVER(ORDER BY SA.AJMT_YMD DESC) AS RNUM 
+			     , C.COM_NM AS GDS_TYPE_NM 
+			     , SA.AJMT_NO 
+			     , SA.GDS_CODE 
+			     , SA.QTY 
+			     , SA.AJMT_YMD
+			     , G.GDS_NM 
+			     , G.UNIT_NM 
+			     , G.GDS_TYPE 
+			     , S.SF_STOCK_QTY
+			     , SA.AJMT_TYPE 
+			FROM   GDS G 
+			INNER  JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE 
+			INNER  JOIN STOCK_AJMT SA ON S.GDS_CODE = SA.GDS_CODE AND S.BZENT_NO = SA.BZENT_NO 
+			LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = G.GDS_TYPE 
+			WHERE  SA.AJMT_TYPE = 'AJMT03' 
+			
+		)
+		SELECT T.*
+		FROM T
+		WHERE  T.RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+	</select>
+	
+	 <!--
+ 		@programName : 판매 상품 소모량 리스트 총 갯수
+ 		@description : 판매 상품 소모량 리스트 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 04
+	-->
+	<select id="stockAjmtTotalCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM   STOCK_AJMT 
+		WHERE  AJMT_TYPE = 'AJMT03'
+		
+	</select>
+	
+</mapper>

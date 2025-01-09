@@ -1,0 +1,52 @@
+package com.buff.cust.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.FaqVO;
+import com.buff.vo.NoticeVO;
+import com.buff.vo.QsVO;
+
+@Mapper
+public interface CustCenterMapper {
+	
+	/**
+	* @methodName  : selectFaq
+	* @author      : 서윤정
+	 * @param faqCategory 
+	* @date        : 2024.09.13
+	* @param FaqVO : faq가 담긴 객체
+	* @return : faqVO
+	*/
+
+	public List<FaqVO> selectFaq(String faqCategory);
+
+	
+	/**
+	* @methodName  : selectNotice
+	* @author      : 서윤정
+	 * @param noticeCategory 
+	* @date        : 2024.09.17
+	* @param NoticeVO : 공지사항이  담긴 객체
+	* @return : NoticeVO
+	*/
+	public List<NoticeVO> selectNotice(Map<String, Object> map);
+
+	
+	/**
+	* @methodName  : selectNoticeDetail;
+	* @author      : 서윤정
+	 * @param noticeCategory 
+	* @date        : 2024.09.17
+	* @param NoticeVO : 공지사항 상세가  담긴 객체
+	* @return : NoticeVO
+	*/
+	
+	public NoticeVO selectNoticeDetail(int ntcSeq);
+
+
+	public int insertQsPost(QsVO qsVO);
+	
+}

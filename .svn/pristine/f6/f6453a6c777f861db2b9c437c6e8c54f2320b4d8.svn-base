@@ -1,0 +1,61 @@
+@charset "UTF-8";
+
+.menu-wrap {
+	display: flex;
+	gap: var(--gap--s);
+}
+.menu-cont button {
+	height: -webkit-fill-available;
+}
+.menu-cont input {
+    width: 299px !important;
+}
+.menu-img {
+	height: 50px;
+}
+#menuNm {
+    display: flex;
+    align-items: center;
+    gap: var(--gap--s);
+}
+#menuAmt {
+    padding-right: 40px;
+}
+.event-menu-table tbody {
+  display: block;
+  max-height: 461px;
+  overflow-y: scroll;
+}
+.event-menu-table thead, 
+.event-menu-table tbody tr {
+  display: table;
+  width: 100%; 
+}
+.ck-editor__editable {
+  min-height: 15rem;
+}
+.modal-content {
+	width: 510px;
+} 
+.table-blue th {
+	width: 175px;
+}
+.file-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap--s);
+}
+.file-cont {
+	display: flex;
+    gap: var(--gap--s);
+}
+
+
+
+
+
+
+
+
+
+

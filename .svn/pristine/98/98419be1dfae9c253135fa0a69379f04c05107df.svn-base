@@ -1,0 +1,157 @@
+package com.buff.com.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.com.mapper.DealMapper;
+import com.buff.com.service.DealService;
+import com.buff.vo.PoVO;
+import com.buff.vo.StockPoVO;
+import com.buff.vo.StockVO;
+
+@Service
+public class DealServiceImpl implements DealService{
+	
+	@Autowired
+	DealMapper dealMapper;
+	
+	/**
+	* @methodName  : selectDeal
+	* @author      : 송예진
+	* @date        : 2024.09.26 
+	* @param map   : 필수 입력 정보 type(po || so), bzentNo, 검색 조건(sort,orderby, bzentNm, deliType, deliYmd(sdeYmd,edeYmd), spmtYmd(sregYmd,eregYmd)), 페이징
+	* @return      : 발주/납품 조회
+	*/
+	public List<PoVO> selectDeal(Map<String, Object> map){
+		return this.dealMapper.selectDeal(map);
+	};
+	
+	/**
+	* @methodName  : selectTotalDeal
+	* @author      : 송예진
+	* @date        : 2024.09.26
+	* @param map   : 필수 입력 정보 type(po || so), bzentNo, 검색 조건(sort,orderby, bzentNm, deliType, deliYmd(sdeYmd,edeYmd), spmtYmd(sregYmd,eregYmd))
+	* @return      : 발주/납품 조회 갯수
+	*/
+	public Map<String, Object> selectTotalDeal(Map<String, Object> map){
+		Map<String, Object> cnt = new HashMap<String, Object>();
+		cnt.put("total", this.dealMapper.selectTotalDeal(map));
+		
+		map.put("deliType", "DELI01");
+		cnt.put("deli01", this.dealMapper.selectTotalDeal(map));
+		map.put("deliType", "DELI02");
+		cnt.put("deli02", this.dealMapper.selectTotalDeal(map));
+		map.put("deliType", "DELI03");
+		cnt.put("deli03", this.dealMapper.selectTotalDeal(map));
+		map.put("deliType", "DELI04");
+		cnt.put("deli04", this.dealMapper.selectTotalDeal(map));
+		
+		map.remove("deliType");
+		cnt.put("all", this.dealMapper.selectTotalDeal(map));
+		
+		return cnt;
+	};
+	
+	/**
+	* @methodName  : selectDealDtl
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : 발주에 대한 상세 정보
+	*/
+	public PoVO selectDealDtl(String poNo) {
+		return this.dealMapper.selectDealDtl(poNo);
+	};
+	
+	
+	/**
+	* @methodName  : selectCnptGds
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param gdsCode
+	* @return      : 해당 상품을 판매중인 거래처 조회
+	*/
+	public List<StockVO> selectCnptGds(String gdsCode){
+		return this.dealMapper.selectCnptGds(gdsCode);
+	};
+	
+
+	/**
+	* @methodName  : insertDealAjax
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param bzentNoGroups
+	* @return     : 거래처별 리스트를 받아서 stockPOVO 를 반환
+	*/
+	public int insertDealAjax(Map<String, List<StockPoVO>> bzentNoGroups) {
+		List<StockPoVO> list = new ArrayList<StockPoVO>();
+		int cnt = 0;
+		// bzentNo 별로 발주 처리
+        for (String bzentNo : bzentNoGroups.keySet()) {
+        	PoVO poVo = new PoVO();
+        	poVo.setBzentNo("HO0001"); // 본사
+            // 발주번호(P240927001) 생성 (날짜 + 순번 형식)
+        	cnt += this.dealMapper.insertPo(poVo);
+            String poNo = poVo.getPoNo();
+
+            // 각 bzentNo 별로 StockPO 데이터 처리
+            for (StockPoVO stockPoVo : bzentNoGroups.get(bzentNo)) {
+            	stockPoVo.setPoNo(poNo); // 발주 번호 설정
+                cnt+=this.dealMapper.insertStockPo(stockPoVo); // 데이터베이스에 삽입
+            }
+        }
+        return cnt;
+	};
+	
+	/**
+	* @methodName  : insertPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poVo(bzentNo) : 발주 받는 사람의 사업체 번호(본사나 가맹점)
+	* @return
+	*/
+	public int insertPo(PoVO poVo) {
+		return this.dealMapper.insertPo(poVo);
+	};
+	
+	/**
+	* @methodName  : insertStockPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param stockPoVO : 발주 정보
+	* @return
+	*/
+	public int insertStockPo(StockPoVO stockPoVO) {
+		return this.dealMapper.insertStockPo(stockPoVO);
+	};
+	
+	
+	/**
+	* @methodName  : deleteStockPo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : STOCK_PO삭제 
+	*/
+	public int deleteStockPo(String poNo) {
+		return this.dealMapper.deleteStockPo(poNo);
+	};
+	
+	/**
+	* @methodName  : deletePo
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : PO삭제 (선행 STOCK_PO삭제필요) -deleteStockPo
+	*/
+	public int deletePo(String poNo) {
+		int cnt = this.deleteStockPo(poNo);
+		cnt+= this.dealMapper.deletePo(poNo);
+		return cnt;
+	};
+}

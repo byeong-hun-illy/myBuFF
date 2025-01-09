@@ -1,0 +1,209 @@
+<%--
+    @fileName    : selectFrcsMenuList.jsp
+    @programName : 가맹점 판매 메뉴 관리
+    @description : 가맹점 판매 메뉴 관리를 위한 페이지
+    @author      : 정현종
+    @date        : 2024. 09. 12
+--%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script>
+$(document).ready(function() {
+	// 메뉴 유형 선택 변경 시 필터링
+    $('#gubun').change(function() {
+        var selectedType = $(this).val();
+        $('.menu-row').hide(); // 모든 메뉴 행 숨기기
+        if (selectedType) {
+            $('.menu-row[data-type="' + selectedType + '"]').show(); // 선택된 유형만 표시
+        } else {
+            $('.menu-row').show(); // 선택된 유형이 없으면 모두 표시
+        }
+        updateCheckboxes(); // 체크박스 상태 업데이트
+    });
+	
+	// 검색 폼 제출 시 이벤트
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault(); // 기본 제출 방지
+        // AJAX 요청 등을 통해 검색 처리 후 결과 업데이트
+        var keyword = $('input[name="keyword"]').val();
+        $('.menu-row').each(function() {
+            var menuName = $(this).find('td:nth-child(3)').text(); // 메뉴 이름
+            if (menuName.includes(keyword)) {
+                $(this).show(); // 검색어가 포함된 경우 행 표시
+            } else {
+                $(this).hide(); // 검색어가 포함되지 않은 경우 행 숨김
+            }
+        });
+        updateCheckboxes(); // 체크박스 상태 업데이트
+    });
+
+    // 체크박스 전체 선택/해제 이벤트
+    $('#selectAllLeft').change(function() {
+        $('input[name="menuCheckboxLeft"]:visible').prop('checked', this.checked);
+    });
+
+    $('#selectAllRight').change(function() {
+        $('input[name="menuCheckboxRight"]:visible').prop('checked', this.checked);
+    });
+
+    // 메뉴 추가 및 단종 버튼 클릭 시 AJAX 요청
+    $('.btn-add').click(function() {
+        handleMenuAction('add');
+    });
+
+    $('.btn-remove').click(function() {
+        handleMenuAction('remove');
+    });
+
+    // 메뉴 추가/단종 처리 함수
+    function handleMenuAction(action) {
+        var selectedMenus = [];
+        var selectedMenuNames = []; // 추가할/단종할 메뉴 이름 저장 배열
+        var checkboxName = action === 'add' ? 'menuCheckboxLeft' : 'menuCheckboxRight';
+
+        // 체크된 메뉴 번호 수집
+        $('input[name="' + checkboxName + '"]:checked').each(function() {
+            selectedMenus.push($(this).val());
+            selectedMenuNames.push($(this).next('label').text()); // 메뉴 이름 수집
+        });
+
+        if (selectedMenus.length === 0) {
+            alert((action === 'add' ? '추가할' : '단종할') + ' 메뉴를 선택해주세요.'); 
+            return;
+        }
+
+        var confirmationMessage = (action === 'add' ? '메뉴를 추가하시겠습니까?' : '메뉴를 단종하시겠습니까?');
+        if (confirm(confirmationMessage)) {
+            $.ajax({
+                url: action === 'add' ? '/frcsMenu/insertFrcsMenuAjax' : '/frcsMenu/deleteFrcsMenuAjax',
+                contentType: 'application/json;charset=utf-8',
+                type: 'POST',
+                data: JSON.stringify(selectedMenus),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}"); 
+                },
+                success: function(response) {
+                    alert('메뉴가 ' + (action === 'add' ? '추가' : '단종') + '되었습니다.');
+                    location.reload(); // 페이지 새로 고침
+                },
+                error: function(xhr, status, error) {
+                    alert('메뉴 ' + (action === 'add' ? '추가' : '단종') + '에 실패했습니다: ' + xhr.responseText);
+                }
+            });
+        }
+    }
+
+    // 체크박스 상태 업데이트 함수
+    function updateCheckboxes() {
+        $('input[name="menuCheckboxLeft"]').prop('checked', false);
+        $('input[name="menuCheckboxRight"]').prop('checked', false);
+    }
+});
+</script>
+<div class="wrap">
+    <div class="cont">
+        <!-- 제목 및 버튼 -->
+        <div class="row" style="justify-content: space-between;">
+            <div class="cont-title">가맹점 판매 메뉴 관리</div> <!-- 페이지 제목 -->
+            <div class="button-container">
+                <button class="btn-add">추가</button> <!-- 추가 버튼 -->
+                <button class="btn-remove">단종</button> <!-- 단종 버튼 -->
+            </div>
+        </div>
+        
+        <!-- 검색 조건 시작 -->
+        <form id="searchForm">
+            <div class="search-wrap">
+                <div class="search-cont">
+                    <p>메뉴 유형</p> <!-- 메뉴 유형 선택 레이블 -->
+                    <select id="gubun" name="gubun" style="width: 200px;">
+                        <option value="" selected>선택하세요</option> <!-- 기본 선택 옵션 -->
+                        <option value="MENU02" <c:if test="${param.gubun=='MENU02'}">selected</c:if>>단품</option>
+                        <option value="MENU01" <c:if test="${param.gubun=='MENU01'}">selected</c:if>>세트</option>
+                        <option value="MENU04" <c:if test="${param.gubun=='MENU04'}">selected</c:if>>음료</option>
+                        <option value="MENU03" <c:if test="${param.gubun=='MENU03'}">selected</c:if>>사이드</option>
+                    </select>
+                </div>
+                <div class="search-cont">
+                    <p>메뉴 이름</p> <!-- 메뉴 이름 입력 레이블 -->
+                    <input type="text" name="keyword" placeholder="메뉴 이름을 입력해주세요" class="search-input" value="${param.keyword}"/> 
+                    <button type="submit" class="search-btn"></button> <!-- 검색 버튼 -->
+                </div>
+            </div>
+        </form>
+        <!-- 검색 조건 끝 -->
+        
+        <!-- 테이블 디자인 -->
+        <div class="table-container" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="table-wrap">
+                <h3>판매 가능한 메뉴</h3> <!-- 판매 가능한 메뉴 제목 -->
+                <table class="table-default">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllLeft" /></th> <!-- 왼쪽 테이블 전체 선택 체크박스 -->
+                            <th>메뉴 사진</th> <!-- 메뉴 사진 열 제목 -->
+                            <th>메뉴 이름</th> <!-- 메뉴 이름 열 제목 -->
+                            <th>메뉴 설명</th> <!-- 메뉴 설명 열 제목 -->
+                            <th>메뉴 가격</th> <!-- 메뉴 가격 열 제목 -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="MenuVO" items="${menuVOList}"> <!-- 메뉴 리스트 반복 -->
+                            <c:if test="${fn:contains(MenuVO.menuNm, param.keyword)}"> <!-- 검색어 필터링 -->
+                                <tr class="menu-row" data-type="${MenuVO.menuType}"> <!-- 메뉴 행 -->
+                                    <td>
+                                        <input type="checkbox" name="menuCheckboxLeft" value="${MenuVO.menuNo}" id="menu-${MenuVO.menuNo}" /> <!-- 체크박스 추가 -->
+                                    </td>
+                                    <td>
+                                        <img src="${MenuVO.menuImgPath}" alt="${MenuVO.menuNm}" style="width: 50px; height: 50px;"/> <!-- 메뉴 이미지 -->
+                                    </td> 
+                                    <td>${MenuVO.menuNm}</td> <!-- 메뉴 이름 표시 -->
+                                    <td>${MenuVO.menuExpln}</td> <!-- 메뉴 설명 표시 -->
+                                    <td>
+		                                <fmt:formatNumber value="${MenuVO.menuAmt}" pattern="#,###"/> <!-- 메뉴 가격 표시 -->
+		                            </td>
+                                </tr>
+                            </c:if>
+                        </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-wrap">
+                <h3>가맹점에서 판매할 메뉴</h3> <!-- 가맹점에서 판매할 메뉴 제목 -->
+                <table class="table-default">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllRight" /></th> <!-- 오른쪽 테이블 전체 선택 체크박스 -->
+                            <th>메뉴 사진</th> <!-- 메뉴 사진 열 제목 -->
+                            <th>메뉴 이름</th> <!-- 메뉴 이름 열 제목 -->
+                            <th>메뉴 가격</th> <!-- 메뉴 가격 열 제목 -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="frcsMenuVO" items="${frcsMenuVOList}"> <!-- 가맹점 메뉴 리스트 반복 -->
+                            <c:if test="${fn:contains(frcsMenuVO.menuNm, param.keyword)}"> <!-- 검색어 필터링 -->
+                                <tr class="menu-row" data-type="${frcsMenuVO.menuType}"> <!-- 메뉴 행 -->
+                                    <td>
+                                        <input type="checkbox" name="menuCheckboxRight" value="${frcsMenuVO.menuNo}" id="frcsMenu-${frcsMenuVO.menuNo}" /> <!-- 체크박스 추가 -->
+                                        <label for="frcsMenu-${frcsMenuVO.menuNo}">
+                                            <img src="${frcsMenuVO.menuImgPath}" alt="${frcsMenuVO.menuNm}" style="width: 50px; height: 50px;"/> <!-- 메뉴 이미지 -->
+                                        </label>
+                                    </td>
+                                    <td>${frcsMenuVO.menuNm}</td> <!-- 메뉴 이름 표시 -->
+                                    <td>
+		                                <fmt:formatNumber value="${frcsMenuVO.menuAmt}" pattern="#,###"/> <!-- 메뉴 가격 표시 -->
+		                            </td>
+                                </tr>
+                            </c:if>
+                        </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- table-container 끝 -->
+    </div>
+    <!-- cont 끝 -->
+</div>

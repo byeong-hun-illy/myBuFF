@@ -1,0 +1,21 @@
+package com.buff.cust.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.FaqVO;
+import com.buff.vo.NoticeVO;
+import com.buff.vo.QsVO;
+
+public interface CustCenterService {
+	
+	public List<FaqVO> selectFaq(String faqCategory);
+
+	public List<NoticeVO> selectNotice(Map<String, Object> map);
+
+	public NoticeVO selectNoticeDetail(int ntcSeq);
+
+	public int insertQsPost(QsVO qsVO);
+
+
+}

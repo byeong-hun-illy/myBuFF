@@ -1,0 +1,82 @@
+package com.buff.hdofc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.buff.vo.FrcsVO;
+
+/**
+* @packageName  : com.buff.hdofc.mapper
+* @fileName     : HdofcFrcsClsbizMapper.java
+* @author       : 송예진
+* @date         : 2024.09.21
+* @description  : 본사가 다루는 가맹점 폐업 관리 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.21        송예진     	  			최초 생성
+*/
+@Mapper
+public interface HdofcFrcsClsbizMapper {
+	
+	/**
+	* @methodName  : selectFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param map   : 검색 조건 페이징
+	* @return      : 폐업 예정/완료된 가맹점 조회
+	*/
+	public List<FrcsVO> selectFrcsClsbiz(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectTotalFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param map   : 검색 조건
+	* @return      : 폐업 예정/완료된 가맹점 총 갯수
+	*/
+	public int selectTotalFrcsClsbiz(Map<String, Object> map);
+	
+	/////////////////       조회 구분을 위한 갯수                ////////////////
+	// 총 갯수
+	public int selectAllFrcsClsbiz(Map<String, Object> map);
+	
+	// 폐업 예정 갯수(아직 폐업일이 지나지 않음)
+	public int selectPreFrcsClsbiz(Map<String, Object> map);
+	
+	// 폐업 미정산 갯수
+	public int selectNoClnFrcsClsbiz(Map<String, Object> map);
+	
+	// 폐업 정산 완료된 폐업 승인되지 않은 갯수
+	public int selectClnFrcsClsbiz(Map<String, Object> map);
+	
+	// 폐업 정산 완료된 폐업 승인된 완전 폐업상태인 갯수
+	public int selectAprvFrcsClsbiz(Map<String, Object> map);
+	
+	/**
+	* @methodName  : selectFrcsClsbizDtl
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @param frcsNo
+	* @return      : 폐업 상세
+	*/
+	public FrcsVO selectFrcsClsbizDtl(String frcsNo);
+	
+	/**
+	* @methodName  : updateAllFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @return      : 일괄 폐업
+	*/
+	public int updateAllFrcsClsbizD();
+	
+	/**
+	* @methodName  : updateOneFrcsClsbiz
+	* @author      : 송예진
+	* @date        : 2024.09.21
+	* @return      : 단일 폐업
+	*/
+	public int updateOneFrcsClsbiz(String frcsNo);
+}

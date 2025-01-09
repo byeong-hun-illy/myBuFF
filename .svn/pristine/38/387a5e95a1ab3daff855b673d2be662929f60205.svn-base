@@ -1,0 +1,27 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+/**
+* @packageName  : com.buff.vo
+* @fileName     : PoVO.java
+* @author       : 김현빈
+* @date         : 2024.09.13
+* @description  : 발주, 배송상태, 발주 승인여부 등을 포함
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12        송예진     	  			최초 생성
+*/
+
+@Data
+public class PoVO {
+	private String poNo;
+	private String bzentNo;
+	private String deliYmt;
+	private String deliType;
+	private String aprvYn;
+	
+	// 공통코드 조인
+	private String deliTypeNm;
+}

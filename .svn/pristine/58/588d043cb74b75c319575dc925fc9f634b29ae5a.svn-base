@@ -1,0 +1,544 @@
+<%--
+    @fileName    : insertOrdr.jsp
+    @programName : 고객 주문 화면
+    @description : 고객이 가맹지점에 주문하는 화면, 가맹지점, 메뉴 구부을 선택후 메뉴담기가 가능함.
+    @author      : 서윤정
+    @date        : 2024. 09. 11
+--%>
+
+<%@page import="java.util.Date"%>
+<%@page import="java.util.Calendar"%>
+<%@page import="java.text.SimpleDateFormat"%>
+<%@ page language="java" contentType="text/html;charset=UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="tiles" uri="http://tiles.apache.org/tags-tiles" %>
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+
+
+
+<sec:authorize access="isAuthenticated()">
+   <sec:authentication property="principal.memberVO" var="user" />
+</sec:authorize>
+
+<link href="/resources/cust/css/insertOrder.css" rel="stylesheet">
+<script src="/resources/cust/js/insertOrder.js" type="text/javascript"></script>
+<script type="text/javascript" src="/resources/js/jquery.min.js"></script>
+
+
+<style>
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-menuGubun-container"] { 
+   width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-menuGubun-container"] .select2-dropdown {
+   width: 198px !important;
+}
+</style>
+
+
+<%! 
+    public boolean isNewMenu(String regDate) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        try {
+            Date registrationDate = sdf.parse(regDate);
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DAY_OF_MONTH, -30); // 현재 날짜에서 30일 전으로 설정
+            Date thirtyDaysAgo = cal.getTime();
+            return registrationDate.after(thirtyDaysAgo); // 등록일이 30일 이내인지 확인
+        } catch (Exception e) {
+            return false; // 오류 발생 시 false 리턴
+        }
+    }
+%>
+
+
+<script type="text/javascript">
+<%--
+@fileName    : insertOrdr.jsp
+@programName : 고객 주문 화면
+@description : 가맹점 선택 후, 메뉴 주문
+@author      : 서윤정
+@date        : 2024. 10. 05
+--%>
+
+let mbrId = "${user.mbrId}";
+let bzentNo = null;
+let menuNo = null;
+let menuGubun = ''; 
+let price = null;
+
+$(function(){
+   
+   // 지역 선택 후, 가맹 지점 선택
+   $("#rgnNo").on("change",function(){
+           let rgnNo = $(this).val();
+           console.log("rgnNo : ", rgnNo);
+        
+           
+            $.ajax({
+               url:"/cust/selectFrcsAjax",
+               data:{"rgnNo":rgnNo},
+               type:"post",
+               dataType:"json",
+               beforeSend:function(xhr){
+            xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}");
+         },
+               success:function(result){
+                  console.log("result : ", result);
+                  
+                  let str = "";
+                  
+                  $("#frcsNo").html("");
+                  
+                str = "<option value='' selected>가맹점과 메뉴를 선택해주세요</option>";
+                  
+                $.each(result.bzentVOList,function(idx,bzentVO){
+               
+               str += "<option value='" + bzentVO.bzentNo +"'>" +bzentVO.bzentNm+ "</option>";
+               
+                });
+                  
+               $("#frcsNo").html(str);
+               }
+            });
+        });//end 달러샵 rgnNo
+      
+            
+            
+   // 가맹점 선택 시 해당 가맹점의 메뉴 나옴
+   $(document).on("change", "#frcsNo", function() {
+       bzentNo = $(this).val(); 
+       console.log("bzentNo : " + bzentNo);
+       let menuGubun = $("#menuGubun").val() || '';
+      console.log("menuGubun : " +menuGubun);
+       $.ajax({
+           url: "/cust/selectOrdrMenuAjax",  
+           type: "POST", 
+           data: { "bzentNo": bzentNo, "menuGubun": menuGubun },
+           dataType: "json",  
+           beforeSend: function(xhr) {
+               xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");  
+           },
+           success: function(result) {
+               console.log("result : ", result);
+               
+               $(".frcs-none").html("");
+               let str = "";
+               $.each(result.menuVOList, function(idx, menuVO) {
+                   str += "<li>";  
+                   str += "<div class='img-box'>";
+                   str += "<span style='background-image: url(" + menuVO.menuImgPath + ")'></span>";
+                   str += "</div>";  // 이미지 영역 종료
+                   
+                   str += "<div class='list-txt'>" + menuVO.menuNm + "</div>";  // 메뉴 이름
+                   str += "<div class='list-price'><p>" + new Intl.NumberFormat().format(menuVO.menuAmt) + "<em>원</em></p></div>";  // 가격
+                   
+//                    str += "<div class='preservation'>";
+//                    str += "<div class='list-input'>";
+//                    str += "<div class='cart-qty'>";
+//                    str += "<input type='button' value='-' class='minus-qty'>";
+//                    str += "<input type='text' value='1' class='num'>";
+//                    str += "<input type='button' value='+' class='plus-qty'>";
+//                    str += "</div>";  // 수량 조정 영역
+                   
+//                    str += "<button type='button' class='menu-add'>담기</button>";  // 메뉴 담기 버튼
+//                    str += "</div>";  // list-input
+//                    str += "</div>";  // preservation 
+                   
+                   str += "</li>";  
+               });
+               
+               $(".list-box").html(str);
+               console.log($(".list-box").html());
+           },
+           error: function(xhr, status, error) {
+               console.error("AJAX 에러: ", status, error);
+           }
+       });
+   }); // end bz 가맹점 메뉴
+
+   // 메뉴 구분 클릭시, 선택된 구분의 메뉴만 나옴
+   $("#menuGubun").on("change",function(){
+        bzentNo = $("#frcsNo").val();
+        console.log("bzentNo : " + bzentNo);
+        menuGubun =  $(this).val(); 
+      console.log("menuGubun : " +menuGubun);
+       $.ajax({
+           url: "/cust/selectOrdrMenuAjax",  
+           type: "POST", 
+           data: { "bzentNo": bzentNo, "menuGubun": menuGubun },
+           dataType: "json",  
+           beforeSend: function(xhr) {
+               xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");  
+           },
+           success: function(result) {
+               console.log("result : ", result);
+             
+               let str = "";
+               $.each(result.menuVOList, function(idx, menuVO) {
+                   str += "<li>";  
+                   str += "<div class='img-box'>";
+                   str += "<span style='background-image: url(" + menuVO.menuImgPath + ")'></span>";
+                   str += "</div>";  // 이미지 영역 종료
+                   
+                   str += "<div class='list-menuNo' style='display: none'>" + menuVO.menuNo + "</div>";  // 메뉴 번호
+                   str += "<div class='list-menuNm'>" + menuVO.menuNm + "</div>";  // 메뉴 이름
+                   str += "<div class='list-price'><p>" + menuVO.menuAmt + "<em>원</em></p></div>";  // 가격
+                   
+                   str += "<div class='preservation'>";
+                   str += "<div class='list-input'>";
+                   str += "<div class='cart-qty'>";
+                   str += "<input type='button' value='-' class='minus-qty'>";
+                   str += "<input type='text' value='1' class='num'>";
+                   str += "<input type='button' value='+' class='plus-qty'>";
+                   str += "</div>";  // 수량 끝
+                   
+                   str += "<button type='button' class='menu-add'>담기</button>";  // 메뉴 담기 버튼
+                   str += "</div>";  // list-input 끝
+                   str += "</div>";  // preservation 끝
+                   
+                   str += "</li>"; 
+               });
+               
+               $(".list-box").html(str);
+               console.log($(".list-box").html());
+           },
+           error: function(xhr, status, error) {
+               console.error("AJAX 에러: ", status, error);
+           }
+       });
+      
+   }); // end bz 가맹점 메뉴, 메뉴 구분 끝
+   
+   
+   
+   // 버튼  + 수량 
+   $(document).on('click', '.plus-qty', function() {
+      // 현재 클릭한 버튼의 부모 .cart-qty 찾기 
+       let form = $(this).closest('.cart-qty');
+       
+       // 부모에 속한 .num 가져오기
+       let num = form.find('.num');
+       
+       // input[type=text]으로 작성된 .num의 value를 숫자로 형변환
+       let qty = parseInt(num.val());
+       
+       // 숫자인지 검사하기
+       if (!isNaN(qty)) {
+           num.val(qty + 1);
+       }
+   });
+
+   // 버튼 - 수량
+   $(document).on('click', '.minus-qty', function() {
+       // 현재 클릭한 버튼의 부모 .cart-qty 찾기 
+       let form = $(this).closest('.cart-qty');
+       
+       // 부모에 속한 .num 가져오기
+       let num = form.find('.num');
+       
+       // input[type=text]으로 작성된 .num의 value를 숫자로 형변환
+       let qty = parseInt(num.val());
+       
+       // 숫자인지 검사하기
+       if (!isNaN(qty)) {
+           if (qty <= 0) {
+               num.val(0);
+           } else {
+               num.val(qty - 1);
+           }
+       }
+   });
+   
+   // 장바구니 메뉴 담기 
+   $(document).on("click", ".menu-add", function() {
+       console.log("메뉴 담기 클릭!");
+       let $li = $(this).closest("li");
+
+       // 메뉴 이미지, 이름, 가격, 수량 저장하기 
+       let menuImg = $li.find(".img-box span").css("background-image").replace(/url\(["']?/, '').replace(/["']?\)/, '');
+       let menuNm = $li.find(".list-menuNm").text().trim();
+       let menuAmt = parseInt($li.find(".list-price p").text().trim().replace(/,/g, '').replace('원', '')); // 가격을 숫자로 바꿈
+       let num = parseInt($li.find(".list-input .num").val().trim()) || 1; // 기본값이 1로 함
+       menuNo = $li.find(".list-menuNo").text().trim(); 
+       price = menuAmt * Math.max(num, 1);
+       
+       
+       // 장바구니에서 기존 메뉴 검사
+       let cartMenu = $(".cart-wrap.menu-list").find("li").filter(function() {
+           return $(this).data("menu-no") === menuNo;
+       });
+
+       // 기존 메뉴가 있을 경우, 수량만 업데이트
+       if (cartMenu.length > 0) {
+           let currentQtyInput = cartMenu.find(".num");
+           let currentQty = parseInt(currentQtyInput.val()) || 0; // 현재 수량 가져오기
+           currentQtyInput.val(currentQty + num); // 새로운 수량으로 업데이트
+       } else {
+           $(".menu-none").html("");
+           
+           // 새로운 메뉴 추가하는 로직
+           let newRow = "<li class='cart-cont' data-menu-no='" + menuNo + "'>";
+           newRow += "<div class='menu-info'>";
+           newRow += "<div class=''>";
+           newRow += "<input type='checkbox' class='check-btn' id='menuChk_" + menuNm + "' name='menuChk'>";   
+           newRow += "<label for='menuChk_" + menuNm + "'></label>";
+           newRow += "</div>";
+           newRow += "<img class='menu-img' alt='" + menuNm + "' src='" + menuImg + "' style='width: 136.84px; height: 100px;'>";
+           newRow += "<p>" + menuNm + "</p>";
+           newRow += "</div>";
+           newRow += "<div class='menu-price list-input'>";
+           newRow += "<div class='cart-qty'>";
+           newRow += "<input type='button' value='-' class='minus-qty'>";
+           newRow += "<input type='text' value='" + num + "' class='num'>"; // 수량을 최소 1로 설정
+           newRow += "<input type='button' value='+' class='plus-qty'>";
+           newRow += "</div>";
+           newRow += "<div class='menu-price'>" + price+ "원</div>"; // 총 가격 계산
+           newRow += "<div class='menu-delete'>";
+           newRow += "<span class='material-symbols-outlined' id='menuDelete'>close</span>";
+           newRow += "</div>";
+           newRow += "</div>";
+           newRow += "</li>";
+
+           // 장바구니에 추가하기
+           $("ul.cart-wrap.menu-list").append(newRow);
+       }
+
+       // 수량 초기화
+       $li.find(".list-input .num").val(1); // 최소 1로 초기화
+   });
+
+
+   // 전체 선택 버튼 눌렀을 때, 모든 체크 박스 체크 표시
+   $("#allChk").on("click", function() {
+       let isChecked = $(this).hasClass("checked");
+       $(this).toggleClass("checked"); 
+
+       $(".check-btn").prop("checked", !isChecked);
+   });
+
+   // 장바구니에서 선택된 메뉴 삭제
+   $("#cartDelete").on("click", function() {
+       $(".menu-list li").each(function() {
+           let isChecked = $(this).find(".check-btn").is(":checked");
+           if (isChecked) {
+               $(this).remove(); // 선택된 메뉴 삭제
+           }
+       });
+       // 장바구니에 모든 메뉴가 삭제 됏을 때, 선택한 메뉴 없음 뜨기
+       if ($(".menu-list li").length === 0) {
+           $(".menu-none").html(`
+               <div class="cart-wrap">
+                   <div class="error-info">
+                       <span class="icon material-symbols-outlined">error</span>
+                       <div class="error-msg">선택한 메뉴가 없습니다</div>
+                   </div>
+               </div>
+           `);
+       }
+   });
+   
+
+
+});//end 달러function
+
+
+
+</script>
+
+
+<div class="wrap order-wrap">
+   
+   <!-- 공통 컨테이너 영역 -->   
+   <div class="wrap-cont">
+   
+      <!-- 공통 타이틀 영역 -->
+      <div class="wrap-title">주문하기</div>
+      <!-- /.wrap-title -->
+      
+      <!-- 탭 영역 -->
+      <div class="order-tap">
+         <div class="tap-select tap-frcs active">가맹점 선택</div>
+         <div class="tap-select tap-cart">장바구니 (0)</div>
+      </div>
+      <!-- /.tap-wrap -->
+      
+      <!-- 주문 상세 영역 -->
+      <div class="dtl-wrap">
+         
+         <!-- 주문 상세 오른쪽 영역 -->
+         <div class="dtl-cont left">
+            
+            <!-- 가맹점 선택 영역 -->
+            <div class="dtl-inner frcs">
+            
+               <!-- 셀렉트 영역 -->
+               <div class="select-wrap">
+                  <!-- 지역 선택 셀렉트 영역 -->
+                  <select name="rgnNo" id="rgnNo" class="select2-custom">
+                     <option value="" selected>지역을 선택해주세요</option>
+                     <option value="RGN11"<c:if test="${param.rgnNo == 'RGN11'}">selected</c:if>>서울특별시</option>
+                     <option value="RGN21"<c:if test="${param.rgnNo == 'RGN21'}">selected</c:if>>부산광역시</option>
+                     <option value="RGN22"<c:if test="${param.rgnNo == 'RGN22'}">selected</c:if>>대구광역시</option>
+                     <option value="RGN23"<c:if test="${param.rgnNo == 'RGN23'}">selected</c:if>>인천광역시</option>
+                     <option value="RGN24"<c:if test="${param.rgnNo == 'RGN24'}">selected</c:if>>광주광역시</option>
+                     <option value="RGN25"<c:if test="${param.rgnNo == 'RGN25'}">selected</c:if>>대전광역시</option>
+                     <option value="RGN26"<c:if test="${param.rgnNo == 'RGN26'}">selected</c:if>>울산광역시</option>
+                     <option value="RGN29"<c:if test="${param.rgnNo == 'RGN29'}">selected</c:if>>세종특별자치시</option>
+                     <option value="RGN31"<c:if test="${param.rgnNo == 'RGN31'}">selected</c:if>>경기도</option>
+                     <option value="RGN32"<c:if test="${param.rgnNo == 'RGN32'}">selected</c:if>>강원도</option>
+                     <option value="RGN33"<c:if test="${param.rgnNo == 'RGN33'}">selected</c:if>>충청북도</option>
+                     <option value="RGN34"<c:if test="${param.rgnNo == 'RGN34'}">selected</c:if>>충청남도</option>
+                     <option value="RGN35"<c:if test="${param.rgnNo == 'RGN35'}">selected</c:if>>전라북도</option>
+                     <option value="RGN36"<c:if test="${param.rgnNo == 'RGN36'}">selected</c:if>>전라남도</option>
+                     <option value="RGN37"<c:if test="${param.rgnNo == 'RGN37'}">selected</c:if>>경상북도</option>
+                     <option value="RGN38"<c:if test="${param.rgnNo == 'RGN38'}">selected</c:if>>경상남도</option>
+                     <option value="RGN39"<c:if test="${param.rgnNo == 'RGN39'}">selected</c:if>>제주특별자치도</option>
+                  </select>
+                     
+                  <!-- 가맹점 셀렉트 영역 -->
+                   <select class="select2-custom" name="frcsNo" id="frcsNo">
+                        <option value="">가맹점을 선택해주세요</option>
+                     <!-- ajax() 출력 영역 --> 
+                        <c:forEach var="bzentVO" items="${bzentVOList}">
+                             <option value="${bzentVO.rgnNo}" <c:if test="${param.rgnNo == bzentVO.rgnNo}">selected</c:if>>${bzentVO.bzentNm}</option>
+                          </c:forEach>
+                  </select>
+                  <!-- 메뉴 구분 셀렉트 영역 -->
+                  <select name="menuGubun" id="menuGubun" class="select2-custom">
+                        <option  value="" selected >메뉴 선택</option>
+                        <option  value="">전체</option>
+                        <option value="MENU01"<c:if test="${param.menuType == 'MENU01'}">selected</c:if>>세트</option>
+                        <option value="MENU02"<c:if test="${param.menuType == 'MENU02'}">selected</c:if>>햄버거</option>
+                        <option value="MENU03"<c:if test="${param.menuType == 'MENU03'}">selected</c:if>>사이드</option>
+                        <option value="MENU04"<c:if test="${param.menuType == 'MENU04'}">selected</c:if>>음료</option>
+                  </select>
+               </div>   
+               <!-- /.select-wrap -->   
+               
+               <!-- 메뉴 영역 -->
+                <div class="frcs-menu">
+                   <ul class="list-box">
+                     <!-- ajax() 출력 영역 --> 
+                        </ul>
+                         <div class="frcs-none">
+                      <div class="frcs-wrap">
+                         <div class="error-info">
+                        <span class="icon material-symbols-outlined">error</span>
+                        <div class="error-msg">가맹점을 선택해주세요</div>
+                     </div>
+                      </div>
+                   </div>
+                </div>
+                        
+            </div>
+            <!-- /.frcs-menu -->
+            
+            <!-- 장바구니 영역 -->
+            <div class="dtl-inner cart" style="display:none">
+               <div class="cart-top">
+                  <div class="cart-title">선택한 메뉴</div>
+                  <div class="cart-controll">
+                     <div class="cart-all" id="allChk">전체선택</div>
+                     <div class="cart-delete" id="cartDelete">삭제</div>
+                  </div>
+               </div>
+                   <ul class="cart-wrap menu-list">
+                   
+               <!-- ajax() 출력 영역 --> 
+               
+                   </ul>
+                   <!-- /.menu-list -->
+                   
+                   <div class="menu-none">
+                      <div class="cart-wrap">
+                         <div class="error-info">
+                        <span class="icon material-symbols-outlined">error</span>
+                        <div class="error-msg">선택한 메뉴가 없습니다</div>
+                     </div>
+                      </div>
+                   </div>
+            </div>
+            <!-- /.select-menu -->
+         
+         </div>
+         <!-- /.dtl-cont.left -->
+         
+         <!-- 주문 상세 왼쪽 영역 -->
+         <div class="dtl-cont right">
+            
+            <div class="dtl-right">
+            
+               <!-- 주문 확인 영역 -->
+               <div class="chk-inner">
+                  <p class="chk-title">주문을 확인하세요!</p>
+                  
+                  <div class="chk-wrap top">
+                     <div class="chk-cont">
+                        <div class="rigth">총 수량</div>
+                        <div class="left">3개</div>
+                     </div>
+                     <div class="chk-cont">
+                        <div class="rigth">합산금액</div>
+                        <div class="left">28,000원</div>
+                     </div>
+                     <div class="chk-cont">
+                        <div class="rigth">쿠폰사용</div>
+                        <div class="left">
+                           <button type="button" id="couponModal">쿠폰선택</button>
+                        </div>
+                     </div>
+                     <div class="chk-coupon">
+                           불고기 버거 세트 1000원 할인 <span class="material-symbols-outlined">subdirectory_arrow_left</span> 
+                     </div>
+                     <div class="chk-cont">
+                        <div class="rigth">주문유형</div>
+                        <div class="left">
+                           <input type="radio" class="radio-btn" id="ordr02" name="ordr" value="ordr02">   
+                               <label for="ordr02"> 포장</label>
+                           <input type="radio" class="radio-btn" id="ordr01" name="ordr" value="ordr01" checked>   
+                               <label for="ordr01"> 매장</label>
+                         </div>
+                     </div>
+                  </div>
+                  <!-- /.chk-wrap.top-->
+                  
+                  <div class="chk-wrap bom">
+                     <div class="chk-cont">
+                        <div class="rigth">결제예정금액</div>
+                        <div class="left">28,000원</div>
+                     </div>
+                  </div>
+                  <!-- /.chk-wrap.bom-->
+                  
+               </div>
+               <!-- /.chk-inner-->
+               
+               <!-- 주문하기 버튼 영역 -->
+               <div class="order-btn">
+                  <button type="button" id="orderBtn">주문하기</button>
+               </div>
+               <!-- /.order-btn -->
+            
+            </div>
+            
+         </div>
+         <!-- /.dtl-cont.rigth -->
+         
+      </div>
+      <!-- /.dtl-wrap -->
+      
+   </div>
+   <!--  /.wrap-cont -->
+   
+</div>
+<!-- wrap -->
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="/resources/cust/js/insertOrder.js"></script>
+
+
+

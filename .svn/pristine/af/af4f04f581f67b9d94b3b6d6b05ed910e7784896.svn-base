@@ -1,0 +1,245 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<!-- 
+isAuthenticated() : 로그인 했을 때에만 실행
+ -->
+<sec:authorize access="isAuthenticated()">
+	<!-- 로그인이 필수
+	principal == CustomUser
+	principal.memberVO == memberVO
+	memberVO == user
+	 -->
+	<sec:authentication property="principal.memberVO" var="user"/>
+</sec:authorize>
+<%-- 
+  @fileName    : insertQs.jsp 
+  @programName : 문의 게시글 작성 
+  @description : 회원이 문의 게시글을 작성하는 화면 
+  @author      : 서윤정 
+  @date        : 2024. 09. 18 
+--%>
+
+<script type="text/javascript" src="/resources/js/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+let mbrId = "${user.mbrId}";
+
+$(document).ready(function() {
+    $('#inquiryForm').on('submit', function(e) {
+        e.preventDefault(); // 기본 폼 제출 방지
+
+        //let formData = new FormData();	//<form></form>
+        
+        // 폼 데이터 수집(QsVO)
+        var jsonData = {
+            "qsType": $('select[name="category"]').val(),
+            "qsTtl": $('input[name="title"]').val(),
+            "qsCn": $('textarea[name="cont"]').val(),
+            "mbrId":mbrId
+        };
+        //오브젝트는 ,
+        console.log("jsonData : ", jsonData);
+
+        $.ajax({
+            url: "/cust/insertQsPostAjax",
+            type: "POST",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(jsonData),
+            dataType:"text",
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+            },
+            success: function(result) {
+            	console.log("result : ", result);
+            	
+            	//result는 1 또는 0이 옴
+                Swal.fire({
+                    icon: 'success',
+                    title: '문의 등록 성공!!',
+                    position: 'top-end',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                closeModal();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: " + error);
+                Swal.fire({
+                    icon: 'error',
+                    title: '문의 등록 실패',
+                    text: '다시 시도해 주세요.'
+                });
+                closeModal();
+            }
+        });
+    });
+});
+
+// 모달 열기 및 닫기
+function openModal() {
+    $("#myModal").fadeIn();
+}
+
+function closeModal() {
+    $("#myModal").fadeOut();
+}
+
+function noLogin(){
+	var Toast = Swal.mixin({
+	      toast: true,
+	      position: 'top-end',
+	      showConfirmButton: false,
+	      timer: 3000
+	    });
+	
+	Toast.fire({
+		icon:'warning',
+		title:'로그인해주세요'
+	});
+}
+
+// 모달 외부 클릭 시 닫기
+$(window).on('click', function(event) {
+    if ($(event.target).is("#myModal")) {
+        closeModal();
+    }
+});
+</script>
+
+<!-- content-header: 페이지 이름 -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">문의</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="location-wrap">
+    <div class="location-container">
+        <div class="page_navi">
+            <a href="/cust/home"><span>HOME</span></a> > <span>고객센터</span> > <span>문의</span>
+        </div>
+ <div class="page-menu">
+            <div class="menu-item active">
+                <a href="/center/selectNotice"><span>공지사항</span></a>
+            </div>
+            <div class="menu-item">
+                <a href="/center/selectFaq"><span>FAQ</span></a>
+            </div>
+            <div class="menu-item">
+                <a href="/cust/insertQs"><span>문의</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div>
+    - 소중한 말씀 귀 기울여 듣고 보다 나은 서비스로 개선하겠습니다.<br>
+    - 작성해 주신 글은 점포로 우선 접수됩니다.<br>
+    - 본사 고객의 소리 운영시간: 평일 9시~18시<br>
+    - 유선상담<br>
+    매장이용 불편사항 042-222-8202 (평일 9시~18시)<br>
+    일반문의 010-2547-0855 (평일 9시~18시)<br>
+    - 모바일 쿠폰 오류, 환불 등 문의 사항은 구입처에서만 유선 상담 가능합니다.<br>
+</div>
+<hr>
+<p>작성시 유의사항</p>
+<div>
+    - 로그인 후, 문의 게시글 작성이 가능합니다.<br>
+    - 개인정보 문제로 제목/내용에 개인정보(이름, 연락처, 이메일 등) 입력을 지양해 주세요.<br>
+    - 아래와 같은 경우 답변이 안되며, 등록된 의견은 수정 및 삭제가 불가합니다.<br>
+    - 연락처 및 이메일 기재 오류<br>
+    - 관계법령 저촉, 사회통념상 어긋나는 내용<br>
+    - 광고성 게시물 등.<br>
+    - 작성해 주신 글은 점포와 공유되며, 우선 접수 진행됩니다.
+</div>
+
+<!-- 로그인 했을 때 실행 -->
+<sec:authorize access="isAuthenticated()">
+	<button onclick="openModal()">문의 글 작성</button>
+</sec:authorize>
+<!-- 로그인 안했을 때 실행 -->
+<sec:authorize access="isAnonymous()">
+	<button onclick="noLogin()">문의 글 작성</button>
+</sec:authorize>
+
+<!-- 모달 -->
+<div id="myModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">문의 글 작성</h3>
+            </div>
+            <form id="inquiryForm">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="InputCategory">문의 유형</label>
+                        <select name="category" required>
+                            <option value="" selected disabled>선택해주세요</option>
+                            <option value="QS01">구매</option>
+                            <option value="QS02">매장이용</option>
+                            <option value="QS03">채용</option>
+                            <option value="QS04">가맹점</option>
+                            <option value="QS05">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="titleInput">제목</label>
+                        <input type="text" name="title" placeholder="제목을 입력해주세요" class="search-input w-400" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="contInput">내용</label>
+                        <textarea name="cont" rows="5" cols="50" spellcheck="false" placeholder="내용을 입력해주세요" required></textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">제출</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 모달 스타일 -->
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* 모달 너비 조정 */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>

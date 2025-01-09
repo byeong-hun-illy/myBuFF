@@ -1,0 +1,50 @@
+package com.buff.cust.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.BzentVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MenuVO;
+
+/**
+* @packageName  : com.buff.service.cust
+* @fileName     : CustHomeService.java
+* @author       : 서윤정
+* @date         : 2024.09.13
+* @description  : 고객 메인화면_가맹점 카드 목록
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     	  			최초 생성
+*/
+public interface CustHomeService {
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 고객 메인화면_ 가맹점 카드 리스트 
+	*/
+	public List<BzentVO> home();
+	
+	public List<BzentVO> selectStore(Map<String, Object> map);
+
+	public List<MenuVO> selectMenu(String menuGubun);
+
+	public int getTotal(Map<String, Object> map);
+
+	public List<EventVO> selectEvent();
+	
+	public int insertDscsnPost(FrcsDscsnVO frcsDscsnVO);
+
+	public int checkId(String mbrId);
+
+	public List<BzentVO> selectOrdrStore(Map<String, Object> map);
+
+	public List<MenuVO> selectOrdrMenu(Map<String, Object> map);
+	
+}

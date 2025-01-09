@@ -1,0 +1,153 @@
+package com.buff.frcs.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsSlsMapper;
+import com.buff.frcs.service.FrcsSlsService;
+import com.buff.vo.OrdrVO;
+
+/**
+* @packageName  : com.buff.frcs.service.impl
+* @fileName     : FrcsSlsServiceImpl.java
+* @author       : 정현종
+* @date         : 2024.10.03
+* @description  : 가맹점 매출 ServiceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.10.03        정현종     	  			최초 생성
+*/
+@Service
+public class FrcsSlsServiceImpl implements FrcsSlsService {
+	
+	@Autowired
+	FrcsSlsMapper frcsSlsMapper;
+	
+	/**
+	* @methodName  : selectFrcsPeriodSlsList
+	* @author      : 정현종
+	* @date        : 2024.10.04
+	* @param 	   : map
+	* @return	   : 검색조건에 맞는 기간별 매출 리스트
+	*/
+	@Override
+	public List<OrdrVO> selectFrcsPeriodSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectFrcsPeriodSlsList(map);
+	}
+	
+	/**
+	* @methodName  : selectTotalFrcsPeriodSlsList
+	* @author      : 정현종
+	* @date        : 2024.10.04
+	* @param       : map
+	* @return      : 페이징을 위한 총 행의 수
+	*/
+	@Override
+	public int selectTotalFrcsPeriodSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalFrcsPeriodSlsList(map);
+	}
+	
+	/**
+	* @methodName  : selectFrcsPeriodSlsTotalAmt
+	* @author      : 정현종
+	* @date        : 2024.10.04
+	* @param 	   : map
+	* @return	   : 검색조건에 맞는 총 매출액
+	*/
+	@Override
+	public Double selectFrcsPeriodSlsTotalAmt(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectFrcsPeriodSlsTotalAmt(map);
+	}
+	
+	/**
+	* @methodName  : selectFrcsPeriodSlsDetailAjax
+	* @author      : 정현종
+	* @date        : 2024.10.04
+	* @param 	   : map
+	* @return	   : 매출 상세 ajax처리
+	*/
+	@Override
+	public List<OrdrVO> selectFrcsPeriodSlsDetailAjax(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectFrcsPeriodSlsDetailAjax(map);
+	}
+	
+	
+	/**
+	* @methodName  : selectFrcsMenuSlsList
+	* @author      : 정현종
+	* @date        : 2024.10.04
+	* @param 	   : map
+	* @return      : 메뉴 매출 리스트
+	*/
+	@Override
+	public List<OrdrVO> selectFrcsMenuSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectFrcsMenuSlsList(map);
+	}
+	
+	/**
+	 * @methodName  : selectTotalFrcsMenuSlsList
+	 * @author      : 정현종
+	 * @date        : 2024.10.04
+	 * @param       : map
+	 * @return	    : 전체 메뉴의 수
+	 */
+	@Override
+	public int selectTotalFrcsMenuSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalFrcsMenuSlsList(map);
+	}
+	
+	/**
+	* @methodName  : selectTotalSingle
+	* @author      : 정현종
+	* @date        : 2024.10.05
+	* @param 	   : map
+	* @return      : 단품 메뉴의 수
+	*/
+	@Override
+	public int selectTotalSingle(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalSingle(map);
+	}
+	
+	/**
+	* @methodName  : selectTotalSet
+	* @author      : 정현종
+	* @date        : 2024.10.05
+	* @param       : map
+	* @return      : 세트 메뉴의 수
+	*/
+	@Override
+	public int selectTotalSet(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalSet(map);
+	}
+	
+	/**
+	* @methodName  : selectTotalSide
+	* @author      : 정현종
+	* @date        : 2024.10.05
+	* @param       : map
+	* @return      : 사이드 메뉴의 수
+	*/
+	@Override
+	public int selectTotalSide(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalSide(map);
+	}
+	
+	/**
+	* @methodName  : selectTotalDrink
+	* @author      : 정현종
+	* @date        : 2024.10.05
+	* @param       : map
+	* @return      : 음료 메뉴의 수
+	*/
+	@Override
+	public int selectTotalDrink(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalDrink(map);
+	}
+	
+	
+	
+}

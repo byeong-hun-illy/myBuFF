@@ -1,0 +1,112 @@
+package com.buff.cust.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.cust.mapper.CustHomeMapper;
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustHomeService;
+import com.buff.vo.BzentVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MenuVO;
+
+@Service
+public class CustHomeServiceImpl implements CustHomeService {
+
+	@Inject
+	MemberMapper memberMapper;
+	
+	@Inject
+	CustHomeMapper custHomeMapper;
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 고객 메인화면_ 가맹점 카드 리스트 
+	*/
+	@Override
+	public List<BzentVO> home() {
+		return this.memberMapper.home();
+	}
+
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 전제 매장 조회
+	*/
+	@Override
+	public List<BzentVO> selectStore(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		return this.memberMapper.selectStore(map);
+	}
+	
+	
+
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 매장 조회 , 페이징처리
+	*/
+	@Override
+	public int getTotal(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		return this.memberMapper.getTotal();
+	}
+	
+	
+	/**
+	* @methodName  : selectMenu
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 메뉴 조회
+	*/
+	@Override
+	public List<MenuVO> selectMenu(String menuGubun) {
+		// TODO Auto-generated method stub
+		return this.custHomeMapper.selectMenu(menuGubun);
+	}
+
+	
+	/**
+	* @methodName  : selectMenu
+	* @author      : 서윤정
+	* @date        : 2024.09.13
+	* @param  	   : 
+	* @return      : 문의사항 작성 화면
+	*/
+	
+
+	@Override
+	public List<EventVO> selectEvent() {
+		// TODO Auto-generated method stub
+		return this.custHomeMapper.selectEvent();
+	}
+
+	@Override
+	public int insertDscsnPost(FrcsDscsnVO frcsDscsnVO) {
+		return this.custHomeMapper.insertDscsnPost(frcsDscsnVO);
+	}
+
+	@Override
+	public int checkId(String mbrId) {
+		// TODO Auto-generated method stub
+		return this.custHomeMapper.checkId(mbrId);
+	}
+	
+
+	
+
+}

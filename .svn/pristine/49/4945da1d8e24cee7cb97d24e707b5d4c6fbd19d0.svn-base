@@ -1,0 +1,41 @@
+package com.buff.frcs.mapper;
+
+/**
+* @packageName  : com.buff.frcs.mapper
+* @fileName     : FrcsStockMapper.java
+* @author       : 정현종
+* @date         : 2024.09.20
+* @description  : 가맹점 재고 현황 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.20                정현종     	  		      최초 생성
+*/
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.GdsVO;
+
+public interface FrcsStockMapper {
+	
+	/**
+	* @methodName  : selectFrcsStockList
+	* @author      : 정현종
+	* @date        : 2024.09.20
+	* @param  	   : 
+	* @return      : 가맹점 재고 현황 목록
+	*/
+	public List<GdsVO> selectFrcsStockList ();
+	
+	public int selectTotal(Map<String, Object> map);
+
+	public int selectAll(Map<String, Object> map);
+
+	public int selectFood(Map<String, Object> map);
+
+	public int selectPacking(Map<String, Object> map);
+
+	public int selectSubMart(Map<String, Object> map);
+	
+}

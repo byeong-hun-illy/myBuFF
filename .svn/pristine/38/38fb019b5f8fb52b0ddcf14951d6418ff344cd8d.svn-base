@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustCenterMapper">
+
+	<select id="selectFaq"  parameterType="String" resultType="faqVO">
+		SELECT FAQ_SEQ
+			 , FAQ_TTL
+			 , FAQ_CN
+			 , QS_TYPE
+		  FROM FAQ
+		<where>
+			<if test="faqCategory != null and faqCategory != ''">
+				AND QS_TYPE = #{faqCategory}
+			</if>
+		</where>
+		ORDER BY FAQ_SEQ DESC
+	</select>
+	
+	
+	<select id="selectNotice" parameterType="hashMap" resultType="noticeVO">
+    SELECT 
+        NTC_SEQ
+       , NTC_TTL
+       , NTC_CN
+       , INQ_CNT
+    FROM NOTICE
+    WHERE 1=1
+    <if test="noticeCategory != null and noticeCategory != ''">
+        <choose>
+            <when test="noticeCategory == 'ntcTtl'">
+                AND NTC_TTL LIKE '%' || #{keyword} || '%'
+            </when>
+            <when test="noticeCategory == 'ntcCn'">
+                AND NTC_CN LIKE '%' || #{keyword} || '%'
+            </when>
+        </choose>
+    </if>
+    <if test="noticeCategory == null or noticeCategory == ''">
+        AND (NTC_TTL LIKE '%' || #{keyword} || '%' OR NTC_CN LIKE '%' || #{keyword} || '%')
+    </if>
+</select>
+
+	<select id="selectNoticeDetail" parameterType="int" resultType="noticeVO">
+		SELECT NTC_SEQ
+	         , NTC_TTL
+	         , NTC_CN
+	         , INQ_CNT
+          FROM NOTICE
+         WHERE NTC_SEQ = #{ntcSeq}
+	</select>
+
+	<insert id="insertQsPost" parameterType="qsVO">
+        INSERT INTO QS(QS_SEQ, MBR_ID, QS_TYPE, QS_TTL, QS_CN)
+        VALUES (
+            (SELECT NVL(MAX(QS_SEQ), 0) + 1 FROM QS)
+            ,'tieawu5d' 
+            ,#{category} 
+            ,#{title} 
+            ,#{cont}
+        )
+    </insert>
+	
+</mapper>

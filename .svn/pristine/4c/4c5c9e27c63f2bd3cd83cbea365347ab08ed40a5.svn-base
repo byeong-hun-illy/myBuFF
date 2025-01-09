@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.09.22
+@description  : 지역 구분 
+-->
+<mapper namespace="com.buff.com.mapper.ComMapper">
+	<!-- rgnNo 찾기 -->
+	<select id="rgnNoSearch" resultType="String" parameterType="String">
+		SELECT COM_NO AS RGN_NO
+		FROM COM_CODE
+		WHERE COM_GROUP_NO = 'RGN'
+		AND COM_EXPLN=SUBSTR(#{addr},1,2)
+	</select>
+
+	<select id="selectCom" resultType="comVO" parameterType="String">
+		SELECT COM_NO
+				, COM_NM
+		FROM COM_CODE
+		WHERE COM_GROUP_NO = #{groupNo}
+	</select>
+	
+<!-- ////////////////////////////////////////////////// select구분 //////////////////////////////////////////////////// -->
+	
+	<!-- 지역구분 select RGN-->
+	<select id="selectRgn" resultType="rgnVO">
+		SELECT COM_NO AS RGN_NO
+			, COM_NM AS RGN_NM
+		FROM COM_CODE
+        WHERE COM_GROUP_NO = 'RGN'
+	</select>
+	
+	<!-- 폐업 사유 유형 CR-->
+	<select id="selectClsbizRsn" resultType="clsbizRsnVO">
+		SELECT COM_NO AS CLSBIZ_RSN_TYPE
+			  , COM_NM AS CLSBIZ_RSN_TYPE_NO
+		  FROM COM_CODE
+		 WHERE COM_GROUP_NO= 'CR'	 
+	</select>
+	
+	<!-- 은행 유형 BK-->
+	<select id="selectBank" resultType="bankVO">
+		SELECT COM_NO AS BANK_TYPE
+			  , COM_NM AS BANK_TYPE_NM
+		  FROM COM_CODE
+		 WHERE COM_GROUP_NO= 'BK'	 
+	</select>
+</mapper>

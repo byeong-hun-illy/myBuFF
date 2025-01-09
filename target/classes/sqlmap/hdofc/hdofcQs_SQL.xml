@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.10.01
+@description  : 문의사항 관리
+ sql
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcQsMapper">
+	
+	<resultMap type="qsVO" id="qsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="qsSeq" column="QS_SEQ"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="qsType" column="QS_TYPE"/>
+		<result property="qsTtl" column="QS_TTL"/>
+		<result property="qsCn" column="QS_CN"/>
+		<result property="wrtrDt" column="WRTR_DT"/>
+		<result property="ansDt" column="ANS_DT"/>
+		<result property="ansCn" column="ANS_CN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		
+		<association property="memberVO" resultMap="mbrMap" />
+		<association property="mngrVO" resultMap="mngrMap" />
+		<collection property="fileDetailVOList" resultMap="fileDetailMap" />
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrPswd" column="MBR_PSWD"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="delYn" column="DEL_YN"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+	
+	<resultMap type="fileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<!--
+ 		@programName : 문의사항 리스트 select
+ 		@description : 문의사항 리스트 select
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 30
+	-->
+	<select id="selectQsList" parameterType="hashMap" resultMap="qsMap">
+		SELECT *
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY TO_NUMBER(Q.QS_SEQ) DESC) AS RNUM
+			     , C.COM_NM AS QS_TYPE_NM
+			     , Q.QS_SEQ 
+			     , Q.QS_TTL
+			     , Q.QS_CN 
+			     , MEM.MBR_NM 
+			     , MEM.MBR_ID 
+			     , Q.WRTR_DT
+			     , MN.MNGR_ID
+			     , MNGR.MBR_NM AS MNGR_NM 
+			     , Q.QS_TYPE
+			     , FD.FILE_SN
+			     , FD.FILE_GROUP_NO
+			     , FD.FILE_ORIGINAL_NAME
+			     , FD.FILE_SAVE_NAME
+			     , FD.FILE_SAVE_LOCATE
+			     , FD.FILE_SIZE
+			     , FD.FILE_EXT
+			     , FD.FILE_MIME
+			     , FD.FILE_FANCYSIZE
+			     , FD.FILE_SAVE_DATE
+			     , FD.FILE_DOWNCOUNT
+			FROM   QS Q 
+			LEFT   OUTER JOIN MNGR MN ON Q.MNGR_ID = MN.MNGR_ID 
+			LEFT   OUTER JOIN MEMBER MEM ON Q.MBR_ID = MEM.MBR_ID 
+			LEFT   OUTER JOIN MEMBER MNGR ON MN.MNGR_ID = MNGR.MBR_ID 
+			LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = Q.QS_TYPE
+			LEFT   OUTER JOIN FILE_GROUP FG ON Q.FILE_GROUP_NO = FG.FILE_GROUP_NO 
+			LEFT   OUTER JOIN FILE_DETAIL FD ON FG.FILE_GROUP_NO = FD.FILE_GROUP_NO 
+			WHERE 1=1
+			<!-- 문의 유형 필터링 -->
+			<if test="qsType != null and qsType != ''">
+				AND Q.QS_TYPE = #{qsType}
+			</if>
+			<!-- QS 제목 필터링 -->
+			<if test="qsTtl != null and qsTtl != ''">
+				AND Q.QS_TTL LIKE '%' || #{qsTtl} || '%'
+			</if>
+			<!-- QS 내용 필터링 -->
+<!-- 			<if test="qsCn != null and qsCn != ''"> -->
+<!-- 				AND Q.QS_CN LIKE '%' || #{qsCn} || '%' -->
+<!-- 			</if> -->
+			<!-- 시작일 필터링 -->
+			<if test="bgngYmd != null and bgngYmd != ''">
+			<![CDATA[
+				AND TO_CHAR(WRTR_DT,'YYYY-MM-DD') >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND TO_CHAR(WRTR_DT,'YYYY-MM-DD') <= #{expYmd}
+			]]>
+			</if>
+		)
+		WHERE  RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+	</select>
+	
+	 <!--
+ 		@programName : 테이블 <th> 정렬조건
+ 		@description : 테이블 <th> 정렬조건
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 02
+	-->
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_wrtrDt">
+		<!-- 지역순 -->
+		<if test="sort == 'wrtrDt'">
+			ORDER BY Q.WRTR_DT
+		</if>
+	</sql>
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	 <!--
+ 		@programName : 문의사항 리스트 총 갯수
+ 		@description : 문의사항 리스트 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<select id="qsTotalCnt" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*) 
+		FROM   QS
+		WHERE  1=1
+		<if test="qsType != null and qsType != ''">
+			AND QS_TYPE = #{qsType}
+		</if>
+		<!-- QS 제목 필터링 -->
+		<if test="qsTtl != null and qsTtl != ''">
+			AND QS_TTL LIKE '%' || #{qsTtl} || '%'
+		</if>
+		<!-- QS 내용 필터링 -->
+<!-- 		<if test="qsCn != null and qsCn != ''"> -->
+<!-- 			AND QS_CN LIKE '%' || #{qsCn} || '%' -->
+<!-- 		</if> -->
+		<!-- 시작일 필터링 -->
+        <if test="bgngYmd != null and bgngYmd != ''">
+        <![CDATA[
+			AND TO_CHAR(WRTR_DT,'YYYY-MM-DD') >= #{bgngYmd}
+		]]>
+		</if>
+		<!-- 종료일 필터링 -->
+		<if test="expYmd != null and expYmd != ''">
+		<![CDATA[
+			AND TO_CHAR(WRTR_DT,'YYYY-MM-DD') <= #{expYmd}
+		]]>
+		</if>
+	</select>
+	
+	 <!--
+ 		@programName : 문의사항 유형 총 갯수
+ 		@description : 문의사항 유형 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 01
+	-->
+	<select id="tapMaxTotal" resultType="hashMap">
+		SELECT MAX(T.tapAll) tapAll
+		     , MAX(T.tapWaiting) tapWaiting
+		     , MAX(T.tapProgress) tapProgress
+		     , MAX(T.tapScheduled) tapScheduled
+		     , MAX(T.tapCompleted) tapCompleted
+		     , MAX(T.tapCancelled) tapCancelled
+		FROM
+		(
+		    SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress,0 tapScheduled,0 tapCompleted,0 tapCancelled
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    UNION ALL
+		    SELECT 0,COUNT(*),0,0,0,0
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    Q.QS_TYPE = 'QS01'
+		    UNION ALL
+		    SELECT 0,0,COUNT(*),0,0,0
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    Q.QS_TYPE = 'QS02'
+		    UNION ALL
+		    SELECT 0,0,0,COUNT(*),0,0
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    Q.QS_TYPE = 'QS03'
+		    UNION ALL
+		    SELECT 0,0,0,0,COUNT(*),0
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    Q.QS_TYPE = 'QS04'
+		    UNION ALL
+		    SELECT 0,0,0,0,0,COUNT(*)
+		    FROM   QS Q 
+		    INNER  JOIN COM_CODE C ON Q.QS_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    Q.QS_TYPE = 'QS05'
+		) T
+	</select>
+	
+	<!--
+ 		@programName : 문의사항 상세 출력
+ 		@description : 문의사항 상세 출력
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 02
+	-->
+	<select id="selectQsDetail" parameterType="String" resultMap="qsMap">
+		SELECT MEM.MBR_NM
+		     , C.COM_NM AS QS_TYPE_NM
+		     , Q.WRTR_DT
+		     , Q.QS_TTL
+		     , Q.QS_TYPE
+		     , Q.QS_CN
+		     , Q.ANS_CN
+		     , Q.ANS_DT
+		     , Q.MNGR_ID
+		     , MNGR.MBR_NM AS MNGR_NM
+		     , Q.QS_SEQ
+		     , FD.FILE_SN
+		     , FD.FILE_GROUP_NO
+		     , FD.FILE_ORIGINAL_NAME
+		     , FD.FILE_SAVE_NAME
+		     , FD.FILE_SAVE_LOCATE
+		     , FD.FILE_SIZE
+		     , FD.FILE_EXT
+		     , FD.FILE_MIME
+		     , FD.FILE_FANCYSIZE
+		     , FD.FILE_SAVE_DATE
+		     , FD.FILE_DOWNCOUNT
+		FROM   QS Q 
+		LEFT   OUTER JOIN MNGR MN ON Q.MNGR_ID = MN.MNGR_ID 
+		LEFT   OUTER JOIN MEMBER MEM ON Q.MBR_ID = MEM.MBR_ID 
+		LEFT   OUTER JOIN MEMBER MNGR ON MN.MNGR_ID = MNGR.MBR_ID 
+		LEFT   OUTER JOIN COM_CODE C ON C.COM_NO = Q.QS_TYPE
+		LEFT   OUTER JOIN FILE_GROUP FG ON Q.FILE_GROUP_NO = FG.FILE_GROUP_NO 
+		LEFT   OUTER JOIN FILE_DETAIL FD ON FG.FILE_GROUP_NO = FD.FILE_GROUP_NO  
+		WHERE  Q.QS_SEQ = #{qsSeq}
+	</select>
+	
+	<!--
+ 		@programName : 문의사항 댓글 등록 및 수정
+ 		@description : 문의사항 댓글 등록 및 수정
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 02
+	-->
+	<update id="updateQsDetailAns" parameterType="qsVO">
+		UPDATE QS
+	    SET MNGR_ID = #{mngrId}, 
+	        ANS_DT = SYSDATE, 
+	        ANS_CN = #{ansCn}
+	    WHERE QS_SEQ = #{qsSeq}
+	</update>
+	
+	<delete id="deleteQs" parameterType="String">
+		DELETE FROM QS
+		WHERE  QS_SEQ = #{qsSeq}
+	</delete>
+	
+</mapper>

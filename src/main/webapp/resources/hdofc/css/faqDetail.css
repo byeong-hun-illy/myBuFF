@@ -1,0 +1,13 @@
+@charset "UTF-8";
+
+/* 테이블 기본 스타일 */
+.faq-info {
+    width: 100%;
+    border-collapse: collapse;
+}
+.faq-info tr th {
+    width: 10%; td도 동일하게 25%
+}
+.faq-info tr td {
+    width: 40%; td도 동일하게 25%
+}

@@ -1,0 +1,25 @@
+package com.buff.frcs.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.buff.vo.PoVO;
+
+/**
+* @packageName  : com.buff.mapper.frcs
+* @fileName     : FrcsPoMapper.java
+* @author       : 김현빈
+* @date         : 2024.09.13
+* @description  : 가맹점 마이 페이지 Mapper
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13                김현빈     	  		      최초 생성
+*/
+public interface FrcsPoMapper {
+	
+	public List<PoVO> selectFrcsPoList(Map<String, Object> map);
+	
+	public int poTotalCnt(Map<String, Object> map);
+	
+}

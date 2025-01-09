@@ -1,0 +1,1002 @@
+@charset "UTF-8";
+
+html {
+    display: block;
+    font-size: 16px;
+    color: #666;
+    -webkit-text-size-adjust: none;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    word-break: keep-all;
+    font-family: 'Noto Sans KR', sans-serif;
+}   
+
+html, body {   
+    height: 100%;
+}
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, header, footer, aside, nav, sub, sup, tt, var, dl, dt, dd, ol, select, button, ul, li, fieldset, form, label, legend, caption, tbody, tfoot, thead, tr, textarea, input {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+::selection {
+    background-color: rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+.wrap {
+    position: relative;
+    padding-top: 160px;
+    min-width: 1220px;
+    height: 100%;
+}
+
+div {
+    display: block;
+    unicode-bidi: isolate;
+}
+
+#ch-plugin {
+    position: relative !important;
+    display: block !important;
+    color-scheme: normal !important;
+    white-space: normal !important;
+}
+
+.fix_ban_cen {
+    position: fixed;
+    right: 25px;
+    top: 50%;
+    margin-top: -130px;
+    z-index: 100;
+    background-color: #fff;
+    box-shadow: 0px 4px 12px 1px rgba(68, 120, 132, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.fix_ban_bot {
+    position: fixed;
+    right: 36px;
+    bottom: 25px;
+    z-index: 100;
+}
+
+
+/* */
+
+/* 마이페이지 시작 */
+.content { 
+    padding-bottom: 160px;
+    overflow: hidden;
+}
+
+.mypage-top {
+	background-color: var(--bg--blue);
+    padding: 70px 20px 70px;
+}
+
+.mypage-bom {
+    padding: 70px 20px 60px;
+}
+
+.inner {
+    position: relative;
+    margin: 0 auto;
+}
+
+.popup {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 500;
+    display: none;
+}
+
+.mypage-top .tit p span {
+    font-weight: 700;
+    font-size: 1.875rem;
+    line-height: 1.367em;
+}
+
+.mypage-top .info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.mypage-top .tit {
+    position: relative;
+}
+
+.mypage-top .tit p {
+    color: #333;
+    font-weight: 500;
+    font-size: 1.625rem;
+    line-height: 1.577em;
+    margin-bottom: 11px;
+}
+
+
+.mypage-top .tit .rcd_code {
+    background-color: #F2F8F8;
+    border-radius: 30px;
+    line-height: 30px;
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+
+.mypage-top .tit .rcd_code span {
+    display: block;
+    color: #ACB7B8;
+    font-weight: 400;
+    font-size: 0.875rem;
+    padding-right: 16px;
+    background: url(../images/copy-icon.svg?ver=1) no-repeat right center;
+}
+
+.mypage-top .tit .rcd_code input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 0;
+    opacity: 0;
+    border: none;
+}
+
+.mypage-top .info ul {
+    display: flex;
+    justify-content: space-between;
+}
+
+dl, ul, ol, menu, li {
+    list-style: none;
+}
+
+.mypage-top .info ul li {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mypage-top .con a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.mypage-top .info ul li .box1 {
+    padding: 35px 30px 35px 30px;
+}
+
+.hambergur-icon {
+	margin-bottom: 60px;
+    background-image: url(/resources/images/hambergur.png);
+    width: auto;
+    height: 52px;
+    background-repeat: no-repeat;
+    background-position: 160px;
+    background-clip: content-box;
+    background-size: 60px;
+}
+
+.coupon-icon span {
+	font-size: 50px;
+}
+
+.mypage-top .box {
+    box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.mypage-top .info ul li .membership .mbs1 .ic_bg {
+	background-image: url(https://imecomall.co.kr/v2/theme/basic/images/mypage-mb1.svg);
+}
+
+
+.mypage-top .info ul li .membership .ic_bg {
+    background-position: right top;
+    padding-top: 154px;
+}
+
+.mypage-top .info ul li .box .ic_bg {
+    background-repeat: no-repeat;
+}
+
+.mypage-top .info ul li .box p {
+    color: #999;
+    font-size: 0.875rem;
+}
+
+
+.mypage-top .info ul li .box strong {
+    display: block;
+    color: #333;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-top: 13px;
+}
+
+.mypage-top .info ul li.division {
+    width: 280px;
+}
+
+
+.mypage-top .info ul li ~ li {
+    margin-left: 18px;
+}
+
+
+.mypage-top .info ul li {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mypage-top .box {
+    box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.mypage-top .info ul li .box2 {
+	padding: 36px 30px 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.box2-icon {
+	background-repeat: no-repeat;
+    background-position: right center;
+    width: 70px;
+    height: 45px;
+    background-size: 50px;
+}
+
+.delivering-icon {
+    background-image: url(/resources/images/delivering-icon.png);
+}
+
+.qs-icon {
+    background-image: url(/resources/images/qs-icon.png);
+}
+
+.dscsn-icon {
+    background-image: url(/resources/images/dscsn-icon.png);
+}
+
+.coupon-icon {
+    background-image: url(/resources/images/coupon-icon.png);
+}
+
+.mypage-top .info ul li .box strong {
+    display: block;
+    color: #333;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-top: 10px;
+}
+
+.mypage-top .info ul li .box strong span {
+    font-weight: 600;
+}
+
+.mypage-top .box {
+    box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.mypage-top .info ul li .delivered .ic_bg {
+    background-image: url(../images/mypage-icon2.svg);
+    background-position: right center;
+}
+
+.mypage-top .info ul li .box .ic_bg {
+    background-repeat: no-repeat;
+}
+
+
+
+.mypage-top .info ul li .box p {
+    color: #999;
+    font-size: 0.875rem;
+}
+
+.mypage-top .info ul li.division {
+    width: 280px;
+}
+
+.mypage-top .info ul li ~ li {
+    margin-left: 18px;
+}
+
+.mypage-top .info ul li {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.en_font {
+    font-family: 'Poppins';
+}
+
+.mypage-top .info ul li.division {
+    width: 280px;
+}
+
+.mypage-top .info ul li ~ li {
+    margin-left: 18px;
+}
+
+.mypage-top .info ul li {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.mypage-top .eco {
+    margin-top: 20px;
+}
+
+.mypage-top .eco ul {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.mypage-top .eco ul li {
+    width: calc(50% - 11px);
+}
+
+.mypage-top .con a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.mypage-top .eco ul li.stamp .box {
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/my-stamp.png) no-repeat center;
+    background-size: cover;
+}
+
+.mypage-top .box {
+    box-shadow: 0px 8px 20px rgba(127, 138, 140, 0.09);
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+
+.mypage-top .eco ul li .box dl {
+    padding: 35px 30px 30px;
+}
+
+
+.mypage-top .eco ul li .box dl dt {
+    display: flex;
+    align-items: center;
+}
+
+.mypage-top .eco ul li .box dl dt p {
+    color: #fff;
+    font-weight: 700;
+}
+
+.mypage-top .eco ul li .box dl dt strong {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-left: 10px;
+}
+
+
+.mypage-top .eco ul li .box dl dt strong em {
+    font-weight: 600;
+}
+
+address, caption, cite, code, dfn, em, var {
+    font-style: normal;
+}
+
+.mypage-top .eco ul li .box dl dt span {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    margin-left: 8px;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: "Circular Std";
+    text-align: center;
+    width: 32px;
+    line-height: 15px;
+    padding-top: 1px;
+}
+
+
+.mypage-top .eco ul li {
+    width: calc(50% - 11px);
+}
+
+.mypage-top .eco ul li.roulette .box {
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/my-roulette.png) no-repeat center;
+    background-size: cover;
+}
+
+.mypage-top .eco ul li .box dl {
+    padding: 35px 30px 30px;
+}
+
+
+.mypage-top .eco ul li .box dl dt {
+    display: flex;
+    align-items: center;
+}
+
+.mypage-top .eco ul li .box dl dt p {
+    color: #fff;
+    font-weight: 700;
+}
+
+
+.mypage-top .eco ul li .box dl dt strong {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-left: 10px;
+}
+
+.mypage-top .eco ul li .box dl dt strong em {
+    font-weight: 600;
+}
+
+
+.mypage-top .eco ul li .box dl dt span {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    margin-left: 8px;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: "Circular Std";
+    text-align: center;
+    width: 32px;
+    line-height: 15px;
+    padding-top: 1px;
+}
+
+.mypage-top .eco ul li .box dl dd {
+    margin-top: 18px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.813rem;
+    line-height: 1.462em;
+}
+
+.order-wrap {
+	display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 0;
+    margin-top: 40px;
+}
+
+.order-cont {
+    width: 100%;
+    height: 140px;
+    border-radius: 12px;
+    padding: 25px 0 0 45px;
+    line-height: 26px;
+    font-size: 1.2rem;
+    box-shadow: 0px 4px 12px rgba(127, 138, 140, 0.5);;
+}
+
+.order-cont:hover {
+	cursor: pointer;
+}
+
+.order-cont p {
+	color: white;
+}
+
+.order-title {
+	font-family: 'KIMM';
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.go-icon {
+    font-size: 2rem;
+    color: white;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.here {
+    background: url(/resources/images/here-bg.png) no-repeat center;
+    background-size: cover;
+}
+
+.togo {
+    background: url(/resources/images/togo-bg.png) no-repeat center;
+    background-size: cover;	
+}
+
+/* cont 시작  */
+
+.con_top {
+    padding-top: 60px;
+}
+
+.in_1170 {
+    max-width: 1170px;
+}
+
+.inner {
+    position: relative;
+    margin: 0 auto;
+}
+
+.side_nav {
+    display: flex;
+}
+
+.side_nav .lef_menu {
+    width: 245px;
+    padding-right: 45px;
+}
+
+.side_nav .lef_menu ul li.on {
+    border: 1px solid #222;
+    background-color: #222;
+}
+
+.side_nav .lef_menu ul li {
+    display: block;
+    border: 1px solid #F4F4F4;
+    border-bottom: none;
+    padding: 0 15px;
+}
+
+.side_nav .lef_menu ul li.on span {
+    color: #fff;
+    background-image: url(https://imecomall.co.kr/v2/theme/basic/images/wh-arr2.svg);
+}
+
+.side_nav .lef_menu ul li span {
+    display: block;
+    line-height: 54px;
+    color: #555;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right center;
+}
+
+.side_nav .lef_menu ul li.on + li {
+    border-top: none;
+}
+
+.side_nav .lef_menu ul li {
+    display: block;
+    border: 1px solid var(--gray--4);
+    border-bottom: none;
+    padding: 0 15px;
+}
+
+.side_nav .lef_menu ul li:last-child {
+    border-bottom: 1px solid var(--gray--4);
+}
+
+.side_nav .lef_menu .notice_box {
+    margin-top: 20px;
+    background-color: #FBFBFB;
+    border-radius: 12px;
+}
+
+.side_nav .lef_menu .notice_box a {
+    padding: 20px 15px;
+    display: block;
+}
+
+.side_nav .lef_menu .notice_box p {
+    font-weight: 500;
+    color: #777;
+    line-height: 1.4em;
+    font-size: 0.813rem;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right center;
+}
+
+.side_nav .rig_con {
+    width: calc(100% - 245px);
+}
+
+.con_tit1 {
+    margin: 15px 0 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mb15 {
+    margin-bottom: 15px !important;
+}
+
+.con_tit1 p {
+    color: #333;
+    font-size: 1.375rem;
+    font-weight: 600;
+}
+
+.sel_area_box {
+    position: relative;
+}
+
+.con_tit1 .sel_type1 {
+    width: 90px;
+    height: 40px;
+    line-height: 38px;
+    padding: 0 10px;
+    font-size: 0.875rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.sel_area_box .sel_type1 {
+    width: 100%;
+    height: 54px;
+    line-height: 52px;
+    text-align: left;
+    border: 1px solid #E4E4E4;
+    border-radius: 6px;
+    padding: 0 15px;
+    color: #333;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right 10px center;
+    cursor: pointer;
+}
+
+.sel_area_box .op_box {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 3;
+    text-align: left;
+    margin-top: -1px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.sel_area_box .op_box .option {
+    line-height: 40px;
+    padding: 0 10px;
+    color: #555;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.bdr_box {
+    border-top: 1px solid #333;
+}
+
+
+.bdr_box .product_tbl {
+    padding-top: 25px;
+}
+
+.con_box > li.on {
+    display: block;
+}
+
+
+.list_tbl table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+table, th, td {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0;
+    border-collapse: collapse;
+    box-sizing: border-box;
+}
+
+
+table {
+    display: table;
+    border-collapse: separate;
+    box-sizing: border-box;
+    text-indent: initial;
+    unicode-bidi: isolate;
+    border-spacing: 2px;
+    border-color: gray;
+}
+
+col {
+    display: table-column;
+    unicode-bidi: isolate;
+}
+
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    unicode-bidi: isolate;
+    border-color: inherit;
+}
+
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    unicode-bidi: isolate;
+    border-color: inherit;
+}
+
+.list_tbl {
+    border-top: 1px solid #333;
+}
+
+.list_tbl table th {
+    background-color: #FCFCFC;
+    color: #555;
+}
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+table, th, td {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0;
+    border-collapse: collapse;
+    box-sizing: border-box;
+}
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+.list_tbl table td .txt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+.list_tbl table td.status {
+    padding: 13px 10px;
+}
+
+.product_tbl .status {
+    width: 110px;
+    text-align: center;
+    padding-right: 20px;
+}
+
+
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.con_box > li {
+    display: none;
+}
+
+#addOrdr{
+    width: 165px;
+    height: 50px;
+    line-height: 48px;
+    font-size: 0.875rem;
+    border-radius: 10px !important;
+}
+
+/* 아코디언 컨텐츠 스타일 */
+.accordion-collapse {
+   display: none;
+   padding: var(--pd--s);
+   background-color: var(--gray--1);
+   border-top: 1px solid var(--border--primary);
+
+}
+
+.accordion-collapse.show {
+   display: table-row;
+}
+
+.accordion-item {
+   cursor: pointer;
+}
+
+/* 게시판 스타일 */
+#couponListTable, #qsListTable, #dscsnListTable, #infoListTable, #custInfo {
+	display: none;
+}
+
+/* 개인 정보 */
+.write_tbl {
+    padding: 20px 0;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+.write_tbl table {
+    width: 100%;
+}
+
+.write_tbl table th {
+    color: #333;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: left;
+    padding: 8px 10px;
+    line-height: 46px;
+    vertical-align: top;
+}
+
+.write_tbl table td {
+    padding: 10px;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.btn_area {
+    margin: 50px auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#cancelBtn, #changeInfo, #btnPwd {
+    border-radius: 10px;
+   	cursor: pointer;
+	width: 160px;
+    height: 50px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+#cancelBtn, #changeInfo, #delmbr, #homeSearch, .chagePwd {
+	display: none;
+}
+
+#btn_submit {
+	background: var(--green--5);
+	color: white;
+}
+
+#chageCustInfoForm .btn {
+	height: 41px;
+	border-radius: 4px;
+}
+
+.input-tel {
+    padding: 5px;
+    width: 83px;
+    text-align: center;
+}
+
+#mbrEmlAddr {
+	width: 277px;
+}
+
+#pswdInput {
+    width: 250px;
+}
+
+#delmbr, #delmbr span {
+	background: none;
+    color: var(--gray--6);
+}
+
+.del-info {
+	margin-bottom: 20px;
+    background: var(--gray--1);
+    padding: 20px;
+    line-height: 1.8;
+    font-weight: 500;
+}
+
+.del-info h2 {
+	font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.del-modal {
+	width: 600px !important;
+    max-width: 600px !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

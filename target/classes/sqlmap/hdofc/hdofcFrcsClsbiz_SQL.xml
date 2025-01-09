@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@description  : 가맹점 폐업
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcFrcsClsbizMapper">
+	<resultMap type="frcsVO" id="frcsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="frcsType" column="FRCS_TYPE"/>
+		<result property="frcsTypeNm" column="FRCS_TYPE_NM"/>
+		<result property="warnCnt" column="WARN_CNT"/>
+		<result property="opbizYmd" column="OPBIZ_YMD"/>
+		<result property="clsbizYmd" column="CLSBIZ_YMD"/>
+		<result property="openTm" column="OPEN_TM"/>
+		<result property="ddlnTm" column="DDLN_TM"/>
+		
+		<association property="bzentVO" resultMap="bzentMap"/>
+		<association property="frcsClsbizVO" resultMap="frcsClsbizMap"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<association property="mbrVO" resultMap="mbrMap"/>
+		<association property="mngrVO" resultMap="mngrMap"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mbrMap">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrZip" column="MBR_ZIP"/>
+		<result property="mbrAddr" column="MBR_ADDR"/>
+		<result property="mbrDaddr" column="MBR_DADDR"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrBrdt" column="MBR_BRDT"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+		<result property="mbrType" column="MBR_TYPE"/>
+		<result property="mbrAprvYn" column="MBR_APRV_YN"/>
+		<result property="mbrImgPath" column="MBR_IMG_PATH"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="rgnNm" column="RGN_NM"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="mngrMap">
+		<result property="mbrId" column="MNGR_ID"/>
+		<result property="mbrPswd" column="MNGR_PSWD"/>
+		<result property="mbrNm" column="MNGR_NM"/>
+		<result property="mbrZip" column="MNGR_ZIP"/>
+		<result property="mbrAddr" column="MNGR_ADDR"/>
+		<result property="mbrDaddr" column="MNGR_DADDR"/>
+		<result property="mbrTelno" column="MNGR_TELNO"/>
+		<result property="mbrBrdt" column="MNGR_BRDT"/>
+		<result property="mbrEmlAddr" column="MNGR_EML_ADDR"/>
+		<result property="mbrType" column="MNGR_TYPE"/>
+		<result property="mbrAprvYn" column="MNGR_APRV_YN"/>
+		<result property="mbrImgPath" column="MNGR_IMG_PATH"/>
+	</resultMap>
+	
+	<resultMap type="frcsClsbizVO" id="frcsClsbizMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="clsbizPrnmntYm" column="CLSBIZ_PRNMNT_YM"/>
+		<result property="clsbizRsnType" column="CLSBIZ_RSN_TYPE"/>
+		<result property="clsbizRsnTypeNm" column="CLSBIZ_RSN_TYPE_NM"/>
+		<result property="clsbizRsn" column="CLSBIZ_RSN"/>
+		
+		<result property="clsbizType" column="CLSBIZ_TYPE"/>
+		<result property="clsbizTypeNm" column="CLSBIZ_TYPE_NM"/>
+		<result property="clsbizAprvYmd" column="CLSBIZ_APRV_YMD"/>
+	</resultMap>
+	
+	<!--
+ 		@programName : 가맹점 폐업대상 조회
+ 		@description : 조건에 따라 폐업할 가맹점의 정산여부 파악가능
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 21
+	-->
+	<select id="selectFrcsClsbiz" resultMap="frcsMap">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER (<include refid="sort_clsbiz"/> <include refid="orderby"/>) AS RNUM
+				, C.FRCS_NO
+		        , C.CLSBIZ_PRNMNT_YM
+		        , C.CLSBIZ_RSN_TYPE
+		        , C.CLSBIZ_TYPE
+		        , C.CLSBIZ_APRV_YMD
+		        , A.COM_NM AS CLSBIZ_TYPE_NM
+		        , S.COM_NM AS CLSBIZ_RSN_TYPE_NM
+		        , F.FRCS_TYPE
+		        , T.COM_NM AS FRCS_TYPE_NM
+		        , F.CLSBIZ_YMD
+		        , B.BZENT_NM
+		        , B.RGN_NO
+		        , R.COM_NM AS RGN_NM
+		        , M.MBR_ID
+		        , M.MBR_NM
+		        , N.MBR_ID AS MNGR_ID
+		        , N.MBR_NM AS MNGR_NM
+			FROM FRCS_CLSBIZ C
+			JOIN FRCS F ON C.FRCS_NO=F.FRCS_NO
+			JOIN BZENT B ON F.FRCS_NO=B.BZENT_NO
+			JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+			JOIN COM_CODE S ON S.COM_NO=C.CLSBIZ_RSN_TYPE
+			JOIN COM_CODE T ON T.COM_NO=F.FRCS_TYPE
+			JOIN COM_CODE A ON A.COM_NO=C.CLSBIZ_TYPE
+			JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+			LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+			WHERE 1=1
+			<include refid="search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+		<!-- 정렬 조건 시작 -->
+	<sql id="sort_clsbiz">
+		<!-- 폐업유형 -->
+		<if test="sort == 'clsType'">
+			ORDER BY C.CLSBIZ_RSN_TYPE
+		</if>
+		<!-- 가맹점 이름 순 -->
+		<if test="sort == 'bzentNm'">
+			ORDER BY B.BZENT_NM
+		</if>
+		<!-- 가맹점주 이름 순 -->
+		<if test="sort == 'mbrNm'">
+			ORDER BY M.MBR_NM
+		</if>
+		<!-- 관리자 이름 순 -->
+		<if test="sort == 'mngrNm'">
+			ORDER BY N.MBR_NM
+		</if>
+		<!-- 폐업 일자 순 -->
+		<if test="sort == 'clsbizYmd'">
+			ORDER BY F.CLSBIZ_YMD
+		</if>
+		<!-- 지역순 -->
+		<if test="sort == 'rgnNo'">
+			ORDER BY B.RGN_NO
+		</if>
+		<!-- 폐업 순 -->
+		<if test="sort == 'clsbiz'">
+			ORDER BY C.CLSBIZ_TYPE
+		</if>
+		<!-- 승인 순 -->
+		<if test="sort == 'aprvYmd'">
+			ORDER BY C.CLSBIZ_APRV_YMD
+		</if>
+	</sql>
+		
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+		<!-- 검색 조건 시작 -->
+	<sql id="search">
+		<!-- 가맹점 이름 검색 -->
+		<if test="bzentNm != null">
+			AND B.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+		</if>
+		<!-- 가맹점주 이름 검색 -->
+		<if test="mbrNm != null">
+			AND M.MBR_NM LIKE '%'||#{mbrNm}||'%'
+		</if>
+	<!-- 관리자 검색 -->
+		<if test="mngrId != null">
+			AND B.MNGR_ID = #{mngrId}
+		</if>
+	<!-- 지역 검색 -->
+		<if test="rgnNo != null">
+			AND B.RGN_NO = #{rgnNo}
+		</if>
+	<!-- 폐업 일자 -->
+		<if test="bgngYmd != null">
+		<![CDATA[
+			AND F.CLSBIZ_YMD >= #{bgngYmd}
+		]]>
+		</if>
+		<if test="endYmd != null">
+		<![CDATA[
+			AND F.CLSBIZ_YMD <= #{endYmd}
+		]]>
+		</if>
+	<!-- 승인 일자 -->
+		<if test="apsYmd != null">
+		<![CDATA[
+			AND C.CLSBIZ_APRV_YMD >= #{apsYmd}
+		]]>
+		</if>
+		<if test="apeYmd != null">
+		<![CDATA[
+			AND C.CLSBIZ_APRV_YMD <= #{apeYmd}
+		]]>
+		</if>
+	<!-- 폐업 유형 -->
+		<if test="clsbizType != null and clsbizType != ''">
+			AND C.CLSBIZ_TYPE = #{clsbizType}
+	<!-- 사유 유형 -->
+		</if>
+		<if test="clsbizRsnType!=null">
+			AND C.CLSBIZ_RSN_TYPE = #{clsbizRsnType}
+		</if>
+	</sql>
+	
+	<!--
+ 		@programName : 가맹점 폐업대상 총 갯수 페이징 처리를 위함
+ 		@description : 조건에 따라 폐업할 가맹점의 정산여부 파악가능
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 21
+	-->
+	<select id="selectTotalFrcsClsbiz" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM FRCS_CLSBIZ C
+		JOIN FRCS F ON C.FRCS_NO=F.FRCS_NO
+		JOIN BZENT B ON F.FRCS_NO=B.BZENT_NO
+		JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+		JOIN COM_CODE S ON S.COM_NO=C.CLSBIZ_RSN_TYPE
+		JOIN COM_CODE T ON T.COM_NO=F.FRCS_TYPE
+		JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+		LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+		WHERE 1=1
+		<include refid="search"/>
+	</select>
+	
+<!-- /////////////////////////////////////// 가맹점 폐업 상세 ///////////////////////////////////// -->
+	<!--
+ 		@programName : 가맹점 폐업 점검 상새
+ 		@description : 폐업 대상의 가맹점의 정보
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 21
+	-->
+	<select id="selectFrcsClsbizDtl" parameterType="String" resultMap="frcsMap">
+		SELECT C.FRCS_NO
+		        , C.CLSBIZ_PRNMNT_YM
+		        , C.CLSBIZ_RSN_TYPE
+		        , C.CLSBIZ_RSN
+		        , C.CLSBIZ_TYPE
+		        , C.CLSBIZ_APRV_YMD
+		        , A.COM_NM AS CLSBIZ_TYPE_NM
+		        , S.COM_NM AS CLSBIZ_RSN_TYPE_NM
+		        , F.FRCS_TYPE
+		        , T.COM_NM AS FRCS_TYPE_NM
+		        , F.CLSBIZ_YMD
+		        , B.BZENT_NM
+		        , B.BZENT_TELNO
+		        , B.RGN_NO
+		        , R.COM_NM AS RGN_NM
+		        , M.MBR_ID
+		        , M.MBR_NM
+		        , M.MBR_TELNO
+		        , N.MBR_ID AS MNGR_ID
+		        , N.MBR_NM AS MNGR_NM
+		        , N.MBR_TELNO AS MNGR_TELNO
+		FROM FRCS_CLSBIZ C
+		JOIN FRCS F ON C.FRCS_NO=F.FRCS_NO
+		JOIN BZENT B ON F.FRCS_NO=B.BZENT_NO
+		JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+		JOIN COM_CODE S ON S.COM_NO=C.CLSBIZ_RSN_TYPE
+		JOIN COM_CODE T ON T.COM_NO=F.FRCS_TYPE
+		JOIN COM_CODE A ON A.COM_NO=C.CLSBIZ_TYPE
+		JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+		LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+		WHERE C.FRCS_NO=#{frcsNo}
+	</select>
+	
+	<!--
+ 		@programName : 단일 폐업
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 21
+	-->
+	<update id="updateOneFrcsClsbiz" parameterType="String">
+		UPDATE FRCS_CLSBIZ
+		SET CLSBIZ_TYPE='CLS04'
+		    , CLSBIZ_APRV_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+	
+	<!--
+ 		@programName : 가맹점 타입 폐업으로 변경
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 22
+	-->
+	<update id="updateFrcsType" parameterType="String">
+		UPDATE FRCS
+		SET FRCS_TYPE='FRS02'
+		WHERE FRCS_NO = #{frcsNo}
+	</update>
+	
+	<!-- 정산확인하는 버튼 생성
+		정산이 되지 않은 것을 찾고 정산되지 않은 가맹점을 제외한 나머지를 폐업 대기상태로 변경하는 버튼
+	 -->
+	<update id="updateClclnChk">
+		UPDATE FRCS_CLSBIZ
+		SET CLSBIZ_TYPE = 'CLS03'
+		WHERE FRCS_NO IN (
+		    SELECT FRCS_NO
+		    FROM FRCS_CLSBIZ
+		    WHERE CLSBIZ_TYPE = 'CLS02'
+		    AND FRCS_NO NOT IN(
+		            SELECT CL.FRCS_NO
+		            FROM FRCS_CLSBIZ CL
+		            JOIN FRCS_CLCLN C ON C.FRCS_NO=CL.FRCS_NO
+		            JOIN PO P ON P.BZENT_NO=CL.FRCS_NO
+		            JOIN PO_CLCLN PC ON P.PO_NO=PC.PO_NO
+		            WHERE C.CLCLN_YN = 'N'
+		            OR PC.CLCLN_YN = 'N'
+		        )
+		)
+	</update>
+</mapper>

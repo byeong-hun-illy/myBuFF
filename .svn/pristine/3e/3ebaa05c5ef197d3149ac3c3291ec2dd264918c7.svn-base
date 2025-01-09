@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsCouponMapper">
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.27
+	@description  : 가맹점 쿠폰 사용 내역 조회 sql
+-->
+	
+	<resultMap type="ordrVO" id="ordrMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="ordrDtlNo" column="ORDR_DTL_NO"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"></collection>	
+	</resultMap>
+	
+	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+	</resultMap>
+	
+	<resultMap type="couponVO" id="couponMap">
+		<result property="issuSn" column="ISSU_SN"/>
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="useYmd" column="USE_YMD"/>
+		
+		<association property="ordrVO" resultMap="ordrMap"></association>
+	</resultMap>
+	
+	<resultMap type="couponGroupVO" id="couponGroupMap">
+		<result property="couponCode" column="COUPON_CODE"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="couponNm" column="COUPON_NM"/>
+		<result property="dscntAmt" column="DSCNT_AMT"/>
+		<result property="issuQty" column="ISSU_QTY"/>
+		
+		<association property="menuVO" resultMap="menuMap"></association>
+		<collection property="couponVOList" resultMap="couponMap"></collection>
+	</resultMap>
+	
+	<resultMap type="eventVO" id="eventMap">
+		<result property="eventNo" column="EVENT_NO"/>
+		<result property="eventType" column="EVENT_TYPE"/>
+		<result property="eventTtl" column="EVENT_TTL"/>
+		<result property="eventCn" column="EVENT_CN"/>
+		<result property="wrtrYmd" column="WRTR_YMD"/>
+		<result property="bgngYmd" column="BGNG_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+		<result property="aprvYn" column="APRV_YN"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		
+		<collection property="couponGroupVOList" resultMap="couponGroupMap"></collection>
+	</resultMap>
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		
+	</resultMap>
+	
+<!-- 
+	@programName : 가맹점 쿠폰 사용 내역 조회
+	@description : 가맹점 상품유형별 재고 수량
+	@author      : 정현종
+	@date        : 2024. 09. 27
+-->
+    
+    <sql id="search_coupon">
+        <if test="eventType != null and eventType != ''">
+            AND E.EVENT_TYPE = #{eventType}
+        </if>
+        <if test="bgngYmd != null and bgngYmd != ''">
+        <![CDATA[
+           AND TO_DATE(C.USE_YMD, 'YYYY-MM-DD') >= TO_DATE(#{bgngYmd}, 'YYYY-MM-DD')
+        ]]>
+        </if>
+        <if test="expYmd != null and expYmd != ''">
+    	<![CDATA[
+            AND TO_DATE(C.USE_YMD, 'YYYY-MM-DD') <= TO_DATE(#{expYmd}, 'YYYY-MM-DD')
+        ]]>
+        </if>
+        <if test="menuType != null and menuType != ''">
+            AND M.MENU_TYPE = #{menuType}
+        </if>
+        <if test="menuNm != null and menuNm != ''">
+	        AND M.MENU_NM LIKE '%' || #{menuNm} || '%'
+	    </if>
+    </sql>
+    
+    <select id="selectFrcsCouponUseList" parameterType="hashMap" resultMap="eventMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY O.ORDR_DT DESC) AS RNUM
+		     , E.EVENT_TYPE
+		     , C.USE_YMD
+		     , CG.COUPON_NM
+		     , CG.DSCNT_AMT
+		     , M.MENU_TYPE
+		     , M.MENU_NM
+		     , O.MBR_ID 
+		FROM (SELECT DISTINCT O.ORDR_NO, O.ORDR_DT, O.MBR_ID, O.ISSU_SN
+		      FROM ORDR O
+		      LEFT JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		      WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		    ) O
+		LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+		LEFT JOIN COUPON_GROUP CG ON C.COUPON_CODE = CG.COUPON_CODE
+		LEFT JOIN EVENT E ON CG.EVENT_NO = E.EVENT_NO
+		LEFT JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+		WHERE E.EVENT_TYPE IN('EVT04','EVT05') 
+		AND   C.USE_YN = 'Y'
+		<include refid="search_coupon"/>
+	</select>
+    
+    <select id="selectTotalFrcsCoupon" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM (SELECT DISTINCT O.ORDR_NO, O.ORDR_DT, O.MBR_ID, O.ISSU_SN
+		      FROM ORDR O
+		      LEFT JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		      WHERE OD.FRCS_NO = (SELECT B.BZENT_NO FROM BZENT B WHERE B.MBR_ID = #{mbrId})
+		    ) O
+		LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+		LEFT JOIN COUPON_GROUP CG ON C.COUPON_CODE = CG.COUPON_CODE
+		LEFT JOIN EVENT E ON CG.EVENT_NO = E.EVENT_NO
+		LEFT JOIN MENU M ON CG.MENU_NO = M.MENU_NO
+		WHERE E.EVENT_TYPE IN('EVT04','EVT05') 
+		AND   C.USE_YN = 'Y'
+		<include refid="search_coupon"/>    
+	</select>
+    
+</mapper>

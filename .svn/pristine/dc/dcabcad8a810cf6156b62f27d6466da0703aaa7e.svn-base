@@ -1,0 +1,42 @@
+package com.buff.frcs.controller;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.frcs.controller
+* @fileName     : FrcsCouponController.java
+* @author       : 정현종
+* @date         : 2024.09.25
+* @description  : 쿠폰 사용 내역 조회 
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.25        정현종     	  			최초 생성
+*/
+
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsCouponController {
+	
+	/**
+	* @methodName  : selectFrcsCouponUseList
+	* @author      : 정현종
+	* @date        : 2024.09.25
+	* @param       : model
+	* @return	   : 가맹점 쿠폰 사용 내역 조회 URL
+	*/
+	@GetMapping("/couponList")
+	public String selectFrcsCouponUseList(Model model) {
+		
+		return "frcs/selectFrcsCouponUseList";
+	}
+
+}

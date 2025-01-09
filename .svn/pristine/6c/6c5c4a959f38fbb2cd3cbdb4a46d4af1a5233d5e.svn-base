@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cnpt.mapper.CnptSlsMapper">
+
+	<resultMap type="poVO" id="poMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="bzentVO" resultMap="bzentMap"/>
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE_NM"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+		<association property="bzentVO" resultMap="bzentMap"/> 
+	</resultMap>
+	
+	<!-- 
+		거래처 월간 매출 조회
+	 -->
+	<select id="selectCnptSlsMonth" parameterType="hashMap" resultType="poVO">
+		SELECT ROW_NUMBER() OVER(ORDER BY P.PO_NO DESC) AS RNUM
+			 , P.PO_NO
+		     , P.BZENT_NO
+		     , P.DELI_YMD
+		     , P.DELI_TYPE
+		     , C.COM_NM AS DELI_TYPE_NM
+		     , P.RJCT_RSN
+		     , PC.CLCLN_YN
+		     , PC.CLCLN_AMT
+		     , PC.NPMNT_AMT
+		     , PC.CLCLN_YMD
+		  FROM PO P
+		  LEFT JOIN PO_CLCLN PC ON P.PO_NO = PC.PO_NO
+		  LEFT JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO
+		  WHERE P.DELI_YMD LIKE #{yearMonth}
+		    AND PC.CLCLN_YN = 'Y'
+		    AND P.BZENT_NO = #{bzentNo}
+		  ORDER BY P.DELI_YMD ASC
+	</select>
+
+</mapper>

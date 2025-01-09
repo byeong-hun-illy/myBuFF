@@ -1,0 +1,129 @@
+package com.buff.frcs.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsMainMapper;
+import com.buff.frcs.service.FrcsMainService;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsCheckVO;
+import com.buff.vo.MenuVO;
+
+@Service
+public class FrcsMainServiceImpl implements FrcsMainService {
+	
+	@Inject
+	FrcsMainMapper frcsMainMapper;
+	
+	/**
+	* @methodName  : selectMenuQtyDesc
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param 	   : 
+	* @return      : 이번달 판매량 best메뉴 top3 출력
+	*/
+	@Override
+	public List<MenuVO> selectMenuQtyDesc(String bzentNo) {
+		return this.frcsMainMapper.selectMenuQtyDesc(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectMenuQtyAsc
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param 	   : 
+	* @return      : 이번달 판매량 worst메뉴 top3 출력
+	*/
+	@Override
+	public List<MenuVO> selectMenuQtyAsc(String bzentNo) {
+		return this.frcsMainMapper.selectMenuQtyAsc(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectDailysales
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 당일 매출 금액
+	*/
+	@Override
+	public long selectDailysales(String bzentNo) {
+		return this.frcsMainMapper.selectDailysales(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectDailysalesCnt
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 당일 판매 횟수
+	*/
+	@Override
+	public long selectDailysalesCnt(String bzentNo) {
+		return this.frcsMainMapper.selectDailysalesCnt(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectIngEvent
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @return	   : 현재 진행중인 이벤트 리스트
+	*/
+	@Override
+	public List<EventVO> selectIngEvent() {
+		return this.frcsMainMapper.selectIngEvent();
+	}
+	
+	/**
+	* @methodName  : selectStoreGrade
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 최근 매장점검 점수
+	*/
+	@Override
+	public int selectStoreGrade(String bzentNo) {
+		return this.frcsMainMapper.selectStoreGrade(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectStoreWarningCnt
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 매장점검 경고 횟수
+	*/
+	@Override
+	public int selectStoreWarningCnt(String bzentNo) {
+		return this.frcsMainMapper.selectStoreWarningCnt(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectOrderStatusCnt
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.12
+	* @param mbrId
+	* @return	   : 발주관리 유형별 갯수
+	*/
+	@Override
+	public Map<String, Object> selectOrderStatusCnt(String mbrId) {
+		return this.frcsMainMapper.selectOrderStatusCnt(mbrId);
+	}
+	
+	/**
+	* @methodName  : selectStoreCheckList
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.12
+	* @param bzentNo
+	* @return	   : 매장 점검 내역
+	*/
+	@Override
+	public List<FrcsCheckVO> selectStoreCheckList(String bzentNo) {
+		return this.frcsMainMapper.selectStoreCheckList(bzentNo);
+	}
+	
+}

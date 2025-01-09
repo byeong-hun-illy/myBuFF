@@ -1,0 +1,444 @@
+@charset "UTF-8";
+
+.con_top {
+    padding-top: 60px;
+}
+
+.inner {
+    position: relative;
+    margin: 0 auto;
+}
+
+.side_nav {
+    display: flex;
+}
+
+.side_nav .lef_menu {
+    width: 245px;
+    padding-right: 45px;
+}
+
+.side_nav .lef_menu ul li.on {
+    border: 1px solid #222;
+    background-color: #222;
+}
+
+.side_nav .lef_menu ul li.on span {
+    color: #fff;
+    background-image: url(https://imecomall.co.kr/v2/theme/basic/images/wh-arr2.svg);
+}
+
+.side_nav .lef_menu ul li span {
+    display: block;
+    line-height: 54px;
+    color: #555;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right center;
+}
+
+.side_nav .lef_menu ul li.on + li {
+    border-top: none;
+}
+
+.side_nav .lef_menu ul li {
+    display: block;
+    border: 1px solid var(--gray--4);
+    border-bottom: none;
+    padding: 0 15px;
+}
+
+.side_nav .lef_menu ul li:last-child {
+    border-bottom: 1px solid var(--gray--4);
+}
+
+.side_nav .lef_menu .notice_box {
+    margin-top: 20px;
+    background-color: #FBFBFB;
+    border-radius: 12px;
+}
+
+.side_nav .lef_menu .notice_box a {
+    padding: 20px 15px;
+    display: block;
+}
+
+.side_nav .lef_menu .notice_box p {
+    font-weight: 500;
+    color: #777;
+    line-height: 1.4em;
+    font-size: 0.813rem;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right center;
+}
+
+.side_nav .rig_con {
+    width: calc(100% - 245px);
+}
+
+.con_tit1 {
+    margin: 15px 0 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mb15 {
+    margin-bottom: 15px !important;
+}
+
+.con_tit1 p {
+    color: #333;
+    font-size: 1.375rem;
+    font-weight: 600;
+}
+
+.sel_area_box {
+    position: relative;
+}
+
+.con_tit1 .sel_type1 {
+    width: 90px;
+    height: 40px;
+    line-height: 38px;
+    padding: 0 10px;
+    font-size: 0.875rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.sel_area_box .sel_type1 {
+    width: 100%;
+    height: 54px;
+    line-height: 52px;
+    text-align: left;
+    border: 1px solid #E4E4E4;
+    border-radius: 6px;
+    padding: 0 15px;
+    color: #333;
+    background: url(https://imecomall.co.kr/v2/theme/basic/images/bluegray-arr.svg) no-repeat right 10px center;
+    cursor: pointer;
+}
+
+.sel_area_box .op_box {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 3;
+    text-align: left;
+    margin-top: -1px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.sel_area_box .op_box .option {
+    line-height: 40px;
+    padding: 0 10px;
+    color: #555;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.bdr_box {
+    border-top: 1px solid #333;
+}
+
+
+.bdr_box .product_tbl {
+    padding-top: 25px;
+}
+
+.con_box > li.on {
+    display: block;
+}
+
+
+.list_tbl table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+table, th, td {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0;
+    border-collapse: collapse;
+    box-sizing: border-box;
+}
+
+
+table {
+    display: table;
+    border-collapse: separate;
+    box-sizing: border-box;
+    text-indent: initial;
+    unicode-bidi: isolate;
+    border-spacing: 2px;
+    border-color: gray;
+}
+
+col {
+    display: table-column;
+    unicode-bidi: isolate;
+}
+
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    unicode-bidi: isolate;
+    border-color: inherit;
+}
+
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    unicode-bidi: isolate;
+    border-color: inherit;
+}
+
+.list_tbl {
+    border-top: 1px solid #333;
+}
+
+.list_tbl table th {
+    background-color: #FCFCFC;
+    color: #555;
+}
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+table, th, td {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0;
+    border-collapse: collapse;
+    box-sizing: border-box;
+}
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+.list_tbl table td .txt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.list_tbl table th, .list_tbl table td {
+    font-size: 0.875rem;
+    padding: 23px 20px;
+    font-weight: 400;
+    text-align: center;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+
+.list_tbl table td.status {
+    padding: 13px 10px;
+}
+
+.product_tbl .status {
+    width: 110px;
+    text-align: center;
+    padding-right: 20px;
+}
+
+
+
+.list_tbl table td {
+    color: #333;
+}
+
+
+.con_box > li {
+    display: none;
+}
+
+
+dl, ul, ol, menu, li {
+    list-style: none;
+}
+
+
+.list_tbl table td.status span {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    border: 1px solid #E4E4E4;
+    border-radius: 40px;
+    background-color: #fff;
+    color: #999;
+    font-size: 0.875rem;
+    width: 80px;
+    line-height: 32px;
+}
+
+#addOrdr{
+    width: 165px;
+    height: 50px;
+    line-height: 48px;
+    font-size: 0.875rem;
+    border-radius: 10px !important;
+}
+
+/* 아코디언 컨텐츠 스타일 */
+.accordion-collapse {
+   display: none;
+   padding: var(--pd--s);
+   background-color: var(--gray--1);
+   border-top: 1px solid var(--border--primary);
+
+}
+
+.accordion-collapse.show {
+   display: table-row;
+}
+
+.accordion-item {
+   cursor: pointer;
+}
+
+/* 게시판 스타일 */
+#faqListTable, #qsListTable, #qsInsert {
+	display: none;
+}
+
+/* 1:1문의 */
+#qsInsertBtn {
+    background: var(--green--5);
+    border-radius: 10px;
+    color: white;
+   	cursor: pointer;
+	width: 160px;
+    height: 50px;
+    line-height: 48px;
+    font-size: 0.875rem;
+    margin: 50px auto;
+    text-align: center;
+}
+
+/* 문의 등록 */
+.write_tbl {
+    padding: 20px 0;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+.write_tbl table {
+    width: 100%;
+}
+
+.write_tbl table th {
+    color: #333;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    padding: 8px 10px;
+    line-height: 46px;
+    vertical-align: top;
+}
+
+.write_tbl table td {
+    padding: 10px;
+    font-size: 0.875rem;
+}
+
+.btn_area {
+    margin: 50px auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#btn_cancle, #btn_submit {
+    border-radius: 10px;
+   	cursor: pointer;
+	width: 160px;
+    height: 50px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+#btn_submit {
+	background: var(--green--5);
+	color: white;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

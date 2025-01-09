@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.09.25
+@description  : 상품 관리, 재고 관리, 안전 재고 관리, 상품 소모량 관리
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcGdsMapper">
+	<resultMap type="gdsVo" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		
+		<collection property="stockVOList" resultMap="stockMap"/>
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<collection property="gdsAmtVO" resultMap="gdsAmtMap"/>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!   재고 조회 시작   !!!!!!!!!!!!!!!!!!!!!!!!!! -->
+	<!--
+ 		@programName : 재고 조회
+ 		@description : 재고 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="selectStock" parameterType="hashMap" resultMap="gdsMap">
+		WITH t AS (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_gds"/> <include refid="orderby"/>) AS RNUM
+				, G.GDS_CODE
+			    , S.QTY
+			    , S.SF_STOCK_QTY
+			    , G.GDS_NM
+			    , G.GDS_TYPE
+			    , T.COM_NM AS GDS_TYPE_NM
+			    , G.UNIT_NM
+			    , A.AMT
+			    , G.REG_YMD
+			    , S.NTSL_YN
+			FROM GDS G
+			LEFT JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE <include refid="bzent_search"/>
+			JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+			LEFT JOIN (
+			    SELECT A1.GDS_CODE
+			            , A1.BZENT_NO
+			            , A1.AMT
+			            , A1.AMT_SEQ
+			    FROM GDS_AMT A1
+			    JOIN (
+			        SELECT GDS_CODE
+			                , BZENT_NO
+			                , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+			        FROM GDS_AMT
+			        GROUP BY GDS_CODE, BZENT_NO
+			    ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+			) A ON S.GDS_CODE = A.GDS_CODE AND S.BZENT_NO = A.BZENT_NO
+			WHERE 1=1
+			<include refid="gds_search"/>
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.rnum BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!--
+ 		@programName : 재고 갯수
+ 		@description : 재고 조회를 위한 화면
+ 		@author      : 송예진
+ 		@date        : 2024. 09. 25
+	-->
+	<select id="selectTotalStock" parameterType="hashMap" resultType="int">
+	    SELECT COUNT(1)
+		FROM GDS G
+		LEFT JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE <include refid="bzent_search"/>
+		JOIN COM_CODE T ON T.COM_NO = G.GDS_TYPE
+		LEFT JOIN (
+		    SELECT A1.GDS_CODE
+		            , A1.BZENT_NO
+		            , A1.AMT
+		            , A1.AMT_SEQ
+		    FROM GDS_AMT A1
+		    JOIN (
+		        SELECT GDS_CODE
+		                , BZENT_NO
+		                , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+		        FROM GDS_AMT
+		        GROUP BY GDS_CODE, BZENT_NO
+		    ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+		) A ON S.GDS_CODE = A.GDS_CODE AND S.BZENT_NO = A.BZENT_NO
+		WHERE 1=1
+		<include refid="gds_search"/>
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_gds">
+		<!-- 수량 순 -->
+		<if test="sort == 'qty'">
+			ORDER BY S.QTY
+		</if>
+		<!-- 단가 순 -->
+		<if test="sort == 'amt'">
+			ORDER BY A.AMT
+		</if>
+		<!-- 안전재고 순 -->
+		<if test="sort == 'sfStockQty'">
+			ORDER BY S.SF_STOCK_QTY
+		</if>
+		<!-- 단위 순 -->
+		<if test="sort == 'unitNm'">
+			ORDER BY G.UNIT_NM
+		</if>
+		<!-- 등록일자 순 -->
+		<if test="sort == 'regYmd'">
+			ORDER BY G.REG_YMD
+		</if>
+		<!-- 판매여부순 -->
+		<if test="sort == 'ntslYn'">
+			ORDER BY S.NTSL_YN
+		</if>
+		<!-- 유형순 -->
+		<if test="sort == 'gdsType'">
+			ORDER BY G.GDS_TYPE
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="gds_search">
+		<!-- 대유형 검색 -->
+		 <if test="gdsClass != null and gdsClass != ''">
+	        AND G.GDS_TYPE LIKE #{gdsClass} || '%'
+	    </if>
+		<!-- 소유형 검색 -->
+	    <if test="gdsType != null">
+	        AND G.GDS_TYPE = #{gdsType}
+	    </if>
+		<!-- 관리자 검색 -->
+		<if test="gdsNm != null">
+			AND G.GDS_NM = '%'||#{gdsNm}||'%'
+		</if>
+		<!-- 안전재고 검색 -->
+		<if test="sfStockQty == '-'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY > S.QTY
+		]]>
+		</if>
+		<if test="sfStockQty == '+'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY <= S.QTY
+		]]>
+		</if>
+		<!-- 판매 여부 -->
+		<if test="ntslYn != null">
+			AND G.NTSL_YN = #{ntslYn}
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND G.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND G.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+	</sql>
+	<sql id="bzent_search">
+		<!-- 사업체 검색 -->
+		 <if test="bzentNo != null and bzentNo != ''">
+	        AND S.BZENT_NO=#{bzentNo}
+	    </if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+</mapper>

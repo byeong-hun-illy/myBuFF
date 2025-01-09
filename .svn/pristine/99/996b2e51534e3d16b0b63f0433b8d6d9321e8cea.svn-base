@@ -1,0 +1,184 @@
+package com.buff.cnpt.service.impl;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.cnpt.mapper.CnptGdsMapper;
+import com.buff.cnpt.service.CnptGdsService;
+import com.buff.vo.GdsAmtVO;
+import com.buff.vo.GdsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.cnpt.service.impl
+* @fileName     : CnptGdsServiceImpl.java
+* @author       : 이병훈
+* @date         : 2024.09.23
+* @description  : 거래처 상품 재고 관련 서비스 Impl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.23        이병훈     	  			최초 생성
+*/
+
+@Slf4j
+@Service
+public class CnptGdsServiceImpl implements CnptGdsService {
+	
+	@Autowired
+	CnptGdsMapper cnptGdsMapper;
+	
+	
+	/**
+	* @methodName  : selectGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 거래처 상품 재고 현황
+	*/
+	@Override
+	public List<GdsVO> selectCnptGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectCnptGds(map);
+	}
+	
+	/**
+	* @methodName  : downloadExcel
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 서버 응답
+	* @return      : 엑셀 다운로드 
+	*/
+	@Override
+	public void downloadExcel(HttpServletResponse response, String bzentNo) {
+		try {
+	    
+	    // 1. Workbook 생성(XLSX 형식)
+	    Workbook workbook = new XSSFWorkbook();
+	    Sheet sheet = workbook.createSheet("재고 현황");
+	    
+	    // 2. 헤더 설정
+	    Row headerRow = sheet.createRow(0);
+	    String[] columns = {"번호", "상품명", "수량", "단위", "상품 단가"};
+	    
+	    for (int i=0; i< columns.length; i++) {
+	    	Cell cell = headerRow.createCell(i);
+	    	cell.setCellValue(columns[i]);
+	    }
+	    
+	    // 3. 데이터 가져오기 -
+	    Map<String, Object> map = new HashMap<String, Object>();
+	    map.put("bzentNo", bzentNo);
+	    List<GdsVO> gdsList = this.cnptGdsMapper.selectExcel(map);
+	    
+	    // 데이터가 잘 들어왔는지 파악하기
+	    if(gdsList == null || gdsList.isEmpty()) {
+	    	log.warn("조회된 데이터가 없습니다.");
+	    } else {
+	    	log.info("조회된 데이터 개수 : " + gdsList.size());
+	    }
+	    
+	    
+	    // 4. 데이터 행 생성
+	    int rowNum = 1;
+	    for(GdsVO gds : gdsList) {
+	    	Row row = sheet.createRow(rowNum++);
+	    	row.createCell(0).setCellValue(gds.getRnum());
+	    	row.createCell(1).setCellValue(gds.getGdsNm());
+	    	row.createCell(2).setCellValue(gds.getStockVOList().get(0).getQty());
+	    	row.createCell(3).setCellValue(gds.getUnitNm());
+	    	row.createCell(4).setCellValue(gds.getStockVOList().get(0).getGdsAmtVOList().get(0).getAmt());
+	    	
+	    	// stockVOList가 null인지 확인
+	    	if(gds.getStockVOList() != null && !gds.getStockVOList().isEmpty()) {
+	    		row.createCell(2).setCellValue(gds.getStockVOList().get(0).getQty());
+	    		row.createCell(4).setCellValue(gds.getStockVOList().get(0).getGdsAmtVOList().get(0).getAmt());
+	    	} else {
+	    		row.createCell(2).setCellValue("데이터 없음");
+	    		row.createCell(4).setCellValue("데이터 없음");
+	    	}
+	    	
+	    }
+	    
+	    // 5. 자동 너비 조정
+	    for(int i=0; i<columns.length; i++) {
+	    	sheet.autoSizeColumn(i);
+	    }
+	    // 엑셀 파일의 확장자와 Content-Type 설정
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+	    response.setHeader("Content-Disposition", "attachment; filename=\"gdsStockList.xlsx\"");
+	    
+	    // 6. 엑셀 파일을 response의 OutputStream에 작성
+			workbook.write(response.getOutputStream());
+			workbook.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("Excel download error: ", e);
+		    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	    
+
+	}
+	/**
+	* @methodName  : selectTotalGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 검색조건 페이지 총 갯수
+	*/
+	@Override
+	public int selectTotalGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectTotalGds(map);
+	}
+
+	/**
+	* @methodName  : selectAllGds
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param 	   : 검색 조건
+	* @return      : 전체 상품 수
+	*/
+	@Override
+	public int selectAllGds(Map<String, Object> map) {
+		return this.cnptGdsMapper.selectAllGds(map);
+	}
+
+	/**
+	* @methodName  : selectAmtTrend
+	* @author      : 이병훈
+	* @date        : 2024.09.25
+	* @param 	   : 상품 코드
+	* @return      : 6개월 간의 상품 단가 변동 리스트 조회
+	*/
+	@Override
+	public List<GdsAmtVO> selectAmtTrend(String gdsCode) {
+		return this.cnptGdsMapper.selectAmtTrend(gdsCode);
+	}
+	
+	/**
+	* @methodName  : hasStock
+	* @author      : 이병훈
+	* @date        : 2024.09.26
+	* @param 	   : 상품 코드
+	* @return      : 해당 거래처 재고 유무 확인
+	*/
+	@Override
+	public boolean hasStock(String bzentNo) {
+		int result = this.cnptGdsMapper.selectHasStock(bzentNo);
+		return result > 0;
+	}
+
+}

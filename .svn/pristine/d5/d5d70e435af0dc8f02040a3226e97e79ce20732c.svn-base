@@ -1,0 +1,39 @@
+/* selectFrcsStockDetail.css */
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover, .close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.btn-wrap {
+	display: flex; /* Flexbox 사용 */
+	justify-content: center; /* 수평 중앙 정렬 */
+	margin-top: 20px; /* 버튼들과 테이블 간의 간격 조정 */
+}
+
+.btn-wrap button {
+	margin: 0 10px; /* 버튼 간격 조정 */
+}
+
+/* 전체 테이블에 고정된 레이아웃을 적용하고, 너비를 100%로 설정 */
+.table-blue {
+    width: 100%;
+    table-layout: fixed; /* 고정된 레이아웃 */
+}
+
+/* `th`의 너비를 고정하여 균일하게 맞춤 */
+.table-blue th {
+    width: 10%; /* th의 너비를 25%로 설정하여 4열 기준 맞춤 */
+}
+
+/* `td`의 너비도 th와 동일하게 설정 */
+.table-blue td {
+    width: 40%; /* td의 너비도 동일하게 설정 */
+}

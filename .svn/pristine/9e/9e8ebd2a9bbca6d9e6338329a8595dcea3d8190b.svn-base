@@ -1,0 +1,72 @@
+/* selectFrcsMenuList.css */
+.menu-table tbody {
+    display: block; /* 가로세로 조절 가능 */
+    max-height: 461px; /* 보여주고 싶은 만큼 세로값 입력 */
+    overflow-y: scroll; /* 스크롤 만듦 */
+}
+
+.menu-table thead, .menu-table tbody tr {
+    display: table;
+    width: 100%;
+}
+
+/* .menu-table thead th{ */
+/* 	padding: 0;	 */
+/* } */
+
+input[type=checkbox], input[type=radio]{
+    width: 20px;
+}
+
+/* common */
+.ribbon {
+    width: 50px; /* 리본 너비 */
+    height: 50px; /* 리본 높이 */
+    overflow: hidden;
+    position: absolute;
+}
+.ribbon::before,
+.ribbon::after {
+    position: absolute;
+    z-index: -1;
+    content: '';
+    display: block;
+    border: 3px solid #2980b9; /* 테두리 두께 조정 */
+}
+.ribbon span {
+    position: absolute;
+    display: block;
+    width: 75px; /* 리본 텍스트 너비 조정 */
+    padding: 5px 0; /* 패딩 조정 */
+    background-color: #3498db;
+    box-shadow: 0 3px 6px rgba(0,0,0,.1); /* 그림자 조정 */
+    color: #fff;
+    font: 700 12px/1 'Lato', sans-serif; /* 폰트 크기 조정 */
+    text-shadow: 0 1px 1px rgba(0,0,0,.2);
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* top right*/
+.ribbon-top-right {
+    top: -5px; /* 위치 조정 */
+    right: -5px; /* 위치 조정 */
+}
+.ribbon-top-right::before,
+.ribbon-top-right::after {
+    border-top-color: transparent;
+    border-right-color: transparent;
+}
+.ribbon-top-right::before {
+    top: 0;
+    left: 0;
+}
+.ribbon-top-right::after {
+    bottom: 0;
+    right: 0;
+}
+.ribbon-top-right span {
+    left: -10px; /* 텍스트 위치 조정 */
+    top: 15px; /* 텍스트 위치 조정 */
+    transform: rotate(45deg);
+}

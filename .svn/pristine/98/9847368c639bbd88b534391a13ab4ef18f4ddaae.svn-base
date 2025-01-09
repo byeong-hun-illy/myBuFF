@@ -1,0 +1,24 @@
+@charset "UTF-8";
+
+.py-10 {
+	padding: var(--pd--s) !important;	
+}
+
+/* 셀렉트 커스텀 */
+.select2-selection[aria-labelledby="select2-mngrId-container"] {
+	width: 200px !important;
+}
+.select2-selection[aria-labelledby="select2-mngrId-container"] .select2-dropdown {
+	width: 198px !important;
+}
+.tooltip-inner { /* 툴팁으로 나타나는 영역 스타일 조정 */
+  max-width: 320px !important;
+}
+.ck-editor__editable {
+  min-height: 40vh;
+}
+
+.img-info {
+	font-size: 0.9rem;
+    color: var(--gray--7);
+}

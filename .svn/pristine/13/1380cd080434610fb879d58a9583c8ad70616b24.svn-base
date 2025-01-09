@@ -1,0 +1,72 @@
+package com.buff.hdofc.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.buff.hdofc.mapper.HdofcNoticeMapper;
+import com.buff.hdofc.service.HdofcNoticeService;
+import com.buff.util.ArticlePage;
+import com.buff.util.UploadController;
+import com.buff.vo.CouponGroupVO;
+import com.buff.vo.NoticeVO;
+import com.buff.vo.FileDetailVO;
+import com.buff.vo.MemberVO;
+import com.buff.vo.MenuVO;
+import com.buff.vo.MngrVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class HdofcNoticeServiceImpl implements HdofcNoticeService {
+
+	@Inject
+	HdofcNoticeMapper HdofcNoticeMapper;
+	
+	@Inject
+	UploadController uploadController;
+
+	/** 공지사항 목록 시작 */
+	@Override
+	public Map<String, Object> selectNoticeAjax(Map<String, Object> map) {
+
+		// 검색조건 전체 담당자 조회 √
+		List<MngrVO> mngrVOList = this.HdofcNoticeMapper.selectMngrList();
+		
+		// 전체 갯수 조회 (탭에서 사용) √
+		int all = this.HdofcNoticeMapper.selectAll();
+
+		// 페이징을 위한 데이터
+		int total = this.HdofcNoticeMapper.selectTotal(map); // 검색조건에 현재 게시판 갯수 √
+		int currentPage = Integer.parseInt((String) map.get("currentPage"));
+		int size = 10;
+		map.put("size", size);
+		List<NoticeVO> noticeVOList = this.HdofcNoticeMapper.selectNoticeAjax(map); // 전체 공지사항 조회 √
+		
+		// 응답 데이터를 담을 Map 생성
+		Map<String, Object> response = new HashMap<>();
+		response.put("mngrVOList", mngrVOList);
+		response.put("all", all);
+		response.put("articlePage", new ArticlePage<NoticeVO>(total, currentPage, size, noticeVOList, map));
+		
+		return response;
+	}
+	/** 공지사항 목록 끝 */
+
+	
+
+
+	
+
+
+
+
+
+}

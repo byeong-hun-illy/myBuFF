@@ -1,0 +1,308 @@
+package com.buff.cnpt.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.cnpt.service.CnptGdsService;
+import com.buff.cnpt.service.CnptService;
+import com.buff.com.service.ComService;
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.util.ArticlePage;
+import com.buff.vo.GdsAmtVO;
+import com.buff.vo.GdsVO;
+import com.buff.vo.MemberVO;
+import com.buff.vo.StockVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.cnpt.controller
+* @fileName     : CnptGdsController.java
+* @author       : 이병훈
+* @date         : 2024.09.22
+* @description  : 거래처 재고현황 관련 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.22        이병훈     	  			최초 생성
+*/
+@PreAuthorize("hasRole('ROLE_CNPT')")
+@Slf4j
+@RequestMapping("/cnpt")
+@Controller
+public class CnptGdsController {
+
+	@Autowired
+	CnptGdsService cnptGdsService;
+	
+	@Autowired
+	CnptService cnptService;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	@Autowired
+	ComService comService;
+	
+	
+	/**
+	* @methodName  : selectGds
+	* @author      : 이병훈 
+	* @date        : 2024.09.22
+	* @param model
+	* @return : 상품 재고 조회 페이지
+	*/
+	@GetMapping("/gds/list")
+	public String selectGds(Model model,Principal principal) {
+		String mbrId = principal.getName();
+		MemberVO memberVO = memberMapper.getLogin(mbrId);
+		String bzentType = this.cnptGdsService.selectBzentType(memberVO.getBzentNo());
+		
+		log.info("bzentType : " + bzentType);
+		
+		// JSP에 전달
+		model.addAttribute("bzentType", bzentType);
+		return "cnpt/gds/selectGds";
+	}
+	
+	
+	/**
+	* @methodName  : selectGdsAjax
+	* @author      : 이병훈
+	* @date        : 2024.09.22
+	* @param map : 검색 조건
+	* @return : 상품 재고 ajax 조회 처리
+	*/
+	@GetMapping("/gds/listAjax")
+	@ResponseBody
+	public Map<String, Object> selectGdsAjax(@RequestParam Map<String, Object> map){
+		
+	    int size = 10;
+	    int total = this.cnptGdsService.selectTotalGds(map);
+	    
+	    map.put("size", size);
+	    List<GdsVO> gdsList = this.cnptGdsService.selectCnptGds(map);
+	  
+	    int currentPage = map.get("currentPage") != null ? Integer.parseInt((String) map.get("currentPage")) : 1;
+	    
+	    log.info("currentPage : " + currentPage);
+	    log.info("size : " + size);
+	    
+	    // 전체 분류 계산
+	    int all = this.cnptGdsService.selectAllGds(map);
+	    int selling = this.cnptGdsService.selectSellingCnt(map);
+	    int notSelling = this.cnptGdsService.selectNotSellingCnt(map);
+	    
+	    log.info("all 상품 총 객수(전체) :" + all);
+	    
+	    // 결과를 담을 Map 객체 생성
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("articlePage", new ArticlePage<GdsVO>(total, currentPage, size, gdsList, map));
+	    response.put("all", all);
+	    response.put("selling", selling);
+	    response.put("notSelling", notSelling);
+	    
+	    log.info("result : " + response);
+	    
+	    // Ajax 호출을 통해 JSON으로 반환됨
+	    return response; 
+		
+	}
+	
+	/**
+	* @methodName  : downloadExcel
+	* @author      : 이병훈
+	* @date        : 2024.09.23
+	* @param response 
+	* @description : 상품 재고 현황 리스트 엑셀 다운로드
+	*/
+	@GetMapping("/gds/downloadExcel")
+	public void downloadExcel(HttpServletResponse response,
+							  @RequestParam("bzentNo") String bzentNo) {
+		try {
+			this.cnptGdsService.downloadExcel(response, bzentNo);
+		} catch (Exception e) {
+			log.error("Excel download error: ", e);
+	        response.reset(); // 이미 전송된 응답이 있으면 초기화
+	        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	
+	/**
+	* @methodName  : selectStock
+	* @author      : 이병훈
+	* @date        : 2024.09.26
+	* @param bzentNo : 거래처 번호
+	* @return      : 해당 거래처 재고 유무 확인
+	*/
+	@GetMapping("/gds/hasStock")
+	@ResponseBody
+	public boolean selectHasStock(@RequestParam("bzentNo") String bzentNo) {
+		// 재고가 있으면 true, 없으면 false
+		return this.cnptGdsService.hasStock(bzentNo);
+	}
+	
+	/**
+	* @methodName  : selectGdsType
+	* @author      : 이병훈
+	* @date        : 2024.09.26
+	* @param user  : 로그인한 사용자 정보
+	* @param model 
+	* @return	   : 해당 거래처 보유 상품 유형
+	*/
+	@GetMapping("/gds/selectGdsType")
+	@ResponseBody
+	public String selectGdsType(@AuthenticationPrincipal MemberVO user,
+								Model model) {
+		String bzentType = this.cnptGdsService.selectBzentType(user.getBzentNo());
+		log.info("bzentType : " + bzentType);
+		// JSP에 전달
+		model.addAttribute("bzentType", bzentType);
+		
+		return "cnpt/gds/selectGds";
+		
+	}
+	
+	/**
+	* @methodName  : selectGdsDtl
+	* @author      : 이병훈
+	* @date        : 2024.09.27
+	* @param model
+	* @param gdsCode
+	* @return	   : 상품 상세 페이지로 이동
+	*/
+	@GetMapping("/gds/selectGdsDtl")
+	public String selectGdsDtl(Model model, @RequestParam String gdsCode) {
+		return "cnpt/gds/selectGdsDtl";
+	}
+	
+	/**
+	* @methodName  : selectGdsDtlAjax
+	* @author      : 이병훈
+	* @date        : 2024.09.27
+	* @param stockVO
+	* @return      : 상품 상세 페이지 출력
+	*/
+	@PostMapping("/gds/dtlAjax")
+	@ResponseBody
+	public Map<String, Object> selectGdsDtlAjax(@RequestBody StockVO stockVO){
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		GdsVO gdsVO = this.cnptGdsService.selectGdsDtl(stockVO);
+		map.put("gdsVO", gdsVO);
+		int chk = this.cnptGdsService.selectUpdateChk(stockVO);
+		map.put("chk", chk);
+		
+		return map;
+		
+	}
+	/**
+	* @methodName  : updateGdsAjax
+	* @author      : 이병훈
+	* @date        : 2024.09.27
+	* @param gdsVO
+	* @return 	   : 제고가 없을 때 상품 수정
+	*/
+	@PostMapping("/gds/updateAjax")
+	@ResponseBody
+	public int updateGdsAjax(@RequestBody GdsVO gdsVO) {
+		return this.cnptGdsService.updateGds(gdsVO);
+	}
+	
+	/**
+	* @methodName  : updateAmtAjax
+	* @author      : 이병훈
+	* @date        : 2024.09.27
+	* @param map
+	* @return	   : 상품의 단가 및 판매상태 변경
+	*/
+	@PostMapping("/gds/updateAmtAjax")
+	@ResponseBody
+	public int updateAmtAjax(@RequestBody Map<String, Object> map) {
+		int result = this.cnptGdsService.updateAllStock(map);
+		return result;
+	}
+	
+	/**
+	* @methodName  : insertGds
+	* @author      : 이병훈
+	* @date        : 2024.09.28
+	* @return	   : 상품 등록 페이지로 이동
+	*/
+	@GetMapping("/gds/regist")
+	public String insertGds(@RequestParam String bzentType, Model model) {
+		model.addAttribute("bzentType", bzentType);
+		return "cnpt/gds/selectGdsDtl";
+	}
+	
+	/**
+	* @methodName  : insertGdsAjax
+	* @author      : 이병훈
+	* @date        : 2024.09.28
+	* @param map
+	* @return      : 상품 추가 / 단가 추가
+	*/
+	@PostMapping("/gds/registAjax")
+	@ResponseBody
+	public String insertGdsAjax(@RequestBody Map<String, Object> map) {
+		return this.cnptGdsService.insertAllGds(map);
+	}
+	
+
+	/**
+	* @methodName  : deleteLastAmt
+	* @author      : 이병훈
+	* @date        : 2024.09.30
+	* @param gdsAmtVO(bzentNo, gdsCode)
+	* @return      : 잘못 입력된 최근 단가를 삭제함
+	*/
+	@PostMapping("/gds/deleteLastAmt")
+	@ResponseBody
+	public int deleteLastAmt(@RequestBody GdsAmtVO gdsAmtVO) {
+		return this.comService.deleteGdsAmt(gdsAmtVO);
+	}
+	
+	/**
+	* @methodName  : deleteGds
+	* @author      : 이병훈 
+	* @date        : 2024.09.30
+	* @param gdsCode
+	* @return      : 재고 없을 때 상품삭제
+	*/
+	@PostMapping("/gds/deleteAjax")
+	@ResponseBody
+	public int deleteGds(@RequestParam String gdsCode,
+						 @RequestParam String bzentNo) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("gdsCode", gdsCode);
+		map.put("bzentNo", bzentNo);
+		
+		int result = this.cnptGdsService.deleteAll(map);
+		if(result>0) {
+			return result; 
+		} else {
+			return 0;
+		}
+	}
+	
+	
+	
+	
+}

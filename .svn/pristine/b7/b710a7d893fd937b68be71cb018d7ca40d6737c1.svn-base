@@ -1,0 +1,40 @@
+package com.buff.frcs.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.buff.frcs.mapper.FrcsSlsMapper;
+import com.buff.frcs.service.FrcsSlsService;
+import com.buff.vo.OrdrVO;
+
+/**
+* @packageName  : com.buff.frcs.service.impl
+* @fileName     : FrcsSlsServiceImpl.java
+* @author       : 정현종
+* @date         : 2024.10.03
+* @description  : 가맹점 매출 ServiceImpl
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.10.03        정현종     	  			최초 생성
+*/
+@Service
+public class FrcsSlsServiceImpl implements FrcsSlsService {
+	
+	@Autowired
+	FrcsSlsMapper frcsSlsMapper;
+	
+	@Override
+	public List<OrdrVO> selectFrcsPeriodSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectFrcsPeriodSlsList(map);
+	}
+
+	@Override
+	public int selectTotalFrcsPeriodSlsList(Map<String, Object> map) {
+		return this.frcsSlsMapper.selectTotalFrcsPeriodSlsList(map);
+	}
+
+}

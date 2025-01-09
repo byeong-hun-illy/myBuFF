@@ -1,0 +1,55 @@
+package com.buff.cust.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustHomeService;
+import com.buff.vo.BzentVO;
+
+/**
+* @packageName  : com.buff.controller.cust
+* @fileName     : CustController.java
+* @author       : 
+* @date         : 2024.09.13
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     	  			최초 생성
+*/
+@RequestMapping("/cust")
+@Controller
+public class CustController {
+	
+	
+	
+	@Autowired
+	CustHomeService HomeServcie;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	@GetMapping("/home")
+	public String home(Model model) {
+		List<BzentVO> bzentVOList = HomeServcie.home();
+		
+		model.addAttribute("bzentVOList", bzentVOList);
+		
+		return "cust/main/home";
+	}
+	
+	
+	
+	@GetMapping("/selectStore")
+	public String selectStore() {
+		
+		return "cust/main/selectStore";
+	}
+	
+}

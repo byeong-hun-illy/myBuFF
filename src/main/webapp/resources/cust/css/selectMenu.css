@@ -1,0 +1,158 @@
+@charset "UTF-8";
+
+.menu-tap {
+    margin-bottom: 30px;
+    display: flex;
+    width: 100%;
+    gap: 30px;
+    justify-content: center;
+}
+.tap-select {
+	cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+.tap-icon {
+    display: block;
+    width: 70px;
+    height: 70px;
+    border-radius: 30px;
+    border: 1px solid var(--gray--2);
+    background: var(--gray--1);
+    text-align: center;
+    line-height: 90px;
+}
+.tap-icon span {
+    font-size: 2rem !important;
+    color: var(--gray--5);
+}
+.tap-nm {
+    color: var(--gray--5);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+.tap-select.active .tap-icon {
+    border: 2px solid var(--brand--primary);
+    background: var(--brand--bg);
+}
+.tap-select.active .tap-icon span {
+	color: var(--brand--primary);
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+.tap-select.active .tap-nm {
+	color: var(--brand--primary);
+	font-weight: 900;
+}
+
+
+.dtl-wrap {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--gap--l);
+}
+.dtl-inner.frcs {
+	display: flex;
+    flex-direction: column;
+	gap: 20px;
+}
+.menu-list {
+	width: 100%;
+    background: white;
+    border-radius: 12px;
+}
+.list-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 54px;
+}
+.list-box li {
+    width: 230px;
+    margin-left: 22px;
+    height: 365px;
+}
+.img-box {
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: #f7f7f7;
+}
+
+.img-box span {
+    display: block;
+    width: 100%;
+    height: 200px;
+    background-repeat: no-repeat;
+    background-position: center;
+	background-size: 120%;
+    transition: 0.5s;
+}
+.img-box span:hover {
+	background-size: 130%;
+    transition: 0.5s;
+}
+.list-txt {
+	color: #333;
+    font-weight: 500;
+    line-height: 1.44em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+	margin-top: 12px;
+}
+.list-price {
+    margin-top: 10px;
+    color: #333;
+    font-family: 'Poppins';
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+}
+.preservation {
+    margin-top: 15px;
+    color: var(--gray--6);
+    border-top: 1px solid var(--gray--1);
+    padding-top: 15px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

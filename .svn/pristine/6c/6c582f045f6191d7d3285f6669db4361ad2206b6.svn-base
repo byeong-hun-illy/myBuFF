@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.cust.mapper.CustHomeMapper">
+	
+		<!-- 
+		@author       : 서윤정
+		@date         : 2024.09.19
+		@description  : 본사 메뉴 조회
+	 	-->
+	
+	<select id="selectMenu" parameterType="String" resultType="menuVO">
+		SELECT MENU_NM
+			 , MENU_IMG_PATH
+			 , MENU_AMT
+			 , MENU_EXPLN
+			 , RLS_YMD
+		  FROM MENU
+		  <if test="menuGubun != null and menuGubun != ''">
+	        WHERE MENU_TYPE = #{menuGubun}
+	      </if>
+	</select>
+	
+	<insert id="insertDscsnPost" parameterType="String">
+		INSERT INTO FRCS_DSCSN(DSCSN_CODE
+							  ,MBR_ID
+							  ,DSCSN_PLAN_YMD
+							  ,RGN_NO)
+		VALUES(
+		(SELECT 'DS' || (NVL(MAX(CAST(SUBSTR(DSCSN_CODE, 3) AS INTEGER)), 0) + 1) AS DSCSN_CODE
+   		   FROM FRCS_DSCSN), 'axujgw4v', #{bgngYmd} , #{rgnCategory})
+	
+	</insert>
+
+	<select id="selectEvent" resultType="eventVO">
+		SELECT  EVENT_NO
+			  , EVENT_TTL
+			  , EVENT_CN
+			  , BGNG_YMD
+			  , EXP_YMD 
+	      FROM EVENT
+	</select>
+
+
+
+
+</mapper>

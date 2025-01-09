@@ -1,0 +1,95 @@
+document.write("<script src='/resources/js/global/value.js'></script>");
+
+function selectFrcsCheckAjax(){
+	let mngrId = $('#mngrId').val();
+	let rgnNo = $('#rgnNo').val();
+	let gubun = $('#gubun').val();
+	let keyword = $('#keyword').val();
+	
+	
+	let data = {};
+
+	// 값이 빈 문자열이 아니면 data 객체에 추가
+	if (mngrId) {
+	    data.mngrId = mngrId;
+	}
+	if (rgnNo) {
+	    data.rgnNo = rgnNo;
+	}
+	if (gubun) {
+	    data.gubun = gubun;
+	}
+	if (keyword) {
+	    data.keyword = keyword;
+	}
+	
+	data.sort = sort;
+	data.orderby = orderby;
+	data.currentPage = currentPage;
+	data.chk = chk;
+	
+	console.log(data);  // 최종적으로 빈 값이 제외된 data 객체
+	
+	// 서버전송
+	$.ajax({
+		url : "/hdofc/frcs/checkList",
+		type : "GET",
+		data : data,
+		success : function(res){
+			// 분류 처리
+			$('#tap-all').text(res.all);
+			$('#tap-check').text(res.chk);
+			
+			// 테이블 처리
+			let strTbl = '';
+			res.articlePage.content.forEach(list => {
+			// 점검 일자
+			let chckYmd = strToDate(list.chckYmd);
+			
+    		strTbl += `
+			    <tr class="frcsDtl" data-no="${list.frcsVO.frcsNo}" data-nm="${list.frcsVO.bzentVO.bzentNm}"  data-rgn="${list.frcsVO.bzentVO.rgnNm}">
+			        <td class="center">${list.rnum}</td>
+			        <td>${list.frcsVO.bzentVO.bzentNm}</td>
+			        <td class="center">${list.frcsVO.bzentVO.mbrVO ? list.frcsVO.bzentVO.mbrVO.mbrNm : '-'}</td>
+			        <td class="center">${list.frcsVO.bzentVO.mngrVO && list.frcsVO.bzentVO.mngrVO.mbrNm ? list.frcsVO.bzentVO.mngrVO.mbrNm : '-'}</td>
+			        <td class="center">${chckYmd}</td>
+			        <td class="center">${list.chckYmd ? list.totScr : '-'}</td>
+			        <td>${list.frcsVO.bzentVO.rgnNm}</td>
+			    </tr>
+			`;
+			
+			});
+			$('#table-body').html(strTbl)
+			
+			// 페이징 처리
+			let page = '';
+			
+			if (res.articlePage.startPage > res.articlePage.blockSize) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_left</span>
+			        </a>
+			    `;
+			}
+			
+			// 페이지 번호 링크들 추가
+			for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+			    if (res.articlePage.currentPage === pnum) {
+			        page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+			    } else {
+			        page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+			    }
+			}
+			
+			// 'chevron_right' 아이콘 및 다음 페이지 링크 추가
+			if (res.articlePage.endPage < res.articlePage.totalPages) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_right</span>
+			        </a>
+			    `;
+			}
+			$('.pagination').html(page);
+			}
+		});			
+}

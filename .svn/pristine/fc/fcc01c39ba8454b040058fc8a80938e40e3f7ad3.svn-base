@@ -1,0 +1,39 @@
+package com.buff.vo;
+
+import lombok.Data;
+
+/**
+* @packageName  : com.buff.vo
+* @fileName     : BzentVO.java
+* @author       : 송예진
+* @date         : 2024.09.12
+* @description  : 사업체의 전반적인 정보
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12        송예진     	  			최초 생성
+*/
+@Data
+public class BzentVO {
+	private String bzentNo;
+	private String mbrId;
+	private String mngrId;
+	private String bzentTelno;
+	private String bzentNm;
+	
+	private String rgnNo;
+	private String rgnNm; // 이름
+	
+	private String bzentZip;
+	private String bzentAddr;
+	private String bzentDaddr;
+	private String bzentType;
+	private String actno;
+	private String bankType;
+	
+	// 1:1 관리자에 대한 정보
+	private MemberVO mngrInfo;
+	
+	// 1:1 담당자에 대한 정보
+	private MemberVO mbrInfo;
+}

@@ -1,0 +1,96 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html;charset=UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+
+
+
+<sec:authorize access="isAuthenticated()">
+	<sec:authentication property="principal.memberVO" var="user"/>
+</sec:authorize>
+<form action="/logout" method="post" style="display:none">
+	<button id="btnLogout" type="submit">로그아웃</button>
+	<sec:csrfInput/>
+</form>
+<nav class="header">
+	
+	<div class="header-wrap top">
+		<!-- 로고 -->
+		<div class="header-cont" onclick="window.location.href='/buff/home'" style="cursor:pointer;">
+			<img alt="로고이미지" src="/resources/images/common/logo.png" class="logo-img">
+			<div class="logo-title">Buff</div>
+		</div>
+		<!-- 사용자 -->
+		<div class="header-cont">
+	        <ul class="top-quick">
+	        	<!-- 로그인 전 -->
+	        	<sec:authorize access="!isAuthenticated()">
+	            <li class="menu-item">
+	               <a href="/login" class="hover">로그인</a>
+	            </li>
+	            <li><em></em></li>
+	             <li class="menu-item">
+	                <a href="/center/selectNotice" class="">고객센터</a>
+	            </li>
+	            </sec:authorize>
+	        	<!-- 로그인 후 -->
+				<sec:authorize access="isAuthenticated()">
+		            <li class="menu-item">
+		                <a href="#none" id="spnLogout" style="cursor:pointer;">로그아웃</a>
+		            </li>
+		            <li><em></em></li>
+		            <li class="menu-item">
+			            <sec:authorize access="hasRole('ROLE_FRCS')">
+			                <a href="/frcs/main">관리자 전환</a>
+			            </sec:authorize>
+			            <sec:authorize access="hasRole('ROLE_CNPT')">
+			                <a href="/cnpt/main">관리자 전환</a>
+			            </sec:authorize>
+			            <sec:authorize access="hasRole('ROLE_HDOFC')">
+			                <a href="/hdofc/main">관리자 전환</a>
+			            </sec:authorize>
+		            </li>
+		            <li><em></em></li>
+		            <li class="menu-item">
+		                <a href="/center/selectNotice">고객센터</a>
+		            </li>
+				</sec:authorize>
+	        </ul>
+		</div>
+	</div>
+	
+	<div class="header-wrap bom">
+		<!-- 메뉴 -->
+		<ul class=header-cont>
+			<li><a href="/buff/selectMenu" class="nav-menu">메뉴 소개</a></li>
+			<li><a href="/buff/selectStore" class="nav-menu">매장 소개</a></li>
+			<li><a href="/buff/selectEvent" class="nav-menu">이벤트</a></li>
+			<li><a href="/buff/insertDscsn" class="nav-menu">가맹점 문의</a></li>
+			<li><a href="/cust/insertOrdr" class="nav-menu">딜리버리 주문</a></li>
+		</ul>
+		<!-- 마이 페이지 -->
+		<div class="header-cont">
+	        <div class="bom-quick">
+	            <div class="menu-item">
+	                <div class="search-input-btn">
+						<button type="submit" class="search-btn"></button>				
+						<input type="text" placeholder="검색어를 입력해주세요" class="search-input">
+					</div>
+	            </div>
+	            <div class="menu-item">
+	                <a href="/custPage/myPageMain"><span class="material-symbols-outlined">person</span></a>
+	            </div>
+	            <div class="menu-item">
+	                <a href="/cust/insertOrdr"><span class="material-symbols-outlined">shopping_cart</span></a>
+	            </div>
+	        </div>
+		</div>
+	</div>
+	
+</nav>
+
+<!-- 제이쿼리 -->
+<script type="text/javascript" src="/resources/js/jquery.min.js"></script>
+
+

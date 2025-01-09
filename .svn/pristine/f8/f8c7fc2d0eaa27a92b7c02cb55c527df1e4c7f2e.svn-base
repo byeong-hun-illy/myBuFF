@@ -1,0 +1,19 @@
+package com.buff.cust.service;
+
+import java.util.List;
+
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.OrdrVO;
+import com.buff.vo.QsVO;
+
+public interface CustMyPageService {
+
+
+	public List<QsVO> myQs(String mbrId);
+
+	public List<FrcsDscsnVO> myDscsn(String mbrId);
+
+	public List<OrdrVO> myOrdr(String mbrId);
+
+	
+}

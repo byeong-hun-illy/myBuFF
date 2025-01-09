@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.hdofc.mapper.HdofcFrcsClsbizMapper">
+	<select id="selectFrcsClsbiz">
+		SELECT C.FRCS_NO
+	        , C.CLSBIZ_PRNMNT_YM
+	        , C.CLSBIZ_RSN_TYPE
+	        , S.COM_NM AS CLSBIZ_RSN_TYPE_NM
+	        , F.FRCS_TYPE
+	        , T.COM_NM AS FRCS_TYPE_NM
+	        , F.CLSBIZ_YMD
+	        , B.BZENT_NM
+	        , B.RGN_NO
+	        , R.COM_NM AS RGN_NM
+	        , M.MBR_ID
+	        , M.MBR_NM
+	        , N.MBR_ID AS MNGR_ID
+	        , N.MBR_NM AS MNGR_NM
+	        , CL.CLCLN_YMD
+	        , CL.CLCLN_YN
+		FROM FRCS_CLSBIZ C
+		JOIN FRCS F ON C.FRCS_NO=F.FRCS_NO
+		JOIN BZENT B ON F.FRCS_NO=B.BZENT_NO
+		JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+		JOIN COM_CODE S ON S.COM_NO=C.CLSBIZ_RSN_TYPE
+		JOIN COM_CODE T ON T.COM_NO=F.FRCS_TYPE
+		JOIN MEMBER M ON M.MBR_ID=B.MBR_ID
+		LEFT OUTER JOIN MEMBER N ON N.MBR_ID=B.MNGR_ID
+		LEFT OUTER JOIN FRCS_CLCLN CL ON F.FRCS_NO=CL.FRCS_NO AND CL.CLCLN_YM=C.CLSBIZ_PRNMNT_YM
+		WHERE 1=1
+		<include refid="clcln"/>
+	</select>
+	
+	<sql id="clcln">
+		<choose>
+			<when test="clcln='null'">
+				AND CLCLN_YN IS NULL 
+			</when>
+			<when test="clcln='n'">
+				AND CLCLN_YN='N' 
+			</when>
+			<when test="clcln='y'">
+				AND CLCLN_YN='Y'
+			</when>
+		</choose>
+	</sql>
+</mapper>

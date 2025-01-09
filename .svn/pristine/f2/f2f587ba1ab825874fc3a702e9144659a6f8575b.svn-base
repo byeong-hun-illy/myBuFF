@@ -1,0 +1,249 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<sec:authentication property="principal.MemberVO" var="user"/>
+<script>
+let currentPage = 1;
+let startMonth = '';
+let endMonth = '';
+let sort = 'poNo';
+let orderby = 'desc';
+let bzentNo = "${user.bzentNo}";
+
+function(){
+	// 검색 버튼 이벤트 핸들러
+	$('#searchBtn').on('click', function() {
+	    currentPage = 1;
+	    startMonth = $('#startMonthPicker').val();
+	    endMonth = $('#endMonthPicker').val();
+	    selectDealAjax(); 
+	    
+	 // 모든 tap-cont에서 active 클래스를 제거
+	    $('.tap-cont').removeClass('active');
+	 
+	});
+
+	//검색영역 요약보기
+	$('.search-toggle').on('click',function(){
+	   	if ($(this).hasClass('active')){
+	   		$(this).removeClass('active');
+	   		$('.search-toggle').html(`요약보기<span class="icon material-symbols-outlined">Add</span>`);
+	   		$('.search-original').slideDown(300);
+	   		$('.search-summary').slideUp(300);
+	   	} else {
+	   		$(this).addClass('active');
+	   		$('.search-toggle').html(`전체보기<span class="icon material-symbols-outlined">Remove</span>`);
+	   		$('.search-original').slideUp(300);
+	   		$('.search-summary').slideDown(300);
+	   	} 
+		
+	   	/* 아래 부분은 구현하는 페이지에 맞춰서 작성해주세요!! */
+		// 인풋 데이터 가져오기
+	   	let startYmd = $('#startMonthPicker').val();                     
+		let endYmd = $('#endMonthPicker').val();    
+		
+		if(startYmd=='' && endYmd ==''){
+			$('#dateSummary').text('전체');
+		}else {
+			$('#dateSummary').text(startYmd + " ~ " + endYmd);
+		}
+	// 요약 보기 끝	
+	})
+	
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		console.log($(this).data('page'));
+		console.log(currentPage);
+		selectGdsAjax();
+	});
+
+	// 검색 후, 입력 텍스트 초기화
+	$(".search-btn").on("click", function(){
+		$("#startMonthPicker").val("");
+		$("#endMonthPicker").val("");
+	});
+	
+	// 초기화 버튼 클릭시 목록 처음으로
+	$("#resetBtn").on("click", function(){
+		// 검색 조건 초기화
+		$("#startMonthPicker").val('');
+		$("#endMonthPicker").val('');
+		
+		// 정렬 초기화
+		sort = 'poNo';
+		orderby = 'desc';
+		
+		// 정렬화살표 상태 초기화
+		// 모든 정렬 화살표 제거
+		$(".sort-arrow .sort-asc .sort-arrow .sort-desc").removeClass("class");
+	
+		// 기본 정렬 화살표에 active 클래스 추가(상품명 오름차순)
+		$(".th-gdsNm .sort-arrow .sort-asc").addClass("active");
+		
+	    // 모든 th.center 요소에서 active 클래스를 제거
+        $("th.center").removeClass("active");
+		
+	    // 기본 정렬인 gdsNm에 active 클래스 추가
+	    $(".th-gdsNm").addClass("active");
+	    
+	    // 모든 정렬 화살표 상태 초기화
+        $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+
+        // 기본 정렬 화살표에 active 클래스 추가 (상품명 오름차순)
+        $('.th-gdsNm .sort-arrow .sort-asc').addClass('active');
+	    
+	    
+		// 검색 요약 부분도 초기화
+		$("#startSummary").text("YYYY-MM");
+		$("#endSummary").text("YYYY-MM");
+		
+		// 탭 상태도 초기화
+		$(".tap-cont").removeClass("active");
+		$("#tap-all").parent().addClass("active");
+		
+		currentPage = 1;
+		selectGdsAjax();
+		
+	});
+	
+	
+	
+	
+}
+
+
+
+
+</script>
+
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">이벤트 관리</h1>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- wrap -->
+<div class="wrap">
+	<div class="cont">
+		<div class="left-section">
+			<div class="search-section">
+				<!-- cont: 검색 영역 -->
+				<div class="cont search-original">
+					<div class="search-wrap">
+						<!-- 이벤트 기간 검색조건 -->
+						<div class="search-cont">
+							<p class="search-title">시작 년/월</p>
+							<div class="search-date-wrap">
+								<label for="startMonthPicker">시작 년/월</label>
+    							<input type="text" id="startMonthPicker" name="startMonth" placeholder="YYYY-MM" readonly>
+							</div>
+						</div>
+						<div class="search-cont">
+							<p class="search-title">끝 년/월</p>
+							<div class="search-date-wrap">
+								<label for="endMonthPicker">끝 월</label>
+    							<input type="text" id="endMonthPicker" name="endMonth" placeholder="YYYY-MM" readonly>
+							</div>
+						</div>
+					</div>
+					<!-- /.search-wrap -->
+				</div>
+				<!-- /.cont: 검색 영역 -->
+				
+				<!-- cont:  검색 접기 영역 -->
+				<div class="cont search-summary">
+					<div class="search-wrap">
+						<!-- 시작 년월 기간 검색조건 -->
+						<div class="search-cont">
+							<p class="search-title">시작 년/월<span class="summary" id="startSummary"></span></p>
+						</div>
+						<div class="divide-border"></div>
+						<!-- 끝 년월 기간 검색조건 -->
+						<div class="search-cont">
+							<p class="search-title">끝 년/월<span class="summary" id="endSummary"></span></p>
+						</div>
+						<div class="divide-border"></div>
+					</div>
+					<!-- /.search-wrap -->
+				</div>
+				<!-- /.cont: 검색 영역 -->
+				
+				<!-- 검색 버튼 영역 -->
+				<div class="search-control">
+					<div class="search-control-btns">
+						<div class="search-toggle">
+							요약보기<span class="icon material-symbols-outlined">Add</span>
+						</div>
+						<div class="search-reset">
+							초기화<span class="icon material-symbols-outlined">restart_alt</span>
+						</div>
+						<div>
+							<button class="btn btn-default search" id="searchBtn">검색 <span class="icon material-symbols-outlined">search</span></button>
+						</div>		
+					</div>
+				</div>
+				<!-- /.검색 버튼 영역 -->
+			</div>
+			<!-- /.search-section -->		
+		</div>
+	<!-- table cont -->
+	<div class="cont">
+		<div class="table-wrap">
+			<div class="tap-btn-wrap">
+				<div class="tap-wrap">
+					<div data-type=''  class="tap-cont active">
+						<span class="tap-title">전체</span>
+						<span class="bge bge-default" id="tap-all">${all}</span>
+					</div>
+				</div>
+				<div class="btn-wrap">
+					<button class="btn-active" onclick="window.location.href='/hdofc/event/selectEventDetail'">등록 <span class="icon material-symbols-outlined">East</span></button>
+				</div>
+			</div>
+			<!-- /tap-btn-wrap -->
+			<table class="table-default">
+				<thead>
+					<tr>
+						<th class="center" style="width: 20%;">번호</th>
+						<th class="center" style="width: 200px">매출일자</th>
+						<th class="center" style="width: 100px">정산액</th>
+					</tr>
+				</thead>
+				<tbody id="table-body" class="table-sales">
+					<!-- selectEventAjax()를 통해 나타날 영역 -->
+				</tbody>
+			</table>
+			<div class="pagination-wrap">
+				<div class="pagination">
+					<!-- selectEventAjax()를 통해 나타날 영역 -->
+				</div>
+			</div>
+		</div>
+	<!-- table cont 끝 -->
+	</div>
+	
+	<div class="right-section">
+		<!-- 차트 영역 -->
+		<div id="salesChart"></div>	
+	</div>
+	<!-- 전체 cont -->	
+	</div>
+<!-- wrap 끝 -->	
+</div>

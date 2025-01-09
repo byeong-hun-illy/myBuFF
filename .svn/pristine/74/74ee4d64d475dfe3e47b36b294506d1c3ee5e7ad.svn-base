@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.12
+@description  : 발주 관리
+ -->
+<mapper namespace="com.buff.frcs.mapper.FrcsPoMapper">
+	
+ 	<!--
+ 		@programName : 가맹점 발주 내역 조회
+ 		@description : 가맹점 발주 내역 조회를 위한 화면
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectFrcsPoList" resultType="poVO" parameterType="String">
+		SELECT P.PO_NO			<!-- 발주 번호 -->
+			 , P.DELI_YMT		<!-- 배송 완료 일자 -->
+			 , P.DELI_TYPE		<!-- 배송 유형 -->
+		FROM   PO P
+		WHERE  P.BZENT_NO = #{bzentNo}
+	</select>
+	
+	<!-- 배송 유형 분류 -->
+	<sql id="deliType">
+		<if test="deliType == 'DELI01' or deliType == 'DELI02' or deliType == 'DELI03'">
+			AND F.FRCS_TYPE = #{frcsType}
+		</if>
+	</sql>
+	
+</mapper>

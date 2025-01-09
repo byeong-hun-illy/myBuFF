@@ -1,0 +1,320 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<link rel="stylesheet" href="/resources/frcs/css/frcsPoList.css">
+<link rel="stylesheet" href="/resources/css/global/common.css">
+<script src="/resources/js/jquery-3.6.0.js"></script>
+
+<!-- 
+로그인 안했을 때 principal.MemberVO 에서 오류 발생
+ -->
+<sec:authorize access="isAuthenticated()">
+	<!-- 로그인 한(isAuthenticated()) 사용자 정보 -->
+	<sec:authentication property="principal.MemberVO" var="user"/>
+</sec:authorize>
+
+<meta name="_csrf" content="${_csrf.token}" />
+<meta name="_csrf_header" content="${_csrf.headerName}" />
+
+<%--
+	@fileName    : selectFaqList.jsp
+	@programName : Faq 전체 리스트 조회 화면
+	@description : Faq 전체 리스트 조회 화면
+	@author      : 김 현 빈
+	@date        : 2024. 09. 30
+--%>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	// 등록 버튼 클릭 시 insertFaqList 페이지로 이동
+    $("#submitBtn").on("click", function() {
+        window.location.href = "/hdofc/faq/insertFaqList";  // 페이지 이동
+    });
+	
+	// 이벤트 위임을 사용하여 tap-cont 클릭 시 처리
+	$(".tap-wrap").on("click", ".tap-cont", function() {
+		// 모든 탭에서 active 클래스를 제거
+        $(".tap-cont").removeClass("active");
+
+        // 클릭한 탭에만 active 클래스를 추가
+        $(this).addClass("active");
+
+        // 선택된 문의 유형을 가져와 셀렉트 박스 값 변경
+        let selectedQsType = $(this).data("type");
+        $("#qsType").val(selectedQsType);
+        
+     	// localStorage에 클릭된 탭의 정보를 저장
+        localStorage.setItem('selectedQsType', selectedQsType);
+
+        // 폼 자동 제출 (새로고침 방식)
+        $("#searchForm").submit();
+	});
+	
+	$("#searchBtn").on("click",function(event){
+		let qsType = $("#qsType").val();
+		let faqTtl = $("#faqTtl").val();
+// 		let faqCn = $("#faqCn").val();
+		
+		let data = {
+			"qsType":qsType,
+			"faqTtl":faqTtl,
+// 			"faqCn":faqCn
+		};
+		
+		console.log("qsType : ", qsType);
+		console.log("faqTtl: ", faqTtl);
+// 		console.log("faqCn: ", faqCn);
+		
+		$("#searchForm").submit();
+	});
+	
+	// 검색영역 초기화
+	$('.search-reset').on('click', function(){
+		$('.select-selected').text('전체');
+		$('#qsType').val('');
+		$('#faqTtl').val('');
+// 		$('#faqCn').val('');
+		
+	    $('.tap-cont').removeClass('active');
+		$('#tap-all').parent().addClass('active');
+		
+		// 새로고침하여 링크로 이동
+	    window.location.href = "/hdofc/faq/selectFaqList";
+	})
+	//.search-reset
+	
+	// 검색영역 요약보기
+	$('.search-toggle').on('click',function(){
+	   	if ($(this).hasClass('active')){
+	   		$(this).removeClass('active');
+	   		$('.search-toggle').html(`요약보기<span class="icon material-symbols-outlined">Add</span>`);
+	   		$('.search-original').slideDown(300);
+	   		$('.search-summary').slideUp(300);
+	   	} else {
+	   		$(this).addClass('active');
+	   		$('.search-toggle').html(`전체보기<span class="icon material-symbols-outlined">Remove</span>`);
+	   		$('.search-original').slideUp(300);
+	   		$('.search-summary').slideDown(300);
+	   	} 
+		
+	   	/* 아래 부분은 구현하는 페이지에 맞춰서 작성해주세요!! */
+		// 인풋 데이터 가져오기
+		let qsTypeSearch = $('#qsType option:selected').text();
+		let faqTtlSearch = $('#faqTtl').val();
+// 		let faqCnSearch = $('#faqCn').val();
+		
+		// 문의 유형 데이터 입력
+		if(qsTypeSearch==''){
+			$('#qsTypeSummary').text('전체');
+		}else {
+			$('#qsTypeSummary').text(qsTypeSearch);
+		}
+		// 제목 데이터 입력
+		if(faqTtlSearch==''){
+			$('#faqTtlSummary').text('전체');
+		}else {
+			$('#faqTtlSummary').text(faqTtlSearch);
+		}
+		// 내용 데이터 입력
+// 		if(faqCnSearch==''){
+// 			$('#faqCnSummary').text('전체');
+// 		}else {
+// 			$('#faqCnSummary').text(faqCnSearch);
+// 		}
+	});
+	
+});
+</script>
+
+
+<div class="content-header">
+	<div class="container-fluid">
+		<div class="row mb-2 justify-content-between">
+			<div class="row align-items-center">
+				<h1 class="m-0">FAQ</h1>
+			</div>
+			<div class="btn-wrap">
+				<button type="submit" class="btn-active" id="submitBtn">
+					등록 <span class="icon material-symbols-outlined">East</span>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="wrap">
+	<form id="searchForm" name="searchForm" action="/hdofc/faq/selectFaqList" method="get">
+	<div class="search-section">
+		<!-- cont: 검색 영역 -->
+		<div class="cont search-original">
+			<div class="search-wrap">
+				<!-- 진행상태 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">문의 유형</p>
+					<div class="select-custom" style="width:150px">
+						<select name="qsType" id="qsType">
+							<option value="">전체</option>
+							<option value="QS01"
+								<c:if test="${param.qsType == 'QS01'}">selected</c:if>>구매</option>
+							<option value="QS02"
+								<c:if test="${param.qsType == 'QS02'}">selected</c:if>>매장이용</option>
+							<option value="QS03"
+								<c:if test="${param.qsType == 'QS03'}">selected</c:if>>채용</option>
+							<option value="QS04"
+								<c:if test="${param.qsType == 'QS04'}">selected</c:if>>가맹점</option>
+							<option value="QS05"
+								<c:if test="${param.qsType == 'QS05'}">selected</c:if>>기타</option>
+						</select>
+					</div>
+				</div>
+				<!-- 제목 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">제목</p>
+					<input type="text" id="faqTtl" name="faqTtl" placeholder="검색어를 입력하세요" value="${param.faqTtl}"> 
+				</div>
+				<!-- 내용 검색조건 -->
+<!-- 				<div class="search-cont"> -->
+<!-- 					<p class="search-title">내용</p> -->
+<%-- 					<input type="text" id="faqCn" name="faqCn" placeholder="검색어를 입력하세요" value="${param.faqCn}">  --%>
+<!-- 				</div> -->
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 영역 -->
+		
+		<!-- cont:  검색 접기 영역 -->
+		<div class="cont search-summary">
+			<div class="search-wrap">
+				<!-- 일자 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">문의 유형 <span class="summary" id="qsTypeSummary">이벤트기간</span></p>
+				</div>
+				<div class="divide-border"></div>
+				<!-- 셀렉트 검색조건 -->
+				<div class="search-cont">
+					<p class="search-title">제목 <span class="summary" id="faqTtlSummary">쿠폰</span></p>
+				</div>
+				<!-- 텍스트 검색조건 -->
+<!-- 				<div class="search-cont"> -->
+<!-- 					<p class="search-title">내용 <span class="summary" id="faqCnSummary">제목</span></p> -->
+<!-- 				</div> -->
+			</div>
+			<!-- /.search-wrap -->
+		</div>
+		<!-- /.cont: 검색 영역 -->
+		
+		<!-- 검색 버튼 영역 -->
+		<div class="search-control">
+			<div class="search-control-btns">
+				<div class="search-toggle">
+					요약보기<span class="icon material-symbols-outlined">Add</span>
+				</div>
+				<div class="search-reset">
+					초기화<span class="icon material-symbols-outlined">restart_alt</span>
+				</div>
+				<div>
+					<button class="btn btn-default search" id="searchBtn">검색 <span class="icon material-symbols-outlined">search</span></button>
+				</div>		
+			</div>
+		</div>
+		<!-- /.검색 버튼 영역 -->
+		<!-- /.search-section: 검색어 영역 -->
+	</div>
+	</form>
+
+	<div class="cont">
+<!-- 		<div class="cont-title"><span class="material-symbols-outlined title-icon">list_alt</span>자주 묻는 질문</div> -->
+		<!-- table-wrap -->
+		<div class="table-wrap">
+			<div class="tap-wrap">
+				<div data-type="" class="tap-cont ${param.qsType == null || param.qsType == '' ? 'active' : ''}">
+					<span class="tap-title">전체</span>
+					<span class="bge bge-default" id="tap-all">${tapMaxTotal.TAPALL}</span>
+				</div>
+				<div data-type="QS01" class="tap-cont ${param.qsType == 'QS01' ? 'active' : ''}">
+					<span class="tap-title">구매</span>
+					<span class="bge bge-info" id="tap-waiting">${tapMaxTotal.TAPWAITING}</span>
+				</div>
+				<div data-type="QS02" class="tap-cont ${param.qsType == 'QS02' ? 'active' : ''}">
+					<span class="tap-title">매장이용</span>
+					<span class="bge bge-active" id="tap-progress">${tapMaxTotal.TAPPROGRESS}</span>
+				</div>
+				<div data-type="QS03" class="tap-cont ${param.qsType == 'QS03' ? 'active' : ''}">
+					<span class="tap-title">채용</span>
+					<span class="bge bge-warning" id="tap-scheduled">${tapMaxTotal.TAPSCHEDULED}</span>
+				</div>
+				<div data-type="QS04" class="tap-cont ${param.qsType == 'QS04' ? 'active' : ''}">
+					<span class="tap-title">가맹점</span>
+					<span class="bge bge-danger" id="tap-completed">${tapMaxTotal.TAPCOMPLETED}</span>
+				</div>
+				<div data-type="QS05" class="tap-cont ${param.qsType == 'QS05' ? 'active' : ''}">
+					<span class="tap-title">기타</span>
+					<span class="bge bge-danger" id="tap-cancelled">${tapMaxTotal.TAPCANCELLED}</span>
+				</div>
+			</div>
+			<table class="table-default">
+				<thead>
+					<tr>
+						<th class="center" style="width: 60px">번호</th>
+						<th style="width: 300px">제목</th>
+						<th class="center" style="width: 100px">문의 유형</th>
+						<th class="center" style="width: 100px">작성자</th>
+					</tr>
+				</thead>
+				<c:choose>
+					<c:when test="${empty articlePage.content}">
+						<tbody id="table-body" class="table-error">
+							<tr>
+								<td class="error-info" colspan="6">
+									<span class="icon material-symbols-outlined">error</span>
+									<div class="error-msg">검색 결과가 없습니다</div>
+								</td>
+							</tr>
+						</tbody>
+					</c:when>
+					<c:otherwise>
+						<tbody id="table-body">
+							<c:forEach var="faqVOList" items="${articlePage.content}" varStatus="stat">
+								<tr class="po-row" onclick="window.location='/hdofc/faq/selectFaqDetail?faqSeq=${faqVOList.faqSeq}'">
+									<td class="center">${faqVOList.rnum}</td>
+									<td class="">${faqVOList.faqTtl}</td>
+									<td class="center">${faqVOList.qsTypeNm}</td>
+									<td class="center">${faqVOList.mngrVO.memberVO.mbrNm}</td>
+								</tr>
+							</c:forEach>
+						</tbody>
+					</c:otherwise>
+				</c:choose>
+			</table>
+			<!-- pagination-wrap -->
+			<c:if test="${not empty articlePage.content}">
+				<div class="pagination-wrap">
+					<div class="pagination">
+						<c:if test="${articlePage.startPage gt 5}">
+							<a href="/hdofc/faq/selectFaqList?qsType=${param.qsType}&faqTtl=${param.faqTtl}&faqCn=${param.faqCn}&currentPage=${articlePage.startPage-5}" class="page-link">
+								<span class="icon material-symbols-outlined">chevron_left</span>
+							</a>
+						</c:if>
+						<!-- 선택한 페이지만 class="active"가 설정되게 한다 -->
+						<c:forEach var="pNo" begin="${articlePage.startPage}" end="${articlePage.endPage}">
+							<a href="/hdofc/faq/selectFaqList?qsType=${param.qsType}&faqTtl=${param.faqTtl}&faqCn=${param.faqCn}&currentPage=${pNo}" class="page-link 
+		        				<c:if test="${pNo == articlePage.currentPage}">active</c:if>">
+		        				${pNo}
+		    				</a>
+						</c:forEach>
+						<!-- endPage < totalPages일때만 [다음] 활성 -->
+						<c:if test="${articlePage.endPage lt articlePage.totalPages}">
+							<a href="/hdofc/faq/selectFaqList?qsType=${param.qsType}&faqTtl=${param.faqTtl}&faqCn=${param.faqCn}&currentPage=${articlePage.startPage+5}" class="page-link">
+								<span class="icon material-symbols-outlined">chevron_right</span>
+							</a>
+						</c:if>
+					</div>
+				</div>
+			</c:if>
+			<!-- pagination-wrap -->
+		</div>
+		<!-- table-wrap -->
+	</div>
+</div>

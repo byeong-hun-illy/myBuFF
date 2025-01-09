@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.09.12
+@description  : 발주 관리
+ -->
+<mapper namespace="com.buff.frcs.mapper.FrcsPoMapper">
+	
+	<!-- 
+	//BZENT_NO 컬럼의 값이 bzentVO 의 bzentNo 프로퍼티로 세팅
+	 -->
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		<result property="bzentType" column="BZENT_TYPE"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		
+		<collection property="poVOList" resultMap="poMap" />
+	</resultMap>
+	
+	<resultMap type="poVO" id="poMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmt" column="DELI_YMT"/>
+		<result property="deliType" column="DELI_TYPE"/>
+	</resultMap>
+	
+ 	<!--
+ 		@programName : 가맹점 발주 내역 조회
+ 		@description : 가맹점 발주 내역 조회를 위한 화면
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 20
+ 		
+ 		ANSI표기
+ 		 CROSS JOIN
+ 		 INNER JOIN
+ 		 OUTER JOIN
+ 		 NATURAL JOIN
+ 		 
+ 		 public BzentVO selectFrcsPoList(String mbrId);
+ 		 
+ 		 parameter : FrcsPoMapper -> frcsPo_SQL.xml
+ 		 result :  frcsPo_SQL.xml -> FrcsPoMapper
+ 		 
+ 		 poVO{poNo=P230505372,deliYmt=20230505,deliType=DELI03}
+ 		 poVO{poNo=KHB001,deliYmt=,deliType=DELI01}
+ 		 ..
+	-->
+	<select id="selectFrcsPoList" resultType="poVO" parameterType="hashMap">
+		<![CDATA[
+		WITH T AS( 
+			SELECT ROW_NUMBER() OVER(ORDER BY P.PO_NO DESC) RNUM 
+				 , C.COM_NM AS DELI_TYPE_NM 
+				 , P.PO_NO 
+	     		 , P.DELI_YMT 
+	     		 , P.DELI_TYPE 
+			FROM   PO P INNER JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+			INNER  JOIN COM_CODE C ON P.DELI_TYPE = C.COM_NO 
+			WHERE  B.MBR_ID = #{mbrId} 
+		) 
+		SELECT * 
+		FROM   T 
+		WHERE  T.RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+		]]>
+	</select>
+	
+ 	<!--
+ 		@programName : 가맹점 발주 내역 갯수
+ 		@description : 가맹점 발주 내역의 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 09. 23
+	-->
+	<select id="poTotalCnt" resultType="int">
+		SELECT COUNT(*) 
+		FROM   PO P INNER JOIN BZENT B ON(P.BZENT_NO = B.BZENT_NO) 
+		WHERE  B.MBR_ID = #{mbrId} 
+	</select>
+	
+</mapper>

@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 김현빈
+@date         : 2024.10.05
+@description  : 본사 매출 영업분석
+ -->
+<mapper namespace="com.buff.hdofc.mapper.HdofcAnalyzeMapper">
+	
+	<resultMap type="menuVO" id="menuMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="menuNm" column="MENU_NM"/>
+		<result property="menuImgPath" column="MENU_IMG_PATH"/>
+		<result property="menuAmt" column="MENU_AMT"/>
+		<result property="menuExpln" column="MENU_EXPLN"/>
+		<result property="menuType" column="MENU_TYPE"/>
+		<result property="menuTypeNm" column="MENU_TYPE_NM"/>
+		<result property="rlsYmd" column="RLS_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="mngrId" column="MNGR_ID"/>
+		
+		<collection property="frcsMenuVOList" resultMap="frcsMenuMap"/>
+	</resultMap>
+	
+	<resultMap type="frcsMenuVO" id="frcsMenuMap">
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ntslYn" column="NTSL_YN"/>
+		<result property="menuRegYmd" column="MENU_REG_YMD"/>
+		
+		<collection property="ordrDtlVOList" resultMap="ordrDtlMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="ordrDtlVO" id="ordrDtlMap">
+ 		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="frcsNo" column="FRCS_NO"/>
+		<result property="menuNo" column="MENU_NO"/>
+		<result property="ordrQty" column="ORDR_QTY"/>
+		<result property="ordrAmt" column="ORDR_AMT"/>
+		<result property="ordrQtySum" column="ORDR_QTY_SUM"/>
+		<result property="ordrAmtSum" column="ORDR_AMT_SUM"/>
+		
+		<association property="ordrVO" resultMap="ordrMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="ordrVO" id="ordrMap">
+ 		<result property="ordrNo" column="ORDR_NO"/>
+		<result property="ordrDt" column="ORDR_DT"/>
+		<result property="bestDay" column="BEST_DAY"/>
+		<result property="bestTime" column="BEST_TIME"/>
+		<result property="ordrType" column="ORDR_TYPE"/>
+		<result property="spmtYn" column="SPMT_YN"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="issuSn" column="ISSU_SN"/>
+ 	</resultMap>
+
+ 	<!--
+ 		@programName : selectBzentList
+ 		@description : 지역에 따른 가맹점 조회
+ 		@author      : 정기쁨
+ 		@date        : 2024. 10. 10
+	-->
+	<select id="selectBzentList" resultType="bzentVO" parameterType="String">
+		select 
+		    b.bzent_no,
+		    b.bzent_nm,
+		    c.com_no as rgn_no,
+		    c.com_nm as rgn_nm
+		from bzent b, com_code c
+		where b.rgn_no = c.com_no
+		and b.bzent_type = 'BZ_F01'
+		<if test="rgnNo != null and rgnNo != ''">
+			and b.rgn_no = #{rgnNo}
+		</if>
+	</select>
+	
+	 <!--
+ 		@programName : selectFrcsAnalyzeAjax
+ 		@description : 가맹점 별 매출 조회
+ 		@author      : 정기쁨
+ 		@date        : 2024. 10. 10
+	-->
+	<sql id="sort_frcs">
+		ORDER BY SUM(D.ORDR_QTY * D.ORDR_AMT)
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby=='desc'">
+			DESC
+		</if>
+		 <if test="orderby=='asc'">
+	        ASC
+	    </if>
+	</sql>
+	 
+	
+	<select id="selectFrcsAnalyzeAjax" parameterType="hashMap" resultType="bzentVO">
+	    SELECT 
+	        T.*
+	    FROM (
+	        SELECT 
+	        	COUNT(1) OVER () AS TOTAL,
+	            ROW_NUMBER() OVER ( <include refid="sort_frcs"/> <include refid="orderby"/>) AS RNUM,
+	            B.RGN_NO,
+	            C.COM_NM AS RGN_NM,
+	            D.FRCS_NO AS BZENT_NO,
+	            B.BZENT_NM,    
+	            SUM(D.ORDR_QTY * D.ORDR_AMT) AS SALES_SUM
+	        FROM ORDR_DTL D
+	        INNER JOIN ORDR O ON (D.ORDR_NO = O.ORDR_NO)
+	        INNER JOIN BZENT B ON (D.FRCS_NO = B.BZENT_NO)
+	        INNER JOIN COM_CODE C ON (B.RGN_NO = C.COM_NO)
+	        WHERE 1=1
+	        <!-- 지역조회 -->
+	        <if test="rgnNo != null and rgnNo != ''">
+	            AND B.RGN_NO = #{rgnNo}                                                                          
+	        </if>
+	        <!-- 가맹점명 -->
+	        <if test="bzentNo != null and bzentNo != ''">
+	            AND B.BZENT_NO = #{bzentNo}
+	        </if>    
+	        <!-- 분석기간 조회 -->  
+	        <if test="bgngYmd != null and bgngYmd != '' and expYmd != null and expYmd != ''">                                                              
+	            AND O.ORDR_DT BETWEEN TO_DATE(#{bgngYmd},'YYYY-MM-DD') AND TO_DATE(#{expYmd},'YYYY-MM-DD')
+	        </if>
+	        GROUP BY B.RGN_NO, C.COM_NM, D.FRCS_NO, B.BZENT_NM
+	    ) T
+	    WHERE T.RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	
+	<!--
+ 		@programName : 영업 분석 리스트
+ 		@description : 영업 분석 리스트
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 05
+	-->
+	<select id="selectAnalyzeList" parameterType="hashMap" resultMap="menuMap">
+ 		SELECT *
+		FROM (
+	 		SELECT ROW_NUMBER() OVER(ORDER BY SUM(OD.ORDR_QTY) DESC) AS RNUM 
+			     , M.MENU_NO 
+			     , M.MENU_NM 
+			     , M.MENU_TYPE 
+				 , C.COM_NM AS MENU_TYPE_NM 
+			     , M.MENU_AMT 
+			     , SUM(OD.ORDR_QTY) AS ORDR_QTY_SUM 
+			     , SUM(OD.ORDR_AMT * OD.ORDR_QTY) AS ORDR_AMT_SUM 
+			FROM   MENU M
+			INNER  JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO 
+			INNER  JOIN ORDR_DTL OD ON FM.MENU_NO = OD.MENU_NO AND FM.FRCS_NO = OD.FRCS_NO 
+			INNER  JOIN ORDR O ON OD.ORDR_NO = O.ORDR_NO 
+			INNER  JOIN COM_CODE C ON C.COM_NO = M.MENU_TYPE 
+			WHERE  1=1
+			<!-- 메뉴 타입 필터링 -->
+			<if test="menuType != null and menuType != ''">
+				AND M.MENU_TYPE = #{menuType}
+			</if>
+			<!-- 메뉴 이름 필터링 -->
+			<if test="menuSearch != null and menuSearch != ''">
+				AND M.MENU_NM LIKE '%' || #{menuSearch} || '%'
+			</if>
+			<!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND O.ORDR_DT >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND O.ORDR_DT <= #{expYmd}
+			]]>
+			</if>
+			GROUP  BY M.MENU_NO, M.MENU_NM, M.MENU_AMT, M.MENU_TYPE, C.COM_NM
+		)
+		WHERE  RNUM BETWEEN (#{currentPage} * 10) - (10 - 1) AND (#{currentPage} * 10) 
+ 	</select>
+ 	
+	 <!--
+ 		@programName : 유형 검색 메뉴 총 갯수
+ 		@description : 유형 검색 메뉴 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 05
+	-->
+ 	<select id="menuTotalCnt" parameterType="hashMap" resultType="int">
+ 		SELECT COUNT(*)
+		FROM   MENU
+		WHERE  1=1
+		<!-- 메뉴 타입 필터링 -->
+		<if test="menuType != null and menuType != ''">
+			AND MENU_TYPE = #{menuType}
+		</if>
+		<!-- 메뉴 이름 필터링 -->
+		<if test="menuSearch != null and menuSearch != ''">
+			AND MENU_NM LIKE '%' || #{menuSearch} || '%'
+		</if>
+ 	</select>
+ 	
+ 	<!--
+ 		@programName : 메뉴 유형 총 갯수
+ 		@description : 메뉴 유형 총 갯수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 05
+	-->
+ 	<select id="tapMaxTotal" resultType="hashMap">
+	 	SELECT MAX(T.tapAll) tapAll
+		     , MAX(T.tapWaiting) tapWaiting
+		     , MAX(T.tapProgress) tapProgress
+		     , MAX(T.tapScheduled) tapScheduled
+		     , MAX(T.tapCompleted) tapCompleted
+		FROM
+		(
+		    SELECT COUNT(*) tapAll,0 tapWaiting,0 tapProgress,0 tapScheduled,0 tapCompleted
+		    FROM   MENU M 
+		    INNER  JOIN COM_CODE C ON M.MENU_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    UNION ALL
+		    SELECT 0,COUNT(*),0,0,0
+		    FROM   MENU M 
+		    INNER  JOIN COM_CODE C ON M.MENU_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    M.MENU_TYPE = 'MENU01'
+		    UNION ALL
+		    SELECT 0,0,COUNT(*),0,0
+		    FROM   MENU M 
+		    INNER  JOIN COM_CODE C ON M.MENU_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    M.MENU_TYPE = 'MENU02'
+		    UNION ALL
+		    SELECT 0,0,0,COUNT(*),0
+		    FROM   MENU M 
+		    INNER  JOIN COM_CODE C ON M.MENU_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    M.MENU_TYPE = 'MENU03'
+		    UNION ALL
+		    SELECT 0,0,0,0,COUNT(*)
+		    FROM   MENU M 
+		    INNER  JOIN COM_CODE C ON M.MENU_TYPE = C.COM_NO 
+		    WHERE  1=1
+		    AND    M.MENU_TYPE = 'MENU04'
+		) T
+ 	</select>
+ 	
+ 	<!--
+ 		@programName : 베스트 메뉴
+ 		@description : 베스트 메뉴
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 07
+	-->
+	<select id="selectBestMenu" parameterType="hashMap" resultMap="menuMap">
+		SELECT *
+		FROM (
+		    SELECT ROW_NUMBER() OVER(ORDER BY SUM(OD.ORDR_QTY) DESC) AS RNUM
+		         , M.MENU_NO
+		         , M.MENU_NM
+		         , M.MENU_TYPE
+		         , C.COM_NM AS MENU_TYPE_NM
+		         , M.MENU_AMT
+		         , SUM(OD.ORDR_QTY) AS ORDR_QTY_SUM
+		         , SUM(OD.ORDR_AMT * OD.ORDR_QTY) AS ORDR_AMT_SUM
+		    FROM   MENU M
+		    INNER  JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO 
+		    INNER  JOIN ORDR_DTL OD ON FM.MENU_NO = OD.MENU_NO AND FM.FRCS_NO = OD.FRCS_NO
+		    INNER  JOIN ORDR O ON OD.ORDR_NO = O.ORDR_NO
+		    INNER  JOIN COM_CODE C ON C.COM_NO = M.MENU_TYPE
+		    WHERE  1=1
+		    <!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND O.ORDR_DT >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND O.ORDR_DT <= #{expYmd}
+			]]>
+			</if>
+		    GROUP  BY M.MENU_NO, M.MENU_NM, M.MENU_AMT, M.MENU_TYPE, C.COM_NM
+		) A
+		WHERE A.RNUM = 1
+	</select>
+	
+ 	<!--
+ 		@programName : 최고 판매량 피크데이
+ 		@description : 최고 판매량 피크데이
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 07
+	-->
+	<select id="selectBestDay" parameterType="hashMap" resultMap="menuMap">
+		SELECT * FROM (
+		    SELECT 
+		        TO_CHAR(O.ORDR_DT, 'DY') || '요일' AS BEST_DAY, 
+		        SUM(OD.ORDR_QTY) 
+		    FROM 
+		        ORDR O
+		        INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		    WHERE 1=1
+		    <!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND O.ORDR_DT >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND O.ORDR_DT <= #{expYmd}
+			]]>
+			</if>
+		    GROUP BY 
+		        TO_CHAR(O.ORDR_DT, 'DY')
+		    ORDER BY 
+		        SUM(OD.ORDR_QTY) DESC
+		)
+		WHERE ROWNUM = 1
+	</select>
+	
+ 	<!--
+ 		@programName : 최고 판매량 피크타임
+ 		@description : 최고 판매량 피크타임
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 07
+	-->
+	<select id="selectBestTime" parameterType="hashMap" resultMap="menuMap">
+		SELECT * 
+		FROM (
+		    SELECT 
+		        TO_CHAR(O.ORDR_DT, 'HH24') || ':00' AS BEST_TIME, 
+		        SUM(OD.ORDR_QTY)
+		    FROM 
+		        ORDR O
+		        INNER JOIN ORDR_DTL OD ON O.ORDR_NO = OD.ORDR_NO
+		    WHERE 1=1
+		    <!-- 시작일 필터링 -->
+        	<if test="bgngYmd != null and bgngYmd != ''">
+        	<![CDATA[
+				AND O.ORDR_DT >= #{bgngYmd}
+			]]>
+			</if>
+			<!-- 종료일 필터링 -->
+			<if test="expYmd != null and expYmd != ''">
+			<![CDATA[
+				AND O.ORDR_DT <= #{expYmd}
+			]]>
+			</if>
+		    GROUP BY 
+		        TO_CHAR(O.ORDR_DT, 'HH24')
+		    ORDER BY 
+		        SUM(OD.ORDR_QTY) DESC
+		)
+		WHERE ROWNUM = 1
+	</select>
+	
+ 	<!--
+ 		@programName : 기간별 판매량 총 액수
+ 		@description : 기간별 판매량 총 액수
+ 		@author      : 김현빈
+ 		@date        : 2024. 10. 08
+	-->
+	<select id="selectTotalAmt" parameterType="hashMap" resultMap="menuMap">
+		SELECT SUM(OD.ORDR_AMT * OD.ORDR_QTY) AS ORDR_AMT_SUM
+		FROM   MENU M
+		INNER  JOIN FRCS_MENU FM ON M.MENU_NO = FM.MENU_NO 
+		INNER  JOIN ORDR_DTL OD ON FM.MENU_NO = OD.MENU_NO AND FM.FRCS_NO = OD.FRCS_NO
+		INNER  JOIN ORDR O ON OD.ORDR_NO = O.ORDR_NO
+		WHERE  1=1
+		<!-- 시작일 필터링 -->
+		<if test="bgngYmd != null and bgngYmd != ''">
+		<![CDATA[
+			AND O.ORDR_DT >= #{bgngYmd}
+		]]>
+		</if>
+		<!-- 종료일 필터링 -->
+		<if test="expYmd != null and expYmd != ''">
+		<![CDATA[
+			AND O.ORDR_DT <= #{expYmd}
+		]]>
+		</if>
+	</select>
+	
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

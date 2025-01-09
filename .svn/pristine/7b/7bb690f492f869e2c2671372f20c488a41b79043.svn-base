@@ -1,0 +1,208 @@
+/*******************************************
+  @fileName    : event.js
+  @author      : 정기쁨
+  @date        : 2024. 09. 17
+  @description : 이벤트 관리를 위한 코드 모음
+********************************************/
+
+/*******************************************/
+
+// 업데이트 성공 시 토스트ui
+function toast(){
+	var Toast = Swal.mixin({
+	  toast: true,
+	  position: 'top-end',
+	  showConfirmButton: false,
+	  timer: 3000 //3초간 유지
+	});
+	
+	Toast.fire({
+		icon:'success',
+		title:'정보가 업데이트 되었습니다'
+	});
+}
+/********************************************/
+
+// @url		    : /selectNoticeAjax
+// @author      : 정기쁨
+// @date        : 2024.09.25
+// @jsp         : hdofc/notice/selectNotice
+// @description : 공지사항 조회
+function selectNoticeAjax(){
+	
+	var ntcTtl= $('#ntcTtl').val();
+	var ntcCn= $('#ntcCn').val();
+	var mngrId = $('#mngrId').val();
+	var startWrtrDt= $('#startWrtrDt').val();
+	var endWrtrDt= $('#endWrtrDt').val();
+	
+	let data = {};
+
+	// 값이 빈 문자열이 아니면 data 객체에 추가
+	if (ntcTtl) {data.ntcTtl = ntcTtl;}
+	if (ntcCn) {data.ntcCn = ntcCn;}
+	if (mngrId) {data.mngrId = mngrId;}
+	if (startWrtrDt) {data.startWrtrDt = startWrtrDt;}
+	if (endWrtrDt) {data.endWrtrDt = endWrtrDt;}
+	
+	data.currentPage = currentPage;
+	data.sort = sort;
+	data.orderby = orderby;
+	
+	console.log("selectNoticeAjax => ",data);
+	
+	$.ajax({
+		url : "/hdofc/notice/selectNoticeAjax",
+		type : "GET",
+		data : data,
+		success : function(res){
+			console.log(res);
+			console.log(res.articlePage.total);
+			
+			$("#tap-all").text(res.all);
+			
+			let mngrIdStr = `<option value="" selected>전체</option>`; 
+			
+			res.mngrVOList.forEach( mngrVO => {
+				mngrId = mngrVO.mngrId; 
+				mbrNm = mngrVO.memberVO.mbrNm;
+				mngrIdStr += `
+					<option value="${mngrId}">${mbrNm}(${mngrId})</option>
+				`;
+			})
+			
+			$(".select2-custom").html(mngrIdStr);
+
+			// 테이블 처리
+			let strTbl = '';
+			if(res.articlePage.total == 0){
+				strTbl+= `
+					<table class="table-default">
+						<thead>
+							<tr>
+								<th class="center" style="width: 100px">번호</th>
+								<th style="width: 20%">제목</th>
+								<th class="center" style="width: 200px">담당자</th>
+								<th class="center sort" data-sort="wrtrDtSort" style="width: 100px" >
+									등록일자
+									<div class="sort-icon">
+										<div class="sort-arrow">
+										  <span class="sort-asc active">▲</span>
+										  <span class="sort-desc">▼</span>
+										</div>
+									</div>
+								</th>
+								<th class="center sort"  data-sort="intCntSort" style="width: 100px" >
+									조회수
+									<div class="sort-icon">
+										<div class="sort-arrow">
+										  <span class="sort-asc">▲</span>
+										  <span class="sort-desc">▼</span>
+										</div>
+									</div>	
+								</th>
+								<th class="center" style="width: 100px">파일</th>
+							</tr>
+						</thead>
+						<tbody id="table-body">
+							<tr>
+								<td class="error-info" colspan="7">
+									<span class="icon material-symbols-outlined">error</span>
+									<div class="error-msg">검색 결과가 없습니다</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				`;
+				
+				$('.table-default').html(strTbl);
+				$('.pagination').html('');
+				
+			} else {
+			
+			res.articlePage.content.forEach(list => {
+				wrtrDt = list.wrtrDt.substr(0,4)+'-'+list.wrtrDt.substr(4,2)+'-'+list.wrtrDt.substr(6,2);
+				inqCnt = list.inqCnt > 0 ? list.inqCnt.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '-' ;
+				
+	    		strTbl += `
+					<tr>
+						<td class="center">${list.rnum}</td>
+						<td>${list.ntcTtl}</td>
+						<td class="center">${list.memberVO.mbrNm}</td>
+						<td class="center">${wrtrDt}</td>
+						<td class="center">${inqCnt}</td>
+				`;
+				
+				if(list.fileGroupNo > 0) {
+					strTbl += `
+						<td class="center">
+							<button type="button" class="btn btn-download" data-file-group-no="${list.fileGoupNo}">
+							 	다운로드<span class="icon material-symbols-outlined">Download</span> 
+							</button>
+						</td>
+					`;
+				} else {
+					strTbl += `
+						<td class="center">
+							<button type="button" class="btn btn-download" style="opacity: 0.6;">
+							 	다운로드<span class="icon material-symbols-outlined">Download</span> 
+							</button>
+						</td>
+					`;
+				}
+				
+				strTbl += `
+					</tr>
+				`;
+				
+			});
+			$('#table-body').html(strTbl);
+			
+			// 페이징 처리
+			let page = '';
+			
+			// 'chevron_left' 이전 페이지 링크 추가
+			if (res.articlePage.startPage > res.articlePage.blockSize) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_left</span>
+			        </a>
+			    `;
+			}
+			
+			// 페이지 번호 링크들 추가
+			for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+			    if (res.articlePage.currentPage === pnum) {
+			        page += `<a href="#page" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+			    } else {
+			        page += `<a href="#page" class="page-link" data-page="${pnum}">${pnum}</a>`;
+			    }
+			}
+			
+			// 'chevron_right' 아이콘 및 다음 페이지 링크 추가
+			if (res.articlePage.endPage < res.articlePage.totalPages) {
+			    page += `
+			        <a href="#page" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+			            <span class="icon material-symbols-outlined">chevron_right</span>
+			        </a>
+			    `;
+			}
+			$('.pagination').html(page);
+			
+			}
+		} //success
+	});	// ajax		
+	
+}
+// selectNoticeAjax 종료
+
+
+
+
+
+
+
+
+
+
+

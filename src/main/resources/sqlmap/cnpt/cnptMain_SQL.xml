@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 이병훈
+@date         : 2024.10.11
+@description  : 거래처 메인
+ -->
+<mapper namespace="com.buff.cnpt.mapper.CnptMainMapper">
+
+	<resultMap type="poVO" id="poMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE"/>
+		<result property="deliTypeNm" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="bzentVO" resultMap="bzentMap"/>
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE_NM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="qty" column="QTY"/>
+		<result property="period" column="PERIOD"/>
+		<result property="total" column="TOTAL"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="bzentMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+		<association property="bzentVO" resultMap="bzentMap"/> 
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="ntslTypeNm" column="NTSL_TYPE_NM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="ntslQty" column="NTSL_QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		<association property="bzentVO" resultMap="cnptMap"/> <!-- 거래처 -->
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap"/>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<collection property="stockVOList" resultMap="stockMap" />
+	</resultMap>
+	
+	<!-- 거래처 메인화면에 들어갈 데이터 건수(판매중 상품, 미판매, 배송완료, 배송중) -->
+	<select id="selectCnt" resultType="cnptCntVO" parameterType="hashMap">
+		SELECT
+			  (SELECT COUNT(1)
+			   FROM STOCK
+			   WHERE BZENT_NO = #{bzentNo}
+			   AND NTSL_TYPE = 'GDNT03') AS SELLING_CNT
+			   , (SELECT COUNT(1)
+				  FROM STOCK
+				  WHERE BZENT_NO = #{bzentNo}
+				  AND NTSL_TYPE = 'GDNT02') AS NOT_SELLING_CNT
+			   , (SELECT COUNT(*)
+					FROM (
+					    SELECT P.PO_NO
+					    FROM PO P
+					    JOIN STOCK_PO SP ON P.PO_NO = SP.PO_NO
+					    JOIN PO_CLCLN PC ON SP.PO_NO = PC.PO_NO
+					    WHERE P.BZENT_NO = 'HO0001'
+					      AND SP.BZENT_NO = #{bzentNo}
+					      AND P.DELI_TYPE = 'DELI03'
+					    GROUP BY P.PO_NO
+					) A) AS DELI_COMPLETE_CNT
+			   , (SELECT COUNT(1)
+				  FROM PO P
+				  JOIN STOCK_PO SP ON P.PO_NO = SP.PO_NO
+				 WHERE P.BZENT_NO = 'HO0001'
+				   AND SP.BZENT_NO = #{bzentNo}
+				   AND P.DELI_TYPE = 'DELI02') AS DELI_ING_CNT
+			   , (SELECT COUNT(1)
+				  FROM PO P
+				  JOIN STOCK_PO SP ON P.PO_NO = SP.PO_NO
+				 WHERE P.BZENT_NO = 'HO0001'
+				   AND SP.BZENT_NO = #{bzentNo}
+				   AND P.DELI_TYPE = 'DELI01') AS WAIT_APPROVE_CNT
+			   , (SELECT COUNT(1)
+				  FROM PO P
+				  JOIN STOCK_PO SP ON P.PO_NO = SP.PO_NO
+				 WHERE P.BZENT_NO = 'HO0001'
+				   AND SP.BZENT_NO = #{bzentNo}
+				   AND P.DELI_TYPE = 'DELI04') AS NOT_APPROVE_CNT     
+	    FROM DUAL			   	   	  
+	</select>
+	
+	<!-- 검색 조건에 따른 매출 총금액 -->
+	<select id="selectTotalSalesAmount" resultType="long" parameterType="hashMap">
+		SELECT 
+			   COALESCE(SUM(PC.CLCLN_AMT), 0) AS TOTAL_AMOUNT
+		  FROM PO_CLCLN PC
+		  JOIN PO P ON PC.PO_NO = P.PO_NO
+		  JOIN STOCK_PO SP ON PC.PO_NO = SP.PO_NO
+		                   AND SP.BZENT_NO = #{bzentNo}
+		 WHERE P.BZENT_NO = 'HO0001'
+		 <if test="period == 'year'">
+		 	AND SUBSTR(PC.CLCLN_YMD, 1, 4) = TO_CHAR(SYSDATE, 'YYYY')
+		 </if>
+		 <if test="period == 'month'">
+		    AND SUBSTR(PC.CLCLN_YMD, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+		 </if> 
+		 <if test="period == 'day'">
+		    AND PC.CLCLN_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		 </if> 
+	</select>
+	
+	<!-- 최근 1년간 미정산 총 금액 -->
+	<select id="selectTotalNotClclnAmount" resultType="long" parameterType="hashMap">
+		SELECT COALESCE(SUM(PC.CLCLN_AMT),0)
+		  FROM PO_CLCLN PC
+		  JOIN PO P ON PC.PO_NO = P.PO_NO
+		  JOIN STOCK_PO SP ON PC.PO_NO = SP.PO_NO
+		  				   AND SP.BZENT_NO = #{bzentNo}
+		 WHERE P.BZENT_NO = 'HO0001'
+            AND PC.CLCLN_YN = 'N'
+		 	AND SUBSTR(PC.CLCLN_YMD, 1,4) = TO_CHAR(SYSDATE, 'YYYY')
+	
+	</select>
+	
+	<!-- 검색 조건에 따른 매출 금액 차트 -->
+	<select id="selectChartData" resultMap="poClclnMap" parameterType="hashMap">
+		SELECT
+			ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+	        P.PO_NO,
+	        P.BZENT_NO,
+	        P.DELI_YMD,
+	        FN_GET_COM_NM(DELI_TYPE) AS DELI_TYPE_NM,
+	        P.RJCT_RSN,
+	        PC.CLCLN_YN,
+	        PC.CLCLN_AMT,
+	        PC.CLCLN_YMD,
+	        PC.NPMNT_AMT,
+	        SP.GDS_CODE,
+	        SP.QTY,
+	        SP.GDS_AMT,
+			SUM(PC.CLCLN_AMT) AS TOTAL,
+			SUBSTR(PC.CLCLN_YMD, 1, 4) AS PERIOD
+		FROM PO_CLCLN PC
+		JOIN PO P ON PC.PO_NO = P.PO_NO
+		JOIN STOCK_PO SP ON PC.PO_NO = SP.PO_NO
+						 AND SP.BZENT_NO = #{bzentNo}
+		WHERE P.BZENT_NO = 'HO0001'
+		AND PC.CLCLN_YN = 'Y'
+		<if test="period == 'year'">
+            AND SUBSTR(PC.CLCLN_YMD, 1, 4) = TO_CHAR(SYSDATE, 'YYYY')
+        </if>
+        <if test="period == 'month'">
+            AND SUBSTR(PC.CLCLN_YMD, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+        </if>
+        <if test="period == 'day'">
+            AND PC.CLCLN_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        </if>				  	
+		GROUP BY 
+	        P.PO_NO,
+	        P.BZENT_NO,
+	        P.DELI_YMD,
+	        FN_GET_COM_NM(DELI_TYPE),
+	        P.RJCT_RSN,
+	        PC.CLCLN_YN,
+	        PC.CLCLN_AMT,
+	        PC.NPMNT_AMT,
+	        PC.CLCLN_YMD,
+	        SP.GDS_CODE,
+	        SP.QTY,
+	        SP.GDS_AMT,
+	        SUBSTR(PC.CLCLN_YMD, 1, 4)
+		ORDER BY PC.CLCLN_YMD
+	</select>
+	
+	<!-- 기간 검색에 따른 매출 금액과 상품 매출 데이터 -->
+	<select id="selectProductSalesByYear" resultMap="poClclnMap" parameterType="hashMap">
+		SELECT 
+		    RNUM, PO_NO, BZENT_NO, DELI_YMD, DELI_TYPE_NM, RJCT_RSN,
+		    CLCLN_YN, CLCLN_AMT, CLCLN_YMD, NPMNT_AMT, GDS_CODE, QTY, GDS_AMT,
+		    GDS_NM, TOTAL, PERIOD
+		FROM (
+		    SELECT
+		        ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+		        P.PO_NO,
+		        P.BZENT_NO,
+		        P.DELI_YMD,
+		        FN_GET_COM_NM(DELI_TYPE) AS DELI_TYPE_NM,
+		        P.RJCT_RSN,
+		        PC.CLCLN_YN,
+		        PC.CLCLN_AMT,
+		        PC.CLCLN_YMD,
+		        PC.NPMNT_AMT,
+		        SP.GDS_CODE,
+		        SP.QTY,
+		        SP.GDS_AMT,
+		        G.GDS_NM AS GDS_NM,
+		        SUM(PC.CLCLN_AMT) OVER (PARTITION BY G.GDS_NM, SUBSTR(PC.CLCLN_YMD, 1, 4)) AS TOTAL,
+		        SUBSTR(PC.CLCLN_YMD, 1, 4) AS PERIOD
+		    FROM PO_CLCLN PC
+		    JOIN PO P ON PC.PO_NO = P.PO_NO
+		    JOIN STOCK_PO SP ON PC.PO_NO = SP.PO_NO
+		                     AND SP.BZENT_NO = #{bzentNo}
+		    JOIN GDS G ON SP.GDS_CODE = G.GDS_CODE
+		    WHERE P.BZENT_NO = 'HO0001'
+		      AND SUBSTR(PC.CLCLN_YMD, 1, 4) = TO_CHAR(SYSDATE, 'YYYY')
+		)
+		ORDER BY GDS_NM
+	</select>
+	
+	<!-- 월 검색에 따른 매출 금액과 상품 매출 데이터 -->
+	<select id="selectProductSalesByMonth" resultMap="poClclnMap" parameterType="hashMap">
+		SELECT 
+		    RNUM, PO_NO, BZENT_NO, DELI_YMD, DELI_TYPE_NM, RJCT_RSN,
+		    CLCLN_YN, CLCLN_AMT, CLCLN_YMD, NPMNT_AMT, GDS_CODE, QTY, GDS_AMT,
+		    GDS_NM, TOTAL, PERIOD
+		FROM (
+		    SELECT
+		        ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+		        P.PO_NO,
+		        P.BZENT_NO,
+		        P.DELI_YMD,
+		        FN_GET_COM_NM(DELI_TYPE) AS DELI_TYPE_NM,
+		        P.RJCT_RSN,
+		        PC.CLCLN_YN,
+		        PC.CLCLN_AMT,
+		        PC.CLCLN_YMD,
+		        PC.NPMNT_AMT,
+		        SP.GDS_CODE,
+		        SP.QTY,
+		        SP.GDS_AMT,
+		        G.GDS_NM AS GDS_NM,
+		        SUM(PC.CLCLN_AMT) OVER (PARTITION BY G.GDS_NM, SUBSTR(PC.CLCLN_YMD, 1, 6)) AS TOTAL,
+		        SUBSTR(PC.CLCLN_YMD, 1, 6) AS PERIOD
+		    FROM 
+		        PO_CLCLN PC
+		    JOIN 
+		        PO P ON PC.PO_NO = P.PO_NO
+		    JOIN 
+		        STOCK_PO SP ON PC.PO_NO = SP.PO_NO AND SP.BZENT_NO = #{bzentNo}
+		    JOIN 
+		        GDS G ON SP.GDS_CODE = G.GDS_CODE
+		    WHERE 
+		        P.BZENT_NO = 'HO0001'
+		        AND SUBSTR(PC.CLCLN_YMD, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+		)
+		ORDER BY GDS_NM
+	</select>
+	
+	<!-- 월 검색에 따른 매출 금액과 상품 매출 데이터 -->
+	<select id="selectProductSalesByDay" resultMap="poClclnMap" parameterType="hashMap">
+		SELECT 
+	        RNUM, PO_NO, BZENT_NO, DELI_YMD, DELI_TYPE_NM, RJCT_RSN,
+	        CLCLN_YN, CLCLN_AMT, CLCLN_YMD, NPMNT_AMT, GDS_CODE, QTY, GDS_AMT,
+	        GDS_NM, TOTAL, PERIOD
+	    FROM (
+	        SELECT
+	            ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+	            P.PO_NO,
+	            P.BZENT_NO,
+	            P.DELI_YMD,
+	            FN_GET_COM_NM(DELI_TYPE) AS DELI_TYPE_NM,
+	            P.RJCT_RSN,
+	            PC.CLCLN_YN,
+	            PC.CLCLN_AMT,
+	            PC.CLCLN_YMD,
+	            PC.NPMNT_AMT,
+	            SP.GDS_CODE,
+	            SP.QTY,
+	            SP.GDS_AMT,
+	            G.GDS_NM AS GDS_NM,
+	            SUM(PC.CLCLN_AMT) OVER (PARTITION BY G.GDS_NM, PC.CLCLN_YMD) AS TOTAL,
+	            PC.CLCLN_YMD AS PERIOD
+	        FROM 
+	            PO_CLCLN PC
+	        JOIN 
+	            PO P ON PC.PO_NO = P.PO_NO
+	        JOIN 
+	            STOCK_PO SP ON PC.PO_NO = SP.PO_NO 
+	                      AND SP.BZENT_NO = #{bzentNo}
+	        JOIN 
+	            GDS G ON SP.GDS_CODE = G.GDS_CODE
+	        WHERE 
+	            P.BZENT_NO = 'HO0001'
+	            AND PC.CLCLN_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	    )
+	    ORDER BY GDS_NM
+	</select>
+	
+	<!-- 미승인 발주 건수 가져오기 -->
+	<select id="selectUnApprove" parameterType="hashMap" resultMap="poMap">
+	    WITH pp AS (
+	        SELECT 
+	            S.*, 
+	            ROW_NUMBER() OVER (PARTITION BY S.PO_NO ORDER BY S.SPMT_YMD DESC) AS RN
+	        FROM STOCK_PO S
+	    ), po_total AS (
+	        SELECT PO_NO, SUM(QTY * GDS_AMT) AS TOTAL_AMT
+	        FROM STOCK_PO
+	        GROUP BY PO_NO
+	    ), t AS (
+	        SELECT 
+	            ROW_NUMBER() OVER (ORDER BY P.PO_NO DESC) AS RNUM,
+	            P.PO_NO,
+	            P.BZENT_NO,
+	            COALESCE(P.DELI_YMD, '-') AS DELI_YMD,
+	            FN_GET_COM_NM(DELI_TYPE) AS DELI_TYPE_NM,
+	            P.RJCT_RSN,
+	            COALESCE(C.CLCLN_AMT, PT.TOTAL_AMT) AS CLCLN_AMT,
+	            C.CLCLN_YN,
+	            C.CLCLN_YMD,
+	            S.GDS_CODE,
+	            S.QTY,
+	            S.GDS_AMT,
+	            S.SPMT_YMD
+	        FROM PO P
+	        LEFT JOIN PO_CLCLN C ON P.PO_NO = C.PO_NO
+	        JOIN pp S ON S.PO_NO = P.PO_NO AND S.RN = 1
+	        LEFT JOIN po_total PT ON PT.PO_NO = P.PO_NO
+	        WHERE P.DELI_TYPE = 'DELI04'
+	          AND P.BZENT_NO = 'HO0001'
+	          AND S.BZENT_NO = #{bzentNo}
+	    )
+	    SELECT t.*
+	    FROM t
+	    WHERE t.rnum BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	
+</mapper>

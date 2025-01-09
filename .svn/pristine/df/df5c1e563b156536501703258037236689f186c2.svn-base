@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.frcs.mapper.FrcsStockMapper">
+
+<!-- 
+	@author       : 정현종
+	@date         : 2024.09.20
+	@description  : 가맹점 재고 현황 sql
+ -->
+ 	
+ 	<resultMap type="gdsVO" id="gdsMap">
+ 		<result property="rnum" column="RNUM"/>
+ 		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		
+		<collection property="stockVOList" resultMap="stockMap"></collection>
+ 	</resultMap>
+ 	
+ 	<resultMap type="stockVO" id="stockMap">
+ 		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+ 	</resultMap>
+ 	
+ 	<sql id="search">
+		<if test="gubun!=null and keyword!=null">
+			<choose>
+				<when test="gubun=='food'">
+					AND G.GDS_CODE LIKE 'FD%' 
+					AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+				</when>
+				<when test="gubun=='packing'">
+					AND G.GDS_CODE LIKE 'SMD%' 
+					AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+				</when>
+				<when test="gubun=='subMart'">
+					AND G.GDS_CODE LIKE 'SM%' 
+					AND G.GDS_NM LIKE '%' || #{keyword} || '%'
+					AND G.GDS_CODE NOT LIKE 'SMD%'
+				</when>
+			</choose>
+		</if>
+	</sql>
+ 	
+ 	
+ 	<!--
+ 		@programName : 가맹점 재고 현황 조회
+ 		@description : 가맹점 재고 현황 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectFrcsStockList" resultMap="gdsMap" parameterType="java.util.Map">
+	    SELECT ROW_NUMBER() OVER(ORDER BY G.GDS_NM) AS RNUM,  
+	           G.GDS_CODE, G.GDS_NM, G.GDS_TYPE, G.UNIT_NM,
+	           S.BZENT_NO, S.QTY, S.SF_STOCK_QTY
+	    FROM   GDS G
+	    JOIN   STOCK S ON G.GDS_CODE = S.GDS_CODE 
+	    WHERE  S.BZENT_NO = 'FR0303'
+	    <include refid="search" />
+	</select>
+	
+	<!--
+ 		@programName : 검색 결과에 따른 가맹점 상품 유형별 재고 갯수
+ 		@description : 가맹점 재고 현황 조회를 위한 화면
+ 		@author      : 정현종
+ 		@date        : 2024. 09. 20
+	-->
+	<select id="selectAll" resultType="int" parameterType="java.util.Map">
+		SELECT COUNT(G.GDS_CODE)
+		FROM   GDS G
+		LEFT OUTER JOIN STOCK S ON(G.GDS_CODE = S.GDS_CODE) AND S.BZENT_NO = 'FR0303'
+		WHERE  1 = 1
+		<include refid="search" />
+	</select>
+	
+	<select id="selectFood" resultType="int" parameterType="java.util.Map">
+	    SELECT COUNT(G.GDS_CODE)
+	    FROM   GDS G
+	    LEFT OUTER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+	    <include refid="search" />
+	</select>
+	
+	<select id="selectPacking" resultType="int" parameterType="java.util.Map">
+	    SELECT COUNT(G.GDS_CODE)
+	    FROM   GDS G
+	    LEFT OUTER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+	    <include refid="search" />
+	</select>
+	
+	<select id="selectSubMart" resultType="int" parameterType="java.util.Map">
+	    SELECT COUNT(G.GDS_CODE)
+	    FROM   GDS G
+	    LEFT OUTER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+	    <include refid="search" />
+	</select>
+	
+	<select id="selectTotal" resultType="int" parameterType="java.util.Map">
+	    SELECT COUNT(G.GDS_CODE)
+	    FROM   GDS G
+	    LEFT OUTER JOIN STOCK S ON G.GDS_CODE = S.GDS_CODE
+	    <include refid="search" />
+	</select>
+	
+</mapper>

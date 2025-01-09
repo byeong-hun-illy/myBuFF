@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+가맹점 주문에 따른 재고 소진
+@author       : 송예진
+@date         : 2024.09.30
+@description  : 가맹점 정보 조회 및 수정 및 폐업신청
+ -->
+<mapper namespace="com.buff.frcs.mapper.FrcsOrdrMapper">
+
+	<!--  
+		재고 출고 순서
+		updateStockAjmt >  insertStockAjmt > updateOrdrSpmt
+	 -->
+	<!-- 
+		@author       : 가맹점 주문에 따른 재고 소진
+		@date         : 2024.09.30
+		@description  : 출고를 아직 안한 메뉴에 대해 재고에서 빠져나가게함
+	 -->
+	<update id="updateStockAjmt" parameterType="String">
+		MERGE INTO STOCK S
+		USING (
+		    SELECT R.GDS_CODE, ROUND(SUM(R.QTY), 4) AS TOTAL_QTY
+		    FROM ORDR_DTL D
+		    JOIN ORDR O ON D.ORDR_NO = O.ORDR_NO AND O.SPMT_YN = 'N'
+		    JOIN RECIPE R ON D.MENU_NO = R.MENU_NO
+		    WHERE D.FRCS_NO = #{frcsNo}
+		    GROUP BY R.GDS_CODE
+		) RQ
+		ON (S.GDS_CODE = RQ.GDS_CODE AND S.BZENT_NO = #{frcsNo})
+		WHEN MATCHED THEN
+		    UPDATE SET S.QTY = S.QTY - RQ.TOTAL_QTY
+	</update>
+	
+	<!-- 
+		@author       : 가맹점 주문에 따른 재고 조정 추가
+		@date         : 2024.09.30
+		@description  : 출고를 아직 안한 메뉴에 대해 재고에서 빠져나간 기록 추가
+	 -->
+	<insert id="insertStockAjmt" parameterType="String">
+		INSERT INTO STOCK_AJMT(AJMT_NO, GDS_CODE, BZENT_NO, AJMT_TYPE, QTY, AJMT_YMD)
+		SELECT TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(
+		                                    ( SELECT NVL(TO_NUMBER(SUBSTR(MAX(AJMT_NO),9)),0)+1
+		                                        FROM STOCK_AJMT
+		                                        WHERE AJMT_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')
+		                                    ) + ROW_NUMBER() OVER (ORDER BY R.GDS_CODE DESC),3,0)
+		        , R.GDS_CODE
+		        , #{frcsNo}
+		        , 'AJMT03'
+		        , SUM(R.QTY)
+		        , TO_CHAR(SYSDATE,'YYYYMMDD')
+		FROM ORDR_DTL D
+		JOIN ORDR O ON D.ORDR_NO=O.ORDR_NO AND O.SPMT_YN='N'
+		JOIN RECIPE R ON D.MENU_NO=R.MENU_NO 
+		WHERE D.FRCS_NO=#{frcsNo}
+		GROUP BY R.GDS_CODE
+	</insert>
+	<!-- 
+		@author       : 가맹점 주문에 따른 재고 소진
+		@date         : 2024.09.30
+		@description  : 출력 완료 업데이트
+	 -->
+	<update id="updateOrdrSpmt" parameterType="String">
+		UPDATE ORDR
+		SET SPMT_YN = 'Y'
+		WHERE ORDR_NO IN (SELECT ORDR_NO FROM ORDR_DTL WHERE FRCS_NO = #{frcsNo} AND SPMT_YN = 'N')
+	</update>
+	
+</mapper>

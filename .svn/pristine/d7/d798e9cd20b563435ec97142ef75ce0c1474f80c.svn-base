@@ -1,0 +1,149 @@
+package com.buff.cust.controller;
+
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustHomeService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.BzentVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.MenuVO;
+import com.buff.vo.QsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+
+/**
+* @packageName  : com.buff.controller.cust
+* @fileName     : CustController.java
+* @author       : 
+* @date         : 2024.09.13
+* @description  :
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.13        이름     	  			최초 생성
+*/
+@Slf4j
+@RequestMapping("/buff")
+@Controller
+public class CustController {
+	
+	
+	
+	@Autowired
+	CustHomeService HomeServcie;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	
+	/**
+	* @methodName  : home
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 메인화면에 가맹점 카드 조회
+	*/
+	
+	@GetMapping("/home")
+	public String home(Model model) {
+		List<BzentVO> bzentVOList = HomeServcie.home();
+		
+		model.addAttribute("bzentVOList", bzentVOList);
+		
+		return "cust/main/home";
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 가맹지점 조회
+	*/
+	@GetMapping("/selectStore")
+	public String selectStore(@RequestParam Map<String, Object> map, Model model) {
+	    int size = 10; 
+	    int currentPage = Integer.parseInt((String) map.getOrDefault("currentPage", "1")); 
+
+	    map.put("size", size); 
+	    map.put("currentPage", currentPage);
+	    
+	    int total = HomeServcie.getTotal(map);
+	    
+	    log.info("selectStore -> total :" + total);
+	    
+	    List<BzentVO> bzentVOList = HomeServcie.selectStore(map);
+	    
+	    model.addAttribute("articlePage", new ArticlePage<>(total, currentPage, size, bzentVOList, map));
+	    model.addAttribute("bzentVOList", bzentVOList);
+	    
+	    return "cust/main/selectStore";
+
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 본사 메뉴 조회
+	*/
+	@GetMapping("/selectMenu")
+	public String selectMenu(Model model, @RequestParam(value = "menuGubun", defaultValue = "") String menuGubun){
+		List<MenuVO> menuVOList = this.HomeServcie.selectMenu(menuGubun);
+		
+		model.addAttribute("menuGubun", menuGubun);
+		model.addAttribute("menuVOList", menuVOList);
+		
+		return "cust/main/selectMenu";
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 가맹점 문의 화면
+	*/
+	
+	@GetMapping("/insertDscsn")
+	public String insertDscsn() {
+		
+		return "cust/main/insertDscsn";
+	}
+	
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 이벤트 조회
+	*/
+	
+	@GetMapping("/selectEvent")
+	public String selectEvent(Model model) {
+		List<EventVO> eventVOList = HomeServcie.selectEvent();
+		
+		model.addAttribute("eventVOList", eventVOList);
+		
+		return "cust/main/selectEvent";
+	}
+	
+}

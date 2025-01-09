@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buff.com.mapper.FileGroupMapper">
+
+	<!-- FILE_GROUP 테이블에 insert 
+		숫자형 문자 + 숫자 => 숫자형 + 숫자 => 숫자
+	-->
+	<insert id="insertFileGroup" parameterType="fileGroupVO">
+		<selectKey resultType="long" order="BEFORE" keyProperty="fileGroupNo">
+			SELECT NVL(MAX(FILE_GROUP_NO),TO_CHAR(SYSDATE,'YYYYMMDD"000"'))+1
+			FROM FILE_GROUP
+			WHERE SUBSTR(FILE_GROUP_NO,1,8) = TO_CHAR(SYSDATE,'YYYYMMDD')
+		</selectKey>
+		
+		INSERT INTO FILE_GROUP(FILE_GROUP_NO, FILE_REGDATE)
+		VALUES(#{fileGroupNo},SYSDATE)
+	</insert>
+	
+	<!-- public int insertFileDetail(FileDetailVO fileDetailVO); -->
+	<insert id="insertFileDetail" parameterType="fileDetailVO">
+		INSERT INTO FILE_DETAIL(
+			FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME, FILE_SAVE_LOCATE
+			, FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE, FILE_SAVE_DATE
+			, FILE_DOWNCOUNT)
+		VALUES(
+			#{fileSn},#{fileGroupNo},#{fileOriginalName},#{fileSaveName},#{fileSaveLocate},
+			#{fileSize},#{fileExt},#{fileMime},#{fileFancysize},SYSDATE,
+			#{fileDowncount})
+	</insert>
+	
+</mapper>

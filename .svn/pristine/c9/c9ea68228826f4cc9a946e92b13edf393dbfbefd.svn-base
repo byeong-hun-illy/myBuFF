@@ -1,0 +1,250 @@
+package com.buff.cust.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.buff.cust.mapper.CustCenterMapper;
+import com.buff.cust.mapper.MemberMapper;
+import com.buff.cust.service.CustCenterService;
+import com.buff.cust.service.CustHomeService;
+import com.buff.util.UploadController;
+import com.buff.vo.BzentVO;
+import com.buff.vo.CouponVO;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsDscsnVO;
+import com.buff.vo.MenuVO;
+import com.buff.vo.QsVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+@PreAuthorize("hasRole('ROLE_CUST')")
+@Slf4j
+@RequestMapping("/cust")
+@Controller
+public class CustMemberController {
+	
+	@Autowired
+	CustCenterService centerService;
+	
+	@Autowired
+	CustCenterMapper centerMapper;
+	
+	@Autowired
+	CustHomeService HomeServcie;
+	
+	@Autowired
+	MemberMapper memberMapper;
+	
+	@Autowired
+	UploadController uploadController;
+	
+	/**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 문의사항 화면
+	*/
+	@PostMapping("/insertQsPostAjax")
+	@ResponseBody
+	public int insertQsPostAjax(@ModelAttribute QsVO qsVO
+			, 	@RequestParam(value="uploadFile", required = false, defaultValue = "") MultipartFile[] uploadFile
+			) {
+		log.info("insertQsPostAjax->qsVO : " + qsVO);
+		
+		int result = this.centerService.insertQsPost(qsVO);
+	    //매퍼xml의 <insert, <update, <delete의 경우 resultType은 int가 당연해서 생략됨
+		//1(insert 성공) 또는 0(insert 실패)
+	    return result;
+	}
+	
+
+	//jsonString은 RequestParam 애너테이션으로 못 받음!
+	//jsonString은 RequestBody 애너테이션으로 받음
+	//{"rgnNo": "RGN21","dscsnPlanYmd": "2024-09-25","mbrId": "tieawu5d"}
+	@PostMapping("/insertDscsnPost")
+	@ResponseBody
+	public int insertDscsnPost(
+	        @RequestBody FrcsDscsnVO frcsDscsnVO, 
+	        Principal principal) {
+		/*
+		FrcsDscsnVO(rnum=null, dscsnCode=null, mbrId=tieawu5d, mngrId=null
+		, dscsnPlanYmd=2024-09-25, rgnNo=RGN21, dscsnCn=null, dscsnType=null
+		, dscsnTypeNm=null, rgnNm=null, mngrVO=null, mbrVO=null)
+		 */
+		log.info("insertDscsnPost->frcsDscsnVO : " + frcsDscsnVO);
+		
+		String mbrId = principal.getName();
+		//insertDscsnPost -> : tieawu5d
+		log.info("insertDscsnPost -> : " + mbrId);
+		
+		//신청여부 중복체크
+		int cnt = HomeServcie.checkId(mbrId);
+		log.info("cnt : " + cnt);
+		
+		int result = 0;		
+		
+		if(cnt<1) {
+		    try {
+		    	//신청
+		        result = HomeServcie.insertDscsnPost(frcsDscsnVO);
+		        return result; 
+		    } catch (Exception e) {
+		        return 0; 
+		    }
+		}else {
+			return 3;
+		}
+	}
+	
+	
+	
+	@GetMapping("/insertOrdr")
+	public String insertOrdr(@RequestParam Map<String, Object> map, Model model) {
+
+		List<BzentVO> bzentVOList = HomeServcie.selectOrdrStore(map);
+		
+		int total = HomeServcie.getTotal(map);
+		log.info("selectStore -> total :" + total);
+		 
+		model.addAttribute("bzentVOList", bzentVOList);
+		model.addAttribute("total", total);
+
+		return "cust/main/insertOrdr";
+	}
+	
+	
+	
+	//{"rgnNo":"RGN32","keyword":"나운"}
+	//{"rgnNo":"","keyword":"나운"}
+	//{"rgnNo":"","keyword":""}
+	//required=false(값이 필수가 아니다) : <option value="" selected="">전체</option>
+  @ResponseBody
+  @PostMapping("/selectFrcsAjax") 
+  public Map<String,Object> selectFrcsAjax(
+		  @RequestParam(value="rgnNo",required=false,defaultValue="") String rgnNo, 
+		  @RequestParam(value="keyword",required=false,defaultValue="") String keyword,
+		  Model model) {
+	  //selectRgnAjax->rgnNo : RGN11
+	  log.info("selectRgnAjax->rgnNo : " + rgnNo);
+	  //selectRgnAjax->keyword : 역삼
+	  log.info("selectRgnAjax->keyword : " + keyword);
+	  
+	  Map<String,Object> map = new HashMap<String, Object>();
+	  map.put("rgnNo", rgnNo);
+	  map.put("keyword", keyword);
+	  
+	  List<BzentVO> bzentVOList = HomeServcie.selectOrdrStore(map);
+	  
+	  int total = HomeServcie.getTotal(map); 
+	  log.info("selectStore -> total :" + total);
+	  
+	  map.put("bzentVOList", bzentVOList); 
+	  map.put("total",total);
+	  
+	  return map; 
+  }
+ 
+	
+  /**
+	* @methodName  : selectStore
+	* @author      : 서윤정
+	* @date        : 2024.09.12
+	* @param : BzentVO
+	* @return 본사 메뉴 조회
+	*/
+  @PostMapping("/selectOrdrMenuAjax")
+  @ResponseBody
+  public Map<String, Object> selectOrdrMenuAjax(
+          @RequestParam(value = "bzentNo", required = false, defaultValue = "") String bzentNo,
+          @RequestParam(value = "menuGubun", required = false, defaultValue = "") String menuGubun) {
+
+      log.info("menuGubun : " + menuGubun);
+      log.info("bzentNo : " + bzentNo);
+
+      
+      Map<String, Object> map = new HashMap<>();
+      map.put("menuGubun", menuGubun);
+      map.put("bzentNo", bzentNo);
+
+      // 메뉴 목록 조회
+      List<MenuVO> menuVOList = this.HomeServcie.selectOrdrMenu(map);
+      log.info("selectOrdrMenuAjax -> menuVOList : " + menuVOList);
+
+      // 응답 데이터에 메뉴 목록 추가
+      map.put("menuVOList", menuVOList);
+
+      return map;
+  }
+
+  /*
+   selectEvent.jsp의 이벤트를 선택 시 이벤트 상세(insertEventCoupon.jsp)로 이동
+   
+   /cust/insertEventCoupon?eventNo=E00001
+   */
+  @GetMapping("/insertEventCoupon")
+  public String insertEventCoupon(@RequestParam(value="eventNo") String eventNo, Model model) {
+	  log.info("insertEventCoupon->eventNo : " + eventNo);
+	  
+	  //<c:forEach var="eventVO" items="달러{eventVOList}">
+	  //resultMap 했던 거 활용
+	  EventVO eventVO = null;
+	  
+	  model.addAttribute("eventVO", eventVO);
+	  
+	  //forwarding
+	  return "cust/main/insertEventCoupon";
+  }
+  
+  @PostMapping("/insertEventCoupon")
+  public String insertEventCouponPost(CouponVO couponVO, Model model) {
+	  log.info("insertEventCouponPost->couponVO : " + couponVO);
+	  
+	  
+	  /*
+	  1. 쿠폰이 이미 있는지 여부 체킹
+	   */
+	  
+	  //<c:forEach var="eventVO" items="달러{eventVOList}">
+	  EventVO eventVO = null;
+	  
+	  model.addAttribute("eventVO", eventVO);
+	  
+	  /*
+	  2. if
+	  - 쿠폰이 이미 발급되었다면
+	    model.addAttribute("isDuplicate","Y")
+	    return "cust/main/insertEventCoupon";
+	    
+	  - 쿠폰이 최초 발급이라면
+	    COUPON 테이블에 insert 수행
+	  	model.addAttribute("isDuplicate","N") -> jsp에서 "쿠폰이 발급되었습니다"를 띄움
+		  return "cust/main/insertEventCoupon";
+	   */
+	  //지우자
+	  return null;
+	  
+  }
+}
+
+
+
+
+
+
+

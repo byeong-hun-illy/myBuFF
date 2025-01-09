@@ -1,0 +1,96 @@
+package com.buff.frcs.controller;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.buff.com.mapper.ComMapper;
+import com.buff.frcs.service.FrcsCouponService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.EventVO;
+import com.buff.vo.OrdrVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.frcs.controller
+* @fileName     : FrcsCouponController.java
+* @author       : 정현종
+* @date         : 2024.09.25
+* @description  : 쿠폰 사용 내역 조회 
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.25        정현종     	  			최초 생성
+*/
+
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Slf4j
+@Controller
+public class FrcsCouponController {
+	
+	@Autowired
+	FrcsCouponService frcsCouponService;
+	
+	@Autowired
+	ComMapper comMapper;
+	
+	/**
+	* @methodName  : selectFrcsCouponUseList
+	* @author      : 정현종
+	* @date        : 2024.09.25
+	* @param       : model
+	* @return	   : 가맹점 쿠폰 사용 내역 조회 URL
+	*/
+	@GetMapping("/couponList")
+	public String selectFrcsCouponUseList(Model model, Principal principal, 
+			@RequestParam(name = "eventType", required = false, defaultValue = "") String eventType,
+			@RequestParam(name = "bgngYmd", required = false, defaultValue = "") String bgngYmd,
+			@RequestParam(name = "expYmd", required = false, defaultValue = "") String expYmd,
+			@RequestParam(name = "dscntAmt", required = false, defaultValue = "") String dscntAmt,
+			@RequestParam(name = "menuType", required = false, defaultValue = "") String menuType,
+			@RequestParam(name = "menuNm", required = false, defaultValue = "") String menuNm
+		) {
+		
+		//principal == CustomUser
+		//principal.getName() : 로그인 한 아이디
+		String mbrId = principal.getName();
+				
+		int currentPage = 1;
+		int size = 10;
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("mbrId", mbrId);
+		map.put("eventType", eventType);
+		map.put("bgngYmd", bgngYmd);
+		map.put("expYmd", expYmd);
+		map.put("dscntAmt", dscntAmt);
+		map.put("menuType", menuType);
+		map.put("menuNm", menuNm);
+		map.put("currentPage", currentPage);
+		map.put("size", size);
+		
+		List<EventVO> couponUseList = this.frcsCouponService.selectFrcsCouponUseList(map);
+		log.info("selectFrcsCouponUseList->couponUseList : " + couponUseList);
+		
+		int total = this.frcsCouponService.selectTotalFrcsCoupon(map);
+		
+		ArticlePage<EventVO> articlePage = new ArticlePage<EventVO>(total, currentPage, size, couponUseList, map);
+		
+		model.addAttribute("articlePage", articlePage);
+		model.addAttribute("menu", this.comMapper.selectCom("MENU"));
+		
+		return "frcs/selectFrcsCouponUseList";
+	}
+	
+}

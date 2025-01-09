@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="blank">
+	<!-- 
+	 기존에 있던 가맹점 정산 넣기
+	 
+				INSERT INTO FRCS_CLCLN(CLCLN_YM, FRCS_NO, CLCLN_YMD, CLCLN_YN, SLS_GRAMT, ROYALTY, DSCNT_AMT, REG_YMD)
+				SELECT TO_CHAR(O.ORDR_DT, 'YYYYMM')
+				    , D.FRCS_NO
+                    , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD') AS CLCLN_YMD
+                    , 'Y'
+				    , SUM(D.ORDR_QTY * D.ORDR_AMT) AS SLS_GRAMT
+				    , SUM(D.ORDR_QTY * D.ORDR_AMT) * 0.05 AS ROYALTY
+				    , COALESCE(SUM(G.DSCNT_AMT),0) AS DSCNT_AMT
+				    , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD') AS REG_YMD
+				FROM ORDR O
+				JOIN ORDR_DTL D ON O.ORDR_NO=D.ORDR_NO
+				LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+				LEFT JOIN COUPON_GROUP G ON G.COUPON_CODE=C.COUPON_CODE
+				GROUP BY D.FRCS_NO
+				        , TO_CHAR(O.ORDR_DT, 'YYYYMM')
+				        , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD')
+	 -->
+	<!-- 월간 정산 년과 월을 넣으면 그날의 년 월 정산 -->
+	<!-- 매출 내역이 있는 가맹점만 대상으로 insert -->
+	<insert id="insertFrcsClcln" parameterType="String">
+		INSERT INTO FRCS_CLCLN(CLCLN_YM, FRCS_NO, SLS_GRAMT, ROYALTY, DSCNT_AMT, REG_YMD)
+		SELECT TO_CHAR(O.ORDR_DT, 'YYYYMM')
+		    , D.FRCS_NO
+		    , SUM(D.ORDR_QTY * D.ORDR_AMT) AS SLS_GRAMT
+		    , SUM(D.ORDR_QTY * D.ORDR_AMT) * 0.05 AS ROYALTY
+		    , COALESCE(SUM(G.DSCNT_AMT),0) AS DSCNT_AMT
+		    , TO_CHAR(SYSDATE, 'YYYYMMDD') AS REG_YMD
+		FROM ORDR O
+		JOIN ORDR_DTL D ON O.ORDR_NO=D.ORDR_NO
+		LEFT JOIN COUPON C ON C.ISSU_SN = O.ISSU_SN
+		LEFT JOIN COUPON_GROUP G ON G.COUPON_CODE=C.COUPON_CODE
+              WHERE TO_CHAR(O.ORDR_DT, 'YYYYMM')=#{clclnYm}
+		GROUP BY D.FRCS_NO
+		        , TO_CHAR(O.ORDR_DT, 'YYYYMM')
+		        , TO_CHAR(TRUNC(ADD_MONTHS(O.ORDR_DT, 1), 'MM'), 'YYYYMMDD')
+	</insert>
+	
+	<select id="selectFrcsClcln" parameterType="hashMap">
+		SELECT * FROM(
+			SELECT C.CLCLN_YM
+					, C.FRCS_NO
+					, C.SLS_GRAMT
+					, C.DSCNT_AMT
+					, C.REG_YMD
+					, CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND((C.ROYALTY - C.DSCNT_AMT) * (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_YMD
+		            , C.CLCLN_YN
+		            , C.CLCLN_YMD
+		            , B.BZENT_NM
+		            , B.RGN_NO
+		            , R.COM_NM AS RGN_NM
+                    , M.MBR_NM
+			FROM FRCS_CLCLN C
+			JOIN BZENT B ON B.BZENT_NO=C.FRCS_NO
+			JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+            JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+			
+		) WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>	
+	
+	<select id="selectFrcsClclnDtl" parameterType="frcsClclnVO">
+		SELECT C.CLCLN_YM
+					, C.FRCS_NO
+					, C.SLS_GRAMT
+					, C.DSCNT_AMT
+					, C.REG_YMD
+					, CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND((C.ROYALTY - C.DSCNT_AMT) * (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_YMD
+		            , C.CLCLN_YN
+		            , C.CLCLN_YMD
+		            , B.BZENT_NM
+		            , B.RGN_NO
+		            , R.COM_NM AS RGN_NM
+                    , M.MBR_NM
+			FROM FRCS_CLCLN C
+			JOIN BZENT B ON B.BZENT_NO=C.FRCS_NO
+			JOIN COM_CODE R ON R.COM_NO=B.RGN_NO
+            JOIN MEMBER M ON B.MBR_ID=M.MBR_ID
+            WHERE C.CLCLN_YM=#{clclnYm}
+            AND C.FRCS_NO=#{frcsNo}
+	</select>
+</mapper>

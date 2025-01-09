@@ -1,0 +1,45 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<sec:authentication property="principal.MemberVO" var="user" />
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<div class="wrap">
+	<div class="cont">
+		<div class="cont-title">신규 기초 재고 등록
+			<div class="tap-btn-wrap">
+				<div class="btn-wrap">
+					<button class="btn-active" onclick="window.location.href='/cnpt/gds/downloadTemp'">양식<span class="material-symbols-outlined icon">download</span></button>
+				</div>
+			</div>
+		</div> 
+		<!-- table-wrap -->
+		<div class="table-wrap">
+			<table class="table-default">
+				<tbody id="table-body">
+					<tr>
+						<td class="error-info" colspan="7">
+							<span class="icon material-symbols-outlined">notifications_active</span>
+							<div class="error-msg">
+								<span class="material-symbols-outlined">arrow_right</span>
+								상품의 기초 재고를 등록하는 페이지입니다.
+								<span class="material-symbols-outlined">arrow_right</span>
+								반드시, 우측 상단의 양식파일을 내려받은 후에 양식이 맞게 작성하신 파일을 업로드 해주세요.
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- table-wrap -->
+		</div>
+		<div>
+			<form action="/cnpt/gds/uploadStock" method="POST" enctype="multipart/form-data">
+				<input type="hidden" value="${user.bzentNo}" name="bzentNo" />
+				
+				<label for="uploadStock">파일 업로드</label>
+				<input type="file" name="uploadStock" id="uploadStock" placeholder="파일 선택" required />
+				<button type="submit" class="btn btn-active">재고 등록</button>		
+			</form>
+		</div>
+		<!-- cont 끝 -->
+	</div>
+</div>	

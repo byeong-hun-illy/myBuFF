@@ -1,0 +1,280 @@
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<link href="/resources/hdofc/css/frcs.css" rel="stylesheet">
+<link href="/resources/hdofc/css/accordion.css" rel="stylesheet">
+<script src="/resources/js/jquery-3.6.0.js"></script>
+<script src="/resources/hdofc/js/frcs.js"></script>
+<script src="/resources/hdofc/js/frcsCheck.js"></script>
+<script type="text/javascript" src="/resources/ckeditor5/ckeditor.js"></script>
+<script>
+let currentPage = 1;
+let chk = 'chk';
+let sort = 'chckYmd';
+let orderby = 'desc';
+
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+
+$(function(){
+	 // uploadUrl => 이미지 업로드 시 요청할 요청URI
+    // editor => CKEditor가 생성된 후 바로 그 객체
+    // window.editor : 그 객체를 이렇게 부르겠다 정의
+    ClassicEditor.create(document.querySelector('#TEXTAREATEMP'), {
+        ckfinder: {
+            uploadUrl: '/image/upload',
+            options: {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken // CSRF 토큰을 헤더에 추가
+                }
+            }
+        }
+    })
+    .then(editor => {
+        window.editor = editor;
+
+        // Update the textarea whenever the editor data changes
+        editor.model.document.on('change:data', () => {
+            const data = editor.getData();
+            console.log("str : " + data);
+            $("#TEXTAREA").val(data);  // Update the textarea
+        });
+    })
+    .catch(err => {
+        console.error(err.stack);
+    });
+	
+	var frcsModal = new bootstrap.Modal(document.getElementById('frcsModal'), {
+		 backdrop: 'static',  // 모달 외부 클릭 시 닫히지 않도록 설정
+	     keyboard: false      // ESC 키로 모달 닫기 비활성화
+	})
+	
+	// 모달 닫기
+	$('.modal-close').on('click',function(){
+		frcsModal.hide();
+	})
+	
+	$('#frcs').on('click', function(){
+		frcsModal.show();
+		selectFrcsCheckAjax();
+	})
+	// 지역 select 변화
+	$('#rgnNo').on('change',function(){
+		currentPage=1;
+		selectFrcsCheckAjax();
+	})	
+	// 관리자 select 변화
+	$('#mngrId').on('change',function(){
+		currentPage=1;
+		selectFrcsCheckAjax();
+	})	
+	// 검색어 검색 결과
+	$('#submit').on('click',function(){
+		currentPage=1;
+		selectFrcsCheckAjax();
+	})
+	// 분류 조건 클릭 시 스타일 변화와 데이터 변화
+	$('.tap-cont').on('click', function(){
+		currentPage=1;
+		// 모든 tap-cont에서 active 클래스를 제거
+	    $('.tap-cont').removeClass('active');
+
+	    // 클릭된 tap-cont에 active 클래스를 추가
+	    $(this).addClass('active');
+ 		chk = $(this).data('type');
+ 		selectFrcsCheckAjax();
+	})
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		console.log($(this).data('page'));
+		console.log(currentPage);
+		selectFrcsCheckAjax();
+	})
+	
+	//////////////////////// 정렬  ////////////////////////////////
+	$('.sort').on('click',function(){
+		
+	      // 첫 번째 자식인 .sort-asc와 두 번째 자식인 .sort-desc를 선택
+	      var sortAsc = $('.sort-arrow', this).find('.sort-asc');
+	      var sortDesc = $('.sort-arrow', this).find('.sort-desc');
+	      
+	      sort = $(this).data('sort');
+	      
+	      // 첫 번째 자식이 active 클래스가 있는지 확인
+	      if (!sortAsc.hasClass('active')) { // desc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	      
+	        	sortAsc.addClass('active');
+	        	
+	        	orderby = 'asc';
+	      } else{ // asc
+	    	  // 모든 th의 active 클래스를 제거
+	          $('.sort-arrow .sort-asc, .sort-arrow .sort-desc').removeClass('active');
+	    	  
+	        	sortDesc.addClass('active');
+	        	orderby = 'desc';
+	    	  
+	      }
+	      currentPage=1;
+	      selectFrcsCheckAjax();
+	})
+	
+	/////////////////////////////////////////////////////////////////////
+	
+	// 선택
+	$(document).on('click','.frcsDtl', function(){
+		frcsModal.hide();
+		let bzentNo = $(this).data("no");
+		let bzentNm = $(this).data("nm");
+		let rgnNm = $(this).data("rgn");
+		
+		$('#rgnNm').val(rgnNm);
+		$('#bzentNm').val(bzentNm);
+		$('#bzentNo').val(bzentNo);
+	})
+	
+})
+</script>
+<!-- content-header: 추가 페이지 이름 -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      	<button class="btn btn-default mr-3" onclick="location.href='/hdofc/frcs/list'"><span class="icon material-symbols-outlined">keyboard_backspace</span> 목록으로</button>
+        <h1 class="m-0">가맹점 점검 추가</h1>
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+<!-- wrap 시작 -->
+<div class="wrap">
+	
+	<!-- cont 시작  가맹점 선택-->
+	<div class="cont">
+		<!-- table-wrap -->
+		<div class="table-wrap">
+			<div class="table-title row">
+				<div class="cont-title"><span class="material-symbols-outlined title-icon">store</span>가맹점 정보</div> 
+				<button class="accordion-btn" id="frcs"><span class="material-symbols-outlined">search</span></button>
+			</div>
+			<table class="table-blue">
+				<tr>
+					<th>가맹점 이름</th>
+					<td>
+						<input placeholder="선택해주세요" disabled type="text" id="bzentNm" name="bzentNm"/>
+						<input placeholder="선택해주세요" readonly="readonly" type="text" id="bzentNo" name="bzentNo" hidden/>
+					</td>
+					<th>지역</th>
+					<td><input disabled placeholder="선택해주세요" type="text" id="rgnNm" name="rgnNm"/></td>
+				</tr>
+			</table>
+		</div>
+		<!-- table-wrap -->
+	</div>
+	<!-- cont 끝  가맹점 선택-->
+	
+	<!-- cont 시작 -->
+	<div class="cont">
+		<!-- table-wrap -->
+		<div class="table-wrap">
+			<div class="table-title">
+				<div class="cont-title"><span class="material-symbols-outlined title-icon">list_alt</span>점검 정보</div> 
+			</div>
+			<table class="table-blue">
+				<tr>
+					<th class="center" rowspan="2">구 분</th>
+					<th class="center" rowspan="2">점검 항목</th>
+					<th class="center" colspan="3">점검 결과</th>
+				</tr>
+				<tr>
+					<th class="center">양호</th>
+					<th class="center">보통</th>
+					<th class="center">부적합</th>
+				</tr>
+				<tr>
+					<td rowspan="5">위생</td>
+					<td>조리기구 및 식기 세척 상태</td>
+					<td><input type="radio" name="cln1" class="cln1 good" value="10"></td>
+					<td><input type="radio" name="cln1" class="cln1 nomal" value="5"></td>
+					<td><input type="radio" name="cln1" class="cln1 bad" value="0"></td>
+				</tr>
+				<tr>
+					<td>매장 내 청결 상태</td>
+					<td><input type="radio" class="cln2 good" name="cln2" value="10"></td>
+					<td><input type="radio" class="cln2 nomal" name="cln2" value="5"></td>
+					<td><input type="radio" class="cln2 bad" name="cln2" value="0"></td>
+				</tr>
+				<tr>
+					<td>쓰레기통 및 폐기물 관리</td>
+					<td><input type="radio" class="cln3 good" name="cln3" value="10"></td>
+					<td><input type="radio" class="cln3 nomal" name="cln3" value="5"></td>
+					<td><input type="radio" class="cln3 bad" name="cln3" value="0"></td>
+				</tr>
+				<tr>
+					<td>유통기한(신선도) 준수 여부</td>
+					<td><input type="radio" class="cln4 good" name="cln4" value="10"></td>
+					<td><input type="radio" class="cln4 nomal" name="cln4" value="5"></td>
+					<td><input type="radio" class="cln4 bad" name="cln4" value="0"></td>
+				</tr>
+				<tr>
+					<td>조리 시 개인 위생 수칙 준수</td>
+					<td><input type="radio" class="cln5 good" name="cln5" value="10"></td>
+					<td><input type="radio" class="cln5 nomal" name="cln5" value="5"></td>
+					<td><input type="radio" class="cln5 bad" name="cln5" value="0"></td>
+				</tr>
+				<tr>
+					<td rowspan="5">서비스</td>
+					<td>직원의 친절도 및 고객 응대 태도</td>
+					<td><input type="radio" class="srv1 good" name="srv1" value="10"></td>
+					<td><input type="radio" class="srv1 nomal" name="srv1" value="5"></td>
+					<td><input type="radio" class="srv1 bad" name="srv1" value="0"></td>
+				</tr>
+				<tr>
+					<td>고객 문의에 대한 신속한 응대 여부</td>
+					<td><input type="radio" class="srv2 good" name="srv2" value="10"></td>
+					<td><input type="radio" class="srv2 nomal" name="srv2" value="5"></td>
+					<td><input type="radio" class="srv2 bad" name="srv2" value="0"></td>
+				</tr>
+				<tr>
+					<td>주문 처리의 정확성 및 신속함</td>
+					<td><input type="radio" class="srv3 good" name="srv3" value="10"></td>
+					<td><input type="radio" class="srv3 nomal" name="srv3" value="5"></td>
+					<td><input type="radio" class="srv3 bad" name="srv3" value="0"></td>
+				</tr>
+				<tr>
+					<td>고객 대기 시간의 적정선</td>
+					<td><input type="radio" class="srv4 good" name="srv4" value="10"></td>
+					<td><input type="radio" class="srv4 nomal" name="srv4" value="5"></td>
+					<td><input type="radio" class="srv4 bad" name="srv4" value="0"></td>
+				</tr>
+				<tr>
+					<td>고객의 의견 및 불만 사항 처리 절차</td>
+					<td><input type="radio" class="srv5 good" name="srv5" value="10"></td>
+					<td><input type="radio" class="srv5 nomal" name="srv5" value="5"></td>
+					<td><input type="radio" class="srv5 bad" name="srv5" value="0"></td>
+				</tr>
+			</table>
+		</div>
+		<!-- table-wrap -->
+	</div>
+	<!-- cont 끝 -->
+	<div class="cont">
+		<!-- table-wrap -->
+		<div class="table-wrap">
+		<div class="table-title">
+			<div class="cont-title"><span class="material-symbols-outlined title-icon">playlist_add</span>점검 상세 정보</div> 
+			</div>
+			<div class="bar"></div>
+			<div id="TEXTAREATEMP" style="height: 400px;"></div>
+			<textarea rows="3" id="TEXTAREA" cols="" hidden></textarea>
+		</div>
+	</div>
+</div>
+<!-- wrap 끝 -->
+
+<!-- 가맹점 추가 모달 창 -->
+<jsp:include page="/WEB-INF/views/hdofc/modal/frcsCheckModal.jsp" />

@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.09.26
+@description  : 발주 납품을 총괄 관리
+-->
+<mapper namespace="com.buff.com.mapper.DealMapper">
+
+	<resultMap type="poVO" id="poMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE"/>
+		<result property="deliTypeNm" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="bzentVO" resultMap="frcsMap"/> <!-- 가맹점 -->
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="actno" column="ACTNO"/>
+		<result property="bankType" column="BANK_TYPE"/>
+		<result property="bankTypeNm" column="BANK_TYPE_NM"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+		
+		<association property="bzentVO" resultMap="cnptMap"/> <!-- 거래처 -->
+		<association property="gdsVO" resultMap="gdsMap"/> <!-- 거래처 -->
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<collection property="stockVOList" resultMap="stockMap"/>
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="ntslTypeNm" column="NTSL_TYPE_NM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="ntslQty" column="NTSL_QTY"/>
+		<result property="aprvQty" column="APRV_QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<association property="bzentVO" resultMap="cnptMap"/> <!-- 거래처 -->
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap"/>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="cnptMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		
+		<association property="mbrVO" resultMap="cnptMbr"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="frcsMap">
+		<result property="bzentNo" column="FRCS_NO"/>
+		<result property="mbrId" column="FRCS_MBR_ID"/>
+		<result property="bzentTelno" column="FRCS_TELNO"/>
+		<result property="bzentNm" column="FRCS_NM"/>
+		<result property="rgnNo" column="FRGN_NO"/>
+		<result property="bzentZip" column="FRCS_ZIP"/>
+		<result property="bzentAddr" column="FRCS_ADDR"/>
+		<result property="bzentDaddr" column="FRCS_DADDR"/>
+		<result property="actno" column="FRCS_ACTNO"/>
+		<result property="bankType" column="FRCS_BANK_TYPE"/>
+		<result property="bankTypeNm" column="FRCS_BANK_TYPE_NM"/>
+		
+		<association property="mbrVO" resultMap="frcsMbr"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="cnptMbr">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="frcsMbr">
+		<result property="mbrId" column="FMBR_ID"/>
+		<result property="mbrNm" column="FMBR_NM"/>
+		<result property="mbrTelno" column="FMBR_TELNO"/>
+		<result property="mbrEmlAddr" column="FMBR_EML_ADDR"/>
+	</resultMap>
+	
+	<!-- 
+		발주나 납품 조회
+	 -->
+	<select id="selectDeal" parameterType="hashMap" resultMap="poMap">
+		WITH pp AS (
+		    SELECT 
+		        S.*, 
+		        ROW_NUMBER() OVER (PARTITION BY S.PO_NO ORDER BY S.SPMT_YMD DESC) AS RN
+		    FROM STOCK_PO S
+		), po_total AS (
+		    SELECT PO_NO, SUM(QTY * GDS_AMT) AS TOTAL_AMT
+		    FROM STOCK_PO
+		    GROUP BY PO_NO
+		), t AS (
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_deal"/> <include refid="orderby"/>) AS RNUM
+		        , P.PO_NO 
+		        , CB.BZENT_NM
+		        , CB.BZENT_TELNO
+		        , CM.MBR_NM
+		        , FB.BZENT_NM AS FRCS_NM
+		        , FB.BZENT_TELNO AS FRCS_TELNO
+		        , FM.MBR_NM AS FMBR_NM
+		        , P.DELI_YMD
+		        , COALESCE(C.CLCLN_AMT, PT.TOTAL_AMT) AS CLCLN_AMT
+		        , C.CLCLN_YN
+		        , P.DELI_TYPE
+		        , T.COM_NM AS DELI_TYPE_NM
+		        , S.SPMT_YMD
+		    FROM PO P
+		    LEFT JOIN PO_CLCLN C ON P.PO_NO = C.PO_NO
+		    JOIN pp S ON S.PO_NO = P.PO_NO AND S.RN = 1 
+		    JOIN BZENT CB ON CB.BZENT_NO = S.BZENT_NO
+		    JOIN BZENT FB ON FB.BZENT_NO = P.BZENT_NO
+		    JOIN COM_CODE T ON T.COM_NO = P.DELI_TYPE
+		    LEFT JOIN MEMBER CM ON CB.MBR_ID = CM.MBR_ID
+		    LEFT JOIN MEMBER FM ON FB.MBR_ID = FM.MBR_ID
+		    LEFT JOIN po_total PT ON PT.PO_NO = P.PO_NO
+		    WHERE 1=1
+		    <include refid="deal_search"/>
+		)
+		SELECT t.*
+		FROM t
+		WHERE t.rnum BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 
+		발주나 납품 검색 조건 총 갯수 조회
+	 -->
+	<select id="selectTotalDeal" parameterType="hashMap" resultType="int">
+			WITH pp AS (
+			  SELECT 
+			    S.*, 
+			    ROW_NUMBER() OVER (PARTITION BY S.PO_NO ORDER BY S.SPMT_YMD DESC) AS RN
+			  FROM STOCK_PO S
+			)
+		    SELECT COUNT(1)
+			FROM PO P
+			LEFT JOIN PO_CLCLN C ON P.PO_NO=C.PO_NO
+			JOIN pp S ON S.PO_NO = P.PO_NO AND S.RN = 1 
+			JOIN BZENT CB ON CB.BZENT_NO=S.BZENT_NO
+			JOIN BZENT FB ON FB.BZENT_NO=P.BZENT_NO
+			JOIN COM_CODE T ON T.COM_NO=P.DELI_TYPE
+			LEFT JOIN MEMBER CM ON CB.MBR_ID=CM.MBR_ID
+			LEFT JOIN MEMBER FM ON FB.MBR_ID=FM.MBR_ID
+			WHERE 1=1
+			<include refid="deal_search"/>
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_deal">
+		<!-- 발주번호 순 -->
+		<if test="sort == 'poNo'">
+			ORDER BY P.PO_NO
+		</if>
+		<if test="sort == bzentNm">
+			<choose>
+				<when test="type == 'po'">
+					ORDER BY CB.BZENT_NM
+				</when>
+				<when test="type == 'so'">
+					ORDER BY FB.BZENT_NM
+				</when>
+			</choose>
+		</if>
+		<!-- 유형 상태 순 -->
+		<if test="sort == 'deliType'">
+			ORDER BY P.DELI_TYPE
+		</if>
+		<!-- 거래처 이름 순 -->
+		<if test="sort == 'cnptNm'">
+			ORDER BY CB.BZENT_NM
+		</if>
+		<!-- 가맹점 이름 순 -->
+		<if test="sort == 'frcsNm'">
+			ORDER BY FB.BZENT_NM
+		</if>
+		<!-- 총 금액순 -->
+		<if test="sort == 'clclnAmt'">
+			ORDER BY C.CLCLN_AMT
+		</if>
+		<!-- 배송일자순 -->
+		<if test="sort == 'deliYmd'">
+			ORDER BY P.DELI_YMD
+		</if>
+		<!-- 정산여부순 -->
+		<if test="sort == 'clclnYn'">
+			ORDER BY C.CLCLN_YN
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="deal_search">
+		<if test="type=='po'">
+			AND P.BZENT_NO=#{bzentNo}
+		</if>
+		<if test="type=='so'">
+			AND S.BZENT_NO=#{bzentNo}
+		</if>
+		<if test="clclnYn != null">
+			AND C.CLCLN_YN = #{clclnYn}
+		</if>
+		<!-- 거래처 이름 검색 -->
+		<if test="bzentNm != null">
+			<choose>
+				<when test="type == 'po'">
+					AND CB.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+				</when>
+				<when test="type == 'so'">
+					AND FB.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+				</when>
+			</choose>
+		</if>
+		<!-- 운영 -->
+		<if test="deliType != null and deliType != ''">
+			AND P.DELI_TYPE = #{deliType}
+		</if>
+		<!-- 신청 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND S.SPMT_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND S.SPMT_YMD <= #{eregYmd}
+		]]>
+		</if>
+		<!-- 배송 일자 검색 -->
+		<if test="sdeYmd != null">
+		<![CDATA[
+			AND P.DELI_YMD >= #{sdeYmd}
+		]]>
+		</if>
+		<if test="edeYmd != null">
+		<![CDATA[
+			AND P.DELI_YMD <= #{edeYmd}
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!-- 
+		발주나 납품 상세
+	 -->
+	<select id="selectDealDtl" parameterType="String" resultMap="poMap">
+		SELECT P.PO_NO
+		        , CB.BZENT_NM
+		        , CB.BZENT_TELNO
+		        , CB.BZENT_ZIP
+		        , CB.BZENT_ADDR
+		        , CB.BZENT_DADDR
+		        , CM.MBR_NM
+		        , FB.BZENT_NO AS FRCS_NO
+		        , FB.BZENT_NM AS FRCS_NM
+		        , FB.BZENT_TELNO AS FRCS_TELNO
+		        , FB.BZENT_ZIP AS FRCS_ZIP
+		        , FB.BZENT_ADDR AS FRCS_ADDR
+		        , FB.BZENT_DADDR AS FRCS_DADDR
+		        , FB.ACTNO AS FRCS_ACTNO
+		        , FB.BANK_TYPE AS FRCS_BANK_TYPE
+		        , FBK.COM_NM AS FRCS_BANK_TYPE_NM
+		        , FM.MBR_NM AS FMBR_NM
+		        , P.DELI_YMD
+		        , COALESCE(C.CLCLN_AMT, (SELECT SUM(QTY * GDS_AMT)
+                                FROM STOCK_PO
+                                WHERE PO_NO = #{poNo})) AS CLCLN_AMT
+		        , C.CLCLN_YN
+		        , C.CLCLN_YMD
+		        , P.DELI_TYPE
+		        , P.RJCT_RSN
+		        , T.COM_NM AS DELI_TYPE_NM
+		        , S.SPMT_YMD
+		        , S.QTY
+		        , S.GDS_CODE
+		        , S.GDS_AMT
+		        , S.BZENT_NO
+		        , G.GDS_NM
+		        , G.GDS_TYPE
+		        , GT.COM_NM AS GDS_TYPE_NM
+		        , G.UNIT_NM
+		        , S.PO_SEQ
+		        , CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND(C.CLCLN_AMT * (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_AMT
+		        , C.REG_YMD
+		        , C.ACTNO
+		        , C.BANK_TYPE
+		        , BK.COM_NM AS BANK_TYPE_NM
+			FROM PO P
+			LEFT JOIN PO_CLCLN C 
+					ON P.PO_NO=C.PO_NO
+			JOIN STOCK_PO S 
+					ON S.PO_NO = P.PO_NO
+			JOIN BZENT CB 
+					ON CB.BZENT_NO=S.BZENT_NO
+			JOIN BZENT FB 
+					ON FB.BZENT_NO=P.BZENT_NO
+			LEFT JOIN COM_CODE FBK
+					ON FBK.COM_NO=FB.BANK_TYPE
+			JOIN COM_CODE T 
+					ON T.COM_NO=P.DELI_TYPE
+			JOIN GDS G 
+					ON S.GDS_CODE=G.GDS_CODE
+			JOIN COM_CODE GT 
+					ON GT.COM_NO=G.GDS_TYPE
+			LEFT JOIN MEMBER CM 
+					ON CB.MBR_ID=CM.MBR_ID
+			LEFT JOIN MEMBER FM 
+					ON FB.MBR_ID=FM.MBR_ID
+			LEFT JOIN COM_CODE BK
+					ON BK.COM_NO=C.BANK_TYPE
+			WHERE P.PO_NO=#{poNo}
+			ORDER BY S.PO_SEQ
+	</select>
+	
+	<!-- 
+		상품 선택 시 상품을 현재 팔고있는 재고가 0개 초과인 거래처 조회
+	 -->
+	<select id="selectCnptGds" parameterType="String" resultMap="stockMap">
+
+		SELECT S.BZENT_NO
+				, B.BZENT_NM
+				, S.QTY
+				, A.AMT
+				, COALESCE(SUM(CASE 
+			                    WHEN P.DELI_TYPE = 'DELI01' THEN SP.QTY 
+			                    ELSE 0 
+			                 END), 0) AS NTSL_QTY
+			FROM STOCK S
+			LEFT JOIN GDS_AMT A 
+			   		ON S.BZENT_NO = A.BZENT_NO 
+			    	AND A.GDS_CODE = S.GDS_CODE
+			JOIN GDS G 
+			    	ON G.GDS_CODE = S.GDS_CODE
+			JOIN BZENT B 
+			    	ON B.BZENT_NO = S.BZENT_NO
+			LEFT JOIN STOCK_PO SP 
+			    	ON SP.BZENT_NO = S.BZENT_NO 
+			    	AND SP.GDS_CODE = S.GDS_CODE
+			LEFT JOIN PO P 
+			    	ON SP.PO_NO = P.PO_NO
+			WHERE S.GDS_CODE = #{gdsCode}
+			  	AND S.BZENT_NO LIKE 'CN%'
+			  	AND S.NTSL_TYPE = 'GDNT03'
+			  	AND A.AMT!=0
+			GROUP BY 
+			    B.BZENT_NM
+			    , S.QTY
+			    , A.AMT
+			    , S.BZENT_NO
+			HAVING (S.QTY - COALESCE(SUM(CASE 
+			                                WHEN P.DELI_TYPE = 'DELI01' THEN SP.QTY 
+			                                ELSE 0 
+			                             END), 0)) != 0
+			ORDER BY A.AMT
+	</select>
+	
+	<!-- 
+		PO테이블 추가 (BZENT_NO) > 발주자 사업체
+	 -->
+	<insert id="insertPo" parameterType="poVO">
+		<selectKey keyProperty="poNo" order="BEFORE" resultType="String">
+			SELECT 'P'||TO_CHAR(SYSDATE,'YYMMDD')||LPAD(NVL(MAX(TO_NUMBER(SUBSTR(PO_NO,8)))+1,1),3,0)
+			FROM PO
+			WHERE SUBSTR(PO_NO,2,6)=TO_CHAR(SYSDATE,'YYMMDD')
+		</selectKey>
+	
+		INSERT INTO PO(PO_NO, BZENT_NO)
+		VALUES(#{poNo}, #{bzentNo})
+	</insert>
+	
+	<!-- 
+		STOCK_PO 추가 (PO_SEQ, PO_NO, BZENT_NO, GDS_CODE, QTY, GDS_AMT) > 납품자 사업체
+	 -->
+	<insert id="insertStockPo" parameterType="stockPoVO">
+		INSERT INTO STOCK_PO(PO_SEQ, PO_NO, BZENT_NO, GDS_CODE, QTY, GDS_AMT)
+		VALUES(#{poSeq}, #{poNo}, #{bzentNo}, #{gdsCode}, #{qty}, #{gdsAmt})
+	</insert>
+	
+	<!-- 
+		STOCK_PO 삭제
+	 -->
+	<delete id="deleteStockPo" parameterType="String">
+		DELETE 
+		FROM STOCK_PO
+		WHERE PO_NO = #{poNo}
+	</delete>
+	
+	<!-- 
+		PO 삭제
+	 -->
+	<delete id="deletePo" parameterType="String">
+		DELETE
+		FROM PO
+		WHERE PO_NO = #{poNo}
+	</delete>
+	
+	<!-- 
+		거래처나 가맹점이 승인한 경우 (본사나 거래처)
+		수량 감소
+	 -->
+	<update id="updateMinStock" parameterType="String">
+		MERGE INTO STOCK S
+		USING (SELECT GDS_CODE, BZENT_NO, QTY
+		       FROM STOCK_PO
+		       WHERE PO_NO = #{poNo}) SP
+		ON (S.GDS_CODE = SP.GDS_CODE AND S.BZENT_NO = SP.BZENT_NO)
+		WHEN MATCHED THEN
+		    UPDATE SET S.QTY = S.QTY - SP.QTY
+	</update>
+
+	<!-- 
+		재고 출고 시 만약에 상품이 없을 경우 insert
+		
+		배송 완료한 경우 (본사나 가맹점)
+		수량 추가
+		
+		MERGE을 써서 조건문에 따라 INSERT나 UPDATE가 이루어진다
+	 -->
+	<update id="updateAddStock" parameterType="String">
+	    MERGE INTO STOCK S
+	    USING (SELECT GDS_CODE, BZENT_NO, QTY 
+	           FROM STOCK_PO
+	           WHERE PO_NO = #{poNo}) SP
+	    ON (S.GDS_CODE = SP.GDS_CODE AND S.BZENT_NO = (SELECT BZENT_NO FROM PO WHERE PO_NO = #{poNo}))
+	    WHEN MATCHED THEN
+	        UPDATE SET S.QTY = S.QTY + SP.QTY
+	    WHEN NOT MATCHED THEN
+	        INSERT (GDS_CODE, BZENT_NO, QTY)
+	        VALUES (SP.GDS_CODE, (SELECT BZENT_NO FROM PO WHERE PO_NO = #{poNo}), SP.QTY)
+	</update>
+	
+	<!-- 
+		배송 승인한 경우 (deliType = DELI02 , deliYmd) > updateMinStock (발주 받은사람이 누름 -> 본사 거래처)
+		배송 완료 (deliType = DELI03) > updateAddStock (발주시킨사람이 누름 -> 가맹점 본사)
+		미승인 (deliType = DELI04, rjctRsn)
+	 -->
+	<update id="updatePo" parameterType="poVO">
+		UPDATE PO
+		SET DELI_TYPE=#{deliType}
+		<if test="deliYmd != null">
+			, DELI_YMD=#{deliYmd}
+		</if>
+		<if test="rjctRsn != null">
+			, RJCT_RSN = #{rjctRsn}
+		</if>
+		WHERE PO_NO=#{poNo}
+	</update>
+
+	<!-- 
+		배송 승인한 경우 정산 시작
+	 -->
+	<insert id="insertPoClcln" parameterType="String">
+		INSERT INTO PO_CLCLN(PO_NO, CLCLN_AMT)
+		SELECT PO_NO, SUM(QTY*GDS_AMT)
+		FROM STOCK_PO
+		WHERE PO_NO=#{poNo}
+		GROUP BY PO_NO
+	</insert>
+	
+	
+	<!--  가맹점 발주 리스트 시작
+		가맹점 발주 시에는 본사가 판매하는 항목만 보임!
+		수량은 해당 가맹점을 보고 참고함!
+		
+		만약 승인 대기중인 물품은 판매에 쳐주지않음
+		수량이 0개 초과한 제품만 보이도록 조건 설정
+	 -->
+	 <select id="selectFrcsGds" parameterType="hashMap" resultMap="gdsMap">
+	 SELECT * FROM(
+			SELECT ROW_NUMBER() OVER (<include refid="sort_gds"/> <include refid="orderby"/>) AS RNUM
+				, G.GDS_CODE
+		        , S.QTY
+		        , S.SF_STOCK_QTY
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , C.COM_NM AS GDS_TYPE_NM
+		        , A.AMT
+				, HS.QTY - COALESCE(SUM(CASE  
+		              WHEN P.DELI_TYPE = 'DELI01' THEN HS.QTY 
+		              ELSE 0 
+	                    END), 0) AS NTSL_QTY <!-- 본사가 판매 가능한 수량 -->
+			FROM GDS G
+			JOIN COM_CODE C ON G.GDS_TYPE=C.COM_NO
+			JOIN STOCK HS 
+			    ON HS.BZENT_NO='HO0001'
+			    AND HS.GDS_CODE = G.GDS_CODE
+			    AND HS.NTSL_TYPE='GDNT03'
+			LEFT OUTER JOIN (
+						    SELECT A1.GDS_CODE
+						            , A1.BZENT_NO
+						            , A1.AMT
+						            , A1.AMT_SEQ
+			                    FROM GDS_AMT A1
+			    JOIN (SELECT GDS_CODE
+						 , BZENT_NO
+						 , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+			            FROM GDS_AMT
+			            GROUP BY GDS_CODE, BZENT_NO
+			            ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+			    ) A ON G.GDS_CODE = A.GDS_CODE AND HS.BZENT_NO = A.BZENT_NO
+			LEFT JOIN STOCK S 
+			    ON G.GDS_CODE=S.GDS_CODE 
+			    AND S.BZENT_NO=#{bzentNo}
+	        LEFT JOIN STOCK_PO SP 
+	        	ON HS.BZENT_NO=SP.BZENT_NO
+	        	AND HS.GDS_CODE=SP.GDS_CODE
+	        LEFT JOIN PO P ON SP.PO_NO=P.PO_NO
+	        WHERE 1=1
+	        	<include refid="gds_search"/>
+	        GROUP BY G.GDS_CODE
+		        , S.QTY
+		        , S.SF_STOCK_QTY
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , C.COM_NM
+		        , A.AMT
+	            , HS.QTY
+	        HAVING (HS.QTY - COALESCE(SUM(CASE 
+	                    WHEN P.DELI_TYPE = 'DELI01' THEN SP.QTY 
+	                    ELSE 0 
+	                 END), 0)) > 0
+	      	) 
+	      	WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	 </select>
+	 
+	 <!-- 정렬 조건 시작 -->
+	<sql id="sort_gds">
+		<!-- 이름 순 -->
+		<if test="sort == 'gdsNm'">
+			ORDER BY G.GDS_NM
+		</if>
+		<!-- 수량 순 -->
+		<if test="sort == 'qty'">
+			ORDER BY S.QTY
+		</if>
+		<!-- 단가 순 -->
+		<if test="sort == 'amt'">
+			ORDER BY A.AMT
+		</if>
+		<!-- 안전재고 순 -->
+		<if test="sort == 'sfStockQty'">
+			ORDER BY S.SF_STOCK_QTY
+		</if>
+		<!-- 단위 순 -->
+		<if test="sort == 'unitNm'">
+			ORDER BY G.UNIT_NM
+		</if>
+		<!-- 유형순 -->
+		<if test="sort == 'gdsType'">
+			ORDER BY G.GDS_TYPE
+		</if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="gds_search">
+		<!-- 대유형 검색 -->
+		 <if test="gdsClass != null and gdsClass != ''">
+	        AND G.GDS_TYPE LIKE #{gdsClass} || '%'
+	    </if>
+		<!-- 소유형 검색 -->
+	    <if test="gdsType != null">
+	        AND G.GDS_TYPE = #{gdsType}
+	    </if>
+		<!-- 상품이름 검색 -->
+		<if test="gdsNm != null">
+			AND G.GDS_NM LIKE '%'||#{gdsNm}||'%'
+		</if>
+		<!-- 안전재고 검색 -->
+		<if test="sfStockQty == 'down'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY > S.QTY
+		]]>
+		</if>
+		<if test="sfStockQty == 'up'">
+		<![CDATA[
+			AND S.SF_STOCK_QTY <= S.QTY
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+	<!--  가맹점 발주 리스트 총 갯수!!!
+		가맹점 발주 시에는 본사가 판매하는 항목만 보임!
+		수량은 해당 가맹점을 보고 참고함!
+		
+		만약 승인 대기중인 물품은 판매에 쳐주지않음
+		수량이 0개 초과한 제품만 보이도록 조건 설정
+	 -->
+	 <select id="selectTotalFrcsGds" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1) FROM(	
+			SELECT COUNT(1)
+			FROM GDS G
+			JOIN COM_CODE C ON G.GDS_TYPE=C.COM_NO
+			JOIN STOCK HS 
+			    ON HS.BZENT_NO='HO0001'
+			    AND HS.GDS_CODE = G.GDS_CODE
+			    AND HS.NTSL_TYPE='GDNT03'
+			LEFT OUTER JOIN (
+						    SELECT A1.GDS_CODE
+						            , A1.BZENT_NO
+						            , A1.AMT
+						            , A1.AMT_SEQ
+			                    FROM GDS_AMT A1
+			    JOIN (SELECT GDS_CODE
+						 , BZENT_NO
+						 , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+			            FROM GDS_AMT
+			            GROUP BY GDS_CODE, BZENT_NO
+			            ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+			    ) A ON G.GDS_CODE = A.GDS_CODE AND HS.BZENT_NO = A.BZENT_NO
+			LEFT JOIN STOCK S 
+			    ON G.GDS_CODE=S.GDS_CODE 
+			    AND S.BZENT_NO=#{bzentNo}
+	        LEFT JOIN STOCK_PO SP 
+	        	ON HS.BZENT_NO=SP.BZENT_NO
+	        	AND HS.GDS_CODE=SP.GDS_CODE
+	        LEFT JOIN PO P ON SP.PO_NO=P.PO_NO
+	        WHERE 1=1
+	        	<include refid="gds_search"/>
+	        GROUP BY G.GDS_CODE
+		        , S.QTY
+		        , S.SF_STOCK_QTY
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , C.COM_NM
+		        , A.AMT
+	            , HS.QTY
+	        HAVING (HS.QTY - COALESCE(SUM(CASE 
+	                    WHEN P.DELI_TYPE = 'DELI01' THEN SP.QTY 
+	                    ELSE 0 
+	                 END), 0)) > 0
+	    )
+	 </select>
+	 
+ 	 <select id="selectFrcsSfGds" parameterType="String" resultMap="gdsMap">
+ 	 		SELECT G.GDS_CODE
+		        , S.QTY
+		        , S.SF_STOCK_QTY
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , C.COM_NM AS GDS_TYPE_NM
+		        , A.AMT
+				, HS.QTY - COALESCE(SUM(CASE  
+		              WHEN P.DELI_TYPE = 'DELI01' THEN HS.QTY 
+		              ELSE 0 
+	                    END), 0) AS NTSL_QTY 
+	            -- 구매 대기중 숫자
+	            , COALESCE((
+				        SELECT SUM(QTY) 
+				        FROM STOCK_PO A 
+				        JOIN PO B ON B.PO_NO = A.PO_NO AND B.BZENT_NO = #{bzentNo}
+				        WHERE A.GDS_CODE = G.GDS_CODE  -- GDS_CODE와 연결
+				        AND B.DELI_TYPE = 'DELI01'
+				        GROUP BY A.GDS_CODE
+				    ), 0) AS APRV_QTY  -- 구매 대기중 숫자
+			FROM GDS G
+			JOIN COM_CODE C ON G.GDS_TYPE=C.COM_NO
+			JOIN STOCK HS 
+			    ON HS.BZENT_NO='HO0001'
+			    AND HS.GDS_CODE = G.GDS_CODE
+			    AND HS.NTSL_TYPE='GDNT03'
+			LEFT OUTER JOIN (
+						    SELECT A1.GDS_CODE
+						            , A1.BZENT_NO
+						            , A1.AMT
+						            , A1.AMT_SEQ
+			                    FROM GDS_AMT A1
+			    JOIN (SELECT GDS_CODE
+						 , BZENT_NO
+						 , MAX(AMT_SEQ) AS MAX_AMT_SEQ
+			            FROM GDS_AMT
+			            GROUP BY GDS_CODE, BZENT_NO
+			            ) A2 ON A1.GDS_CODE = A2.GDS_CODE AND A1.BZENT_NO = A2.BZENT_NO AND A1.AMT_SEQ = A2.MAX_AMT_SEQ
+			    ) A ON G.GDS_CODE = A.GDS_CODE AND HS.BZENT_NO = A.BZENT_NO
+			LEFT JOIN STOCK S 
+			    ON G.GDS_CODE=S.GDS_CODE 
+			    AND S.BZENT_NO=#{bzentNo}
+	        LEFT JOIN STOCK_PO SP 
+	        	ON HS.BZENT_NO=SP.BZENT_NO
+	        	AND HS.GDS_CODE=SP.GDS_CODE
+	        LEFT JOIN PO P ON SP.PO_NO=P.PO_NO
+	        WHERE 1=1
+	        <![CDATA[
+            AND S.SF_STOCK_QTY > S.QTY
+            ]]>
+	        GROUP BY G.GDS_CODE
+		        , S.QTY
+		        , S.SF_STOCK_QTY
+		        , G.GDS_NM
+		        , G.UNIT_NM
+		        , G.GDS_TYPE
+		        , C.COM_NM
+		        , A.AMT
+		        , SP.QTY
+	            , HS.QTY
+	        HAVING (HS.QTY - COALESCE(SUM(CASE 
+	                    WHEN P.DELI_TYPE = 'DELI01' THEN SP.QTY 
+	                    ELSE 0 
+	                 END), 0)) > 0
+	 </select>
+	 
+	 
+	 <!-- *************************************************** 정산 ***************************** -->
+	 <update id="updateClcln" parameterType="poClclnVO">
+	 	UPDATE PO_CLCLN C
+	 	SET C.CLCLN_YN = 'Y'
+	 		, C.CLCLN_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	 		, C.NPMNT_AMT = #{npmntAmt}
+	 		, C.ACTNO = (
+			    SELECT B.ACTNO
+			    FROM BZENT B
+			    JOIN PO P ON P.BZENT_NO = B.BZENT_NO
+			    WHERE P.PO_NO=C.PO_NO
+			)
+			, C.BANK_TYPE = (
+			    SELECT B.BANK_TYPE
+			    FROM BZENT B
+			    JOIN PO P ON P.BZENT_NO = B.BZENT_NO
+			    WHERE P.PO_NO=C.PO_NO
+			)
+	 	WHERE C.PO_NO=#{poNo}
+	 </update>
+</mapper>

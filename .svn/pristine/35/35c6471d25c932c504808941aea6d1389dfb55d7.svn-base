@@ -1,0 +1,197 @@
+package com.buff.frcs.controller;
+
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.apache.xmlbeans.soap.SOAPArrayType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.frcs.service.FrcsMainService;
+import com.buff.frcs.service.FrcsOrdrService;
+import com.buff.vo.EventVO;
+import com.buff.vo.FrcsCheckVO;
+import com.buff.vo.MenuVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.frcs.controller
+* @fileName     : FrcsMainController.java
+* @author       : 김현빈
+* @date         : 2024.09.21
+* @description  : 메인 화면 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.21        김현빈     	  			최초 생성
+*/
+@PreAuthorize("hasRole('ROLE_FRCS')")
+@RequestMapping("/frcs")
+@Controller
+@Slf4j
+public class FrcsMainController {
+	
+	@Autowired
+	FrcsOrdrService ordrService;
+	
+	@Inject
+	FrcsMainService frcsMainService;
+	
+	@GetMapping("/main")
+	public String main(Model model, Principal principal) {
+		
+		List<EventVO> eventVOList = this.frcsMainService.selectIngEvent();
+		
+		String mbrId = principal.getName();
+		
+		Map<String, Object> map = this.frcsMainService.selectOrderStatusCnt(mbrId);
+		
+		model.addAttribute("eventVOList", eventVOList);
+		model.addAttribute("map", map);
+		
+		return "frcs/main/home";
+	}
+	
+	@PostMapping("/ordr")
+	@ResponseBody
+	public int updateOrdr(@RequestParam String frcsNo) {
+		return this.ordrService.updateOrdrStock(frcsNo);
+	}
+	
+	/** 이번달 판매량 best메뉴 top3 출력
+	 * author : 김현빈, 정현종
+	 * 요청URI : /frcs/selectMenuQtyDesc
+	 * 요청파라미터 : bzentNo
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/selectMenuQtyDesc")
+	public List<MenuVO> selectMenuQtyDesc(@RequestBody String bzentNo) {
+		log.info("selectMenuQtyDesc : -> bzentNo : " + bzentNo);
+		
+		List<MenuVO> menuVODescList = this.frcsMainService.selectMenuQtyDesc(bzentNo);
+		log.info("menuVODescList : -> " + menuVODescList);
+		
+		return menuVODescList;
+	}
+	
+	/** 이번달 판매량 worst메뉴 top3 출력
+	 * author : 김현빈, 정현종
+	 * 요청URI : /frcs/selectMenuQtyAsc
+	 * 요청파라미터 : bzentNo
+	 * 요청방식 : post
+	 */
+	@ResponseBody
+	@PostMapping("/selectMenuQtyAsc")
+	public List<MenuVO> selectMenuQtyAsc(@RequestBody String bzentNo) {
+		log.info("selectMenuQtyAsc : -> bzentNo : " + bzentNo);
+		
+		List<MenuVO> menuVOAscList = this.frcsMainService.selectMenuQtyAsc(bzentNo);
+		log.info("menuVOAscList : -> " + menuVOAscList);
+		
+		return menuVOAscList;
+	}
+	
+	/**
+	* @methodName  : selectDailysales
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 당일 매출 금액
+	*/
+	@ResponseBody
+	@PostMapping("/selectDailysales")
+	public long selectDailysales(@RequestBody String bzentNo) {
+		log.info("selectDailysales : -> bzentNo : " + bzentNo);
+		
+		long dailysales = this.frcsMainService.selectDailysales(bzentNo);
+		log.info("dailysales : -> " + dailysales);
+		
+		return dailysales;
+	}
+	
+	/**
+	* @methodName  : selectDailysalesCnt
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 당일 판매 횟수
+	*/
+	@ResponseBody
+	@PostMapping("/selectDailysalesCnt")
+	public long selectDailysalesCnt(@RequestBody String bzentNo) {
+		log.info("selectDailysalesCnt : -> bzentNo : " + bzentNo);
+		
+		long dailysalesCnt = this.frcsMainService.selectDailysalesCnt(bzentNo);
+		log.info("dailysalesCnt : -> " + dailysalesCnt);
+		
+		return dailysalesCnt;
+	}
+	
+	/**
+	* @methodName  : selectStoreGrade
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 최근 매장점검 점수
+	*/
+	@ResponseBody
+	@PostMapping("/selectStoreGrade")
+	public int selectStoreGrade(@RequestBody String bzentNo) {
+		log.info("selectStoreGrade : -> bzentNo : " + bzentNo);
+		
+		int storeGrade = this.frcsMainService.selectStoreGrade(bzentNo);
+		log.info("selectStoreGrade : -> storeGrade : " + storeGrade);
+		
+		return storeGrade;
+	}
+	
+	/**
+	* @methodName  : selectStoreWarningCnt
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.11
+	* @param bzentNo
+	* @return	   : 매장점검 경고 횟수
+	*/
+	@ResponseBody
+	@PostMapping("/selectStoreWarningCnt")
+	public int selectStoreWarningCnt(@RequestBody String bzentNo) {
+		log.info("selectStoreWarningCnt : -> bzentNo : " + bzentNo);
+		
+		int storeWarningCnt = this.frcsMainService.selectStoreWarningCnt(bzentNo);
+		log.info("selectStoreWarningCnt : -> storeWarningCnt : " + storeWarningCnt);
+		
+		return storeWarningCnt;
+	}
+	
+	/**
+	* @methodName  : selectStoreCheckList
+	* @author      : 김현빈, 정현종
+	* @date        : 2024.10.12
+	* @param bzentNo
+	* @return	   : 매장 점검 내역
+	*/
+	@ResponseBody
+	@PostMapping("/selectStoreCheckList")
+	public List<FrcsCheckVO> selectStoreCheckList(@RequestBody String bzentNo) {
+		log.info("selectStoreCheckList : -> bzentNo : " + bzentNo);
+		
+		List<FrcsCheckVO> frcsCheckVOList = this.frcsMainService.selectStoreCheckList(bzentNo);
+		log.info("selectStoreCheckList : -> frcsCheckVOList : " + frcsCheckVOList);
+		
+		return frcsCheckVOList;
+	}
+		
+}

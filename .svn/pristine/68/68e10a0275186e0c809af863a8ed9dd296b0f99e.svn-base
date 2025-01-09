@@ -1,0 +1,26 @@
+@charset "UTF-8";
+
+#salesChart{
+	display: block;
+    box-sizing: border-box;
+    height: 550px !important;
+    width: 706px !important;
+    position: relative;
+    bottom: 35px;
+}
+
+.page-tap-wrap{
+	position : relative;
+	top : 20px;
+}
+
+#month-text{
+	position: relative;
+    top: 5px;
+}
+
+#daily-text{
+	position: relative;
+    top: 5px;
+}
+

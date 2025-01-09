@@ -1,0 +1,33 @@
+@charset "UTF-8";
+
+/* 정렬 */
+.sort{
+  position: relative; /* 버튼을 TH 내부에 고정하기 위해 필요 */
+  cursor: pointer;
+}
+
+.sort.active {
+  color : var(--green--5);
+}
+
+th .sort-icon {
+  position: absolute;
+  top: 50%;
+  margin-left: 5%;
+  transform: translateY(-50%);
+  display: inline-block;
+}
+
+.sort-arrow .active{
+	color : var(--green--5);
+}
+
+.sort-arrow span{
+  color : var(--border--primary);
+  font-size: 0.5rem;
+  margin: 1px;
+}
+
+.sort-arrow{
+	display: grid;
+}

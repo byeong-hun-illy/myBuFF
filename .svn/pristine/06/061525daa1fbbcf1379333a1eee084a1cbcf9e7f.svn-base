@@ -1,0 +1,199 @@
+<%--
+ 	@fileName    : selectGds.jsp
+ 	@programName : 상품 재고 현황
+ 	@description : 상품 재고현황을 확인하기 위한 페이지
+ 	@author      : 이병훈
+ 	@date        : 2024. 09. 23
+--%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<script src="/resources/js/jquery-3.6.0.js"></script> 
+<script>
+let currentPage = 1;
+// 기본 정렬 기준
+let sort = 'gdsNm';
+// 기본 오름차순 정렬
+let orderby = 'asc';
+
+function selectGdsAjax(){
+	
+	let gubun = $("#gubun").val();
+	let keyword = $("#keyword").val();
+	
+	let data = {
+			currentPage : currentPage,
+			sort : sort, 
+			orderby : orderby,
+			gubun : gubun,
+			keyword : keyword
+			
+	};
+	
+	$.ajax({
+		url : "/cnpt/gds/listAjax",
+		type : "GET",
+		data : data, 
+		success : function(res){
+			let strTbl = '';
+			if(res.articlePage.total == 0){ // 검색 결과가 0인 경우
+				strTbl+= `
+							<tr>
+								<td class="error-info" colspan="8"> 
+									<span class="icon material-symbols-outlined">error</span>
+									<div class="error-msg">검색 결과가 없습니다</div>
+								</td>
+							</tr>`;
+				
+			} else {
+				res.articlePage.content.forEach(function(gds) {
+					// 각각의 재고 정보를 반복하여 출력
+					gds.stockVOList.forEach(function(stock, index){
+						
+					strTbl += `
+						<tr>
+							<td class="center">${index + 1}</td>
+							<td class="center">${gds.gdsNm}</td>
+							<td class="center">${stock.qty}</td>
+							<td class="center">${gds.unitNm}</td>
+							<td class="center">${stock.amt}</td>
+						</tr>`;
+					});
+				});
+			}
+				
+				$('#table-body').html(strTbl);
+	
+				// 페이징 처리
+				let page = '';
+				if (res.articlePage.startPage > res.articlePage.blockSize) {
+				    page += `<a href="#" class="page-link" data-page="${res.articlePage.startPage - res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_left</span></a>`;
+				}
+				for (let pnum = res.articlePage.startPage; pnum <= res.articlePage.endPage; pnum++) {
+					if (res.articlePage.currentPage === pnum) {
+						page += `<a href="#" class="page-link active" data-page="${pnum}">${pnum}</a>`;
+					} else {
+						page += `<a href="#" class="page-link" data-page="${pnum}">${pnum}</a>`;
+					}
+				}
+				if (res.articlePage.endPage < res.articlePage.totalPages) {
+					page += `<a href="#" class="page-link" data-page="${res.articlePage.startPage + res.articlePage.blockSize}">
+				            <span class="icon material-symbols-outlined">chevron_right</span></a>`;
+				}
+				
+				$('.pagination').html(page);
+			
+		}
+	});
+	
+}
+
+
+$(function(){
+	
+	selectGdsAjax();
+	
+	// 검색 버튼 클릭 시 
+	$("#submit").on("click", function(){
+		currentPage = 1;
+		selectGdsAjax();
+	})
+	
+	// 정렬 기준 클릭 시
+	$('.sort').on('click', function(){
+		sort = $(this).data('sort');
+		orderby = (orderby === 'asc') ? 'desc' : 'asc';
+		selectGdsAjax();
+	});
+	
+	// 엑셀 다운로드 클릭 시
+	$('#gdsExcel').on('click', function(){
+		window.location.href = '/cnpt/gds/downloadExcel';
+	});
+	
+	// 페이징 처리
+	$(document).on('click','.page-link',function(){
+		currentPage = $(this).data('page');
+		console.log($(this).data('page'));
+		console.log(currentPage);
+		selectGdsAjax();
+	});
+	
+});
+</script>
+<!-- content-header: 페이지 이름 -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">재고 관리</h1>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<div class="wrap">
+	<!-- search-section: 검색 영역 -->
+	<div class="search-section">
+		<!-- cont: 검색 영역 -->
+		<div class="cont search-original">
+			<div class="search-wrap">
+				<div class="search-cont">
+					<div class="search-word-wrap">
+						<select class="w-150" id="gubun" name="gubun">
+							<option value="" selected>전체</option>
+							<option value="gdsNm">상품 명</option>
+							<option value="gdsAmt">상품 단가</option>
+						</select>
+						<div class="search-input-btn">
+							<input name="keyword" id="keyword" type="text" placeholder="입력해주세요" class="search-input"/>
+							<button type="button" id="submit" class="search-btn"></button>				
+						</div>
+					</div>
+				</div>
+			<!-- /.search-wrap -->
+			</div>
+		<!-- /.cont: 검색 영역 -->
+		</div>
+	<!-- /.search-section -->
+	</div>
+	<div class="search-control">
+			<div class="search-control-btns">
+				<div class="tap-btn-wrap">
+					<div class="btn-wrap">
+						<button class="btn-active" id="gdsExcel">엑셀파일 다운로드<span class="material-symbols-outlined title-icon">download</span></button>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<!-- 테이블 디자인 1 -->
+		<div class="cont">
+			<div class="table-wrap">
+				<table class="table-default">
+					<thead>
+						<tr>
+							<th class="center th-rnum">번호</th>
+							<th class="center sort sort-gds th-gbsNm" data-sort="gdsNm">상품 명</th>
+							<th class="center sort th-amt" data-sort="gty">수 량</th>
+							<th class="center sort th-unitNm" data-sort="unitNm">단 위</th>
+							<th class="center sort sort-gds th-amt" data-sort="amt">상품 단가</th>
+						</tr>
+					</thead>
+					<tbody id="table-body">
+						
+					</tbody>
+				</table>
+				<!-- 페이지네이션 -->
+				<div class="pagination-wrap">
+					<div class="pagination"></div>
+			</div>
+		<!-- table-wrap -->
+		</div>
+	<!-- /테이블 디자인 1 -->
+	</div>
+	<!-- cont 끝 -->
+</div>

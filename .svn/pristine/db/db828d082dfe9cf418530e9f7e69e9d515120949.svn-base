@@ -1,0 +1,138 @@
+package com.buff.com.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.com.service.ComService;
+import com.buff.com.service.DealService;
+import com.buff.util.ArticlePage;
+import com.buff.vo.GdsVO;
+import com.buff.vo.PoVO;
+import com.buff.vo.StockPoVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@PreAuthorize("hasRole('ROLE_CNPT') or hasRole('ROLE_HDOFC') or hasRole('ROLE_FRCS')")
+@Slf4j
+@RequestMapping("/com/deal")
+public class DealController {
+	
+	@Autowired
+	DealService dealService;
+	
+	@Autowired
+	ComService comService;
+	
+	@GetMapping("/listAjax")
+	@ResponseBody
+	public Map<String, Object> selectDealAjax(@RequestParam Map<String,Object> map) {
+	    int size = 10;
+	    map.put("size", size);
+	    List<PoVO> polist = this.dealService.selectDeal(map);
+	    Map<String, Object> response = this.dealService.selectTotalDeal(map);
+	    int total = (int) response.get("total");
+	    int currentPage = Integer.parseInt((String) map.get("currentPage"));
+	    
+	    // 분류 숫자 계산
+	    // 응답 데이터를 담을 Map 생성
+	    response.put("articlePage", new ArticlePage<PoVO>(total, currentPage, size, polist, map));
+	    
+	    return response; // 여러 데이터를 포함한 Map 반환
+	}
+	
+	/**
+	* @methodName  : selectDealDtlAjax
+	* @author      : 송예진
+	* @date        : 2024.09.27
+	* @param poNo
+	* @return      : 가맹점 상세 값 가져오기 (발주번호를 받아)
+	*/
+	@PostMapping("/dtlAjax")
+	@ResponseBody
+	public Map<String, Object> selectDealDtlAjax(@RequestParam String poNo){
+		Map<String, Object> map = new HashMap<String, Object>();
+		PoVO poVo = this.dealService.selectDealDtl(poNo);
+		map.put("po", poVo);
+		return map;
+	}
+	
+	/**
+	* @methodName  : deletePoAjax
+	* @author      : 송예진
+	* @date        : 2024.09.28
+	* @param poNo
+	* @return      : 승인전인 발주 삭제
+	*/
+	@PostMapping("/deleteAjax")
+	@ResponseBody
+	public int deletePoAjax(@RequestParam String poNo) {
+		return this.dealService.deletePo(poNo);
+	}
+	
+	/**
+	* @methodName  : updateStockPo
+	* @author      : 송예진
+	* @date        : 2024.09.28
+	* @param stockPoVOList
+	* @return      : 재고 변경 리스트
+	* STOCK_PO 추가 (PO_SEQ, PO_NO, BZENT_NO, GDS_CODE, QTY, GDS_AMT) 
+	*/
+	@PostMapping("/updateStockPo")
+	@ResponseBody
+	public int updateStockPo(@RequestBody List<StockPoVO> stockPoVOList) {
+		return this.dealService.updateStockPo(stockPoVOList);
+	}
+	
+	/**
+	* @methodName  : updateAprv
+	* @author      : 송예진
+	* @date        : 2024.09.28
+	* @param poVO
+	* @return      : 승인시
+	*/
+	@PostMapping("/poAprv")
+	@ResponseBody
+	public int updateAprv(@RequestBody PoVO poVO) {
+		return this.dealService.deli02Update(poVO);
+	}
+	
+	/**
+	* @methodName  : updateNoAprv
+	* @author      : 송예진
+	* @date        : 2024.09.28
+	* @param poVO
+	* @return      : 미승인 시
+	*/
+	@PostMapping("/poNoAprv")
+	@ResponseBody
+	public int updateNoAprv(@RequestBody PoVO poVO) {
+		return this.dealService.updatePo(poVO);
+	}
+	
+	/**
+	* @methodName  : updatePo
+	* @author      : 송예진
+	* @date        : 2024.09.28
+	* @param poVO
+	* @return      : 배송 완료시 
+	*/
+	@PostMapping("/updateDeliEnd")
+	@ResponseBody
+	public int updatePo(@RequestBody PoVO poVO) {
+		// 배송 완료가 되면 해당 발주건의 정산이 부여
+		return this.dealService.deli03Update(poVO);
+	}
+	
+}

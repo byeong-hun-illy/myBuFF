@@ -1,0 +1,64 @@
+@charset "UTF-8";
+@import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css); 
+@import "reset.css";
+@import "table.css";
+@import "commons.css";
+
+    /* 이벤트 이미지 슬라이드 배너 스타일 */
+    #slideImage {
+        width: 100%;
+        max-width: 1000px;
+        height: 200px;
+        background-color: var(--gray--0);
+        text-align: center;
+        line-height: 200px;
+        font-size: var(--primary--size);
+        color: var(--text--primary);
+        border: 1px solid var(--border--primary);
+        margin: 0 auto;
+    }
+
+    /* 카드 컨테이너 스타일 */
+    .cont {
+        padding: var(--pd--m);
+        background-color: var(--gray--0);
+        border-radius: var(--radius--m);
+    }
+
+    .card-cont {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--gap--m); /* 카드 간격 */
+    }
+
+    /* 카드 스타일 */
+    .card {
+        background-color: var(--gray--0);
+        border: 1px solid var(--border--primary);
+        border-radius: var(--radius--s);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: var(--pd--s);
+        width: calc(33.333% - var(--gap--m)); /* 3개씩 배치, 카드 간격을 고려 */
+        box-sizing: border-box;
+        text-align: center; /* 카드 내 텍스트 중앙 정렬 */
+    }
+
+    /* 카드 제목 스타일 */
+    .card h2 {
+        margin-top: 0;
+        font-size: var(--accent--size);
+        font-weight: var(--accent--weight);
+        color: var(--text--primary);
+    }
+
+    /* 카드 내용 스타일 */
+    .card p {
+        margin: var(--gap--s) 0;
+        color: var(--text--secondary);
+    }
+
+    /* 카드 영역 스타일 */
+    .cont-wrap {
+        display: flex;
+        justify-content: center; /* 카드 컨테이너 중앙 정렬 */
+    }

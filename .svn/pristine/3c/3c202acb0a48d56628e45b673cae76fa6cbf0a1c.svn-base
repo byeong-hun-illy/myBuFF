@@ -1,0 +1,113 @@
+package com.buff.frcs.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.buff.frcs.service.FrcsMenuService;
+import com.buff.vo.FrcsMenuVO;
+import com.buff.vo.MenuVO;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+* @packageName  : com.buff.controller.frcs
+* @fileName     : FrcsMenuController.java
+* @author       : 정현종
+* @date         : 2024.09.12
+* @description  : 가맹점 판매 메뉴 컨트롤러
+* ===========================================================
+* DATE              AUTHOR             NOTE
+* -----------------------------------------------------------
+* 2024.09.12                정현종     	  		      최초 생성
+*/
+
+@RequestMapping("/frcsMenu")
+@Slf4j
+@Controller
+public class FrcsMenuController {
+	
+	@Autowired
+	FrcsMenuService frcsMenuService;
+	
+	/**
+	* @methodName  : selectFrcsMenuList
+	* @author      : 정현종
+	* @date        : 2024.09.12
+	* @param  	   : 검색 조건(메뉴 유형(MENU_TYPE) {MENU02 : 단품, MENU03 : 사이드, MENU04 : 음료, MENU01 : 세트}, 메뉴 이름(MENU_NM))
+	* @return      : 가맹점 판매 메뉴 목록
+	*/
+	@GetMapping("/list")
+	public String selectFrcsMenuList(Model model,
+			@RequestParam(value="gubun", required=false, defaultValue="") String gubun, // 메뉴 유형
+			@RequestParam(value="keyword", required=false, defaultValue="") String keyword) { // 메뉴 이름
+		
+		// 검색조건
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("gubun", gubun);
+		map.put("keyword", keyword);
+		log.info("selectFrcsMenuList->map : " + map);
+		
+		// 판매 메뉴 목록
+		List<FrcsMenuVO> frcsMenuVOList = this.frcsMenuService.selectFrcsMenuList(map);
+		log.info("selectFrcsMenuList->frcsMenuVOList : " + frcsMenuVOList);
+		
+		// 판매 가능 메뉴 목록
+		List<MenuVO> menuVOList = this.frcsMenuService.selectAllFrcsMenuList(map);
+		log.info("selectFrcsMenuList->menuVOList : " + menuVOList);
+		
+		// 모델에 추가하기
+		model.addAttribute("frcsMenuVOList", frcsMenuVOList);
+		model.addAttribute("menuVOList", menuVOList);
+		
+		return "frcs/selectFrcsMenuList"; // JSP 파일 이름 반환
+	}
+	
+	/**
+	 * @methodName  : insertFrcsMenu
+	 * @author      : 정현종
+	 * @date        : 2024.09.13
+	 * @param       : 선택한 메뉴 번호 리스트
+	 * @description : 선택한 메뉴를 추가하는 메소드
+	 */
+	@ResponseBody
+	@PostMapping("/insertFrcsMenuAjax")
+	public List<String> insertFrcsMenuAjax(@RequestBody List<String> menuNos) {
+	    log.info("insertFrcsMenu->menuNos : " + menuNos);
+        
+	    // 메뉴 추가 서비스 호출
+	    int result = frcsMenuService.insertFrcsMenuAjax(menuNos);
+        log.info("insertFrcsMenu->result : " + result);
+	    
+        return menuNos;
+	}
+	
+	/**
+	 * @methodName  : deleteFrcsMenuAjax
+	 * @author      : 정현종
+	 * @date        : 2024.09.13
+	 * @param       : 선택한 메뉴 번호 리스트
+	 * @description : 선택한 메뉴를 단종시키는 메소드
+	 */
+	@ResponseBody
+	@PostMapping("/deleteFrcsMenuAjax")
+	public List<String> deleteFrcsMenuAjax(@RequestBody List<String> menuNos) {
+		log.info("deleteFrcsMenu->menuNos : " + menuNos);
+        
+		// 메뉴 단종 서비스 호출
+        int result = frcsMenuService.deleteFrcsMenuAjax(menuNos);
+        log.info("deleteFrcsMenu->result : " + result);
+	    
+        return menuNos;
+	}
+}

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+@author       : 송예진
+@date         : 2024.10.03
+@description  : 발주에 대한 정산을 총괄 관리
+-->
+<mapper namespace="com.buff.com.mapper.ClclnMapper">
+
+	<resultMap type="poVO" id="poMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="deliYmd" column="DELI_YMD"/>
+		<result property="deliType" column="DELI_TYPE"/>
+		<result property="deliTypeNm" column="DELI_TYPE_NM"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<association property="bzentVO" resultMap="frcsMap"/> <!-- 가맹점 -->
+		<association property="poClclnVO" resultMap="poClclnMap"/>
+		<collection property="stockPoVOList" resultMap="stockPoMap"/>
+	</resultMap>
+	
+	<resultMap type="poClclnVO" id="poClclnMap">
+		<result property="poNo" column="PO_NO"/>
+		<result property="clclnYn" column="CLCLN_YN"/>
+		<result property="clclnAmt" column="CLCLN_AMT"/>
+		<result property="npmntAmt" column="NPMNT_AMT"/>
+		<result property="clclnYmd" column="CLCLN_YMD"/>
+		<result property="regYmd" column="REG_YMD"/>
+	</resultMap>
+	
+	<resultMap type="stockPoVO" id="stockPoMap">
+		<result property="poSeq" column="PO_SEQ"/>
+		<result property="poNo" column="PO_NO"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="qty" column="QTY"/>
+		<result property="gdsAmt" column="GDS_AMT"/>
+		<result property="spmtYmd" column="SPMT_YMD"/>
+		
+		<association property="bzentVO" resultMap="cnptMap"/> <!-- 거래처 -->
+		<association property="gdsVO" resultMap="gdsMap"/> <!-- 거래처 -->
+	</resultMap>
+	
+	<resultMap type="gdsVO" id="gdsMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="regYmd" column="REG_YMD"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsTypeNm" column="GDS_TYPE_NM"/>
+		<result property="unitNm" column="UNIT_NM"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<collection property="stockVOList" resultMap="stockMap"/>
+	</resultMap>
+	
+	<resultMap type="stockVO" id="stockMap">
+		<result property="ntslType" column="NTSL_TYPE"/>
+		<result property="ntslTypeNm" column="NTSL_TYPE_NM"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="qty" column="QTY"/>
+		<result property="ntslQty" column="NTSL_QTY"/>
+		<result property="sfStockQty" column="SF_STOCK_QTY"/>
+		
+		<association property="bzentVO" resultMap="cnptMap"/> <!-- 거래처 -->
+		<collection property="gdsAmtVOList" resultMap="gdsAmtMap"/>
+	</resultMap>
+	
+	<resultMap type="gdsAmtVO" id="gdsAmtMap">
+		<result property="amtSeq" column="AMT_SEQ"/>
+		<result property="gdsCode" column="GDS_CODE"/>
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="amt" column="AMT"/>
+		<result property="ajmtDt" column="AJMT_DT"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="cnptMap">
+		<result property="bzentNo" column="BZENT_NO"/>
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="bzentTelno" column="BZENT_TELNO"/>
+		<result property="bzentNm" column="BZENT_NM"/>
+		<result property="rgnNo" column="RGN_NO"/>
+		<result property="bzentZip" column="BZENT_ZIP"/>
+		<result property="bzentAddr" column="BZENT_ADDR"/>
+		<result property="bzentDaddr" column="BZENT_DADDR"/>
+		
+		<association property="mbrVO" resultMap="cnptMbr"/>
+	</resultMap>
+	
+	<resultMap type="bzentVO" id="frcsMap">
+		<result property="bzentNo" column="FRCS_NO"/>
+		<result property="mbrId" column="FRCS_MBR_ID"/>
+		<result property="bzentTelno" column="FRCS_TELNO"/>
+		<result property="bzentNm" column="FRCS_NM"/>
+		<result property="rgnNo" column="FRGN_NO"/>
+		<result property="bzentZip" column="FRCS_ZIP"/>
+		<result property="bzentAddr" column="FRCS_ADDR"/>
+		<result property="bzentDaddr" column="FRCS_DADDR"/>
+		
+		<association property="mbrVO" resultMap="frcsMbr"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="cnptMbr">
+		<result property="mbrId" column="MBR_ID"/>
+		<result property="mbrNm" column="MBR_NM"/>
+		<result property="mbrTelno" column="MBR_TELNO"/>
+		<result property="mbrEmlAddr" column="MBR_EML_ADDR"/>
+	</resultMap>
+	
+	<resultMap type="memberVO" id="frcsMbr">
+		<result property="mbrId" column="FMBR_ID"/>
+		<result property="mbrNm" column="FMBR_NM"/>
+		<result property="mbrTelno" column="FMBR_TELNO"/>
+		<result property="mbrEmlAddr" column="FMBR_EML_ADDR"/>
+	</resultMap>
+	
+	<!-- 
+		정산 조회
+	 -->
+	<select id="selectClcln" parameterType="hashMap" resultMap="poMap">
+		SELECT * FROM(
+		    SELECT ROW_NUMBER() OVER (<include refid="sort_clcln"/> <include refid="orderby"/>) AS RNUM
+		        , P.PO_NO
+		        , C.CLCLN_YN
+		        , C.CLCLN_AMT
+		        , CASE WHEN TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL
+		                THEN ROUND(C.CLCLN_AMT * (TRUNC(SYSDATE) - TO_DATE(REG_YMD,'YYYYMMDD')-7)*0.001,-1)
+		                            ELSE C.NPMNT_AMT END AS NPMNT_YMD
+		        , C.CLCLN_YMD
+		        , C.REG_YMD
+		        , FB.BZENT_NO AS FRCS_NO
+		        , FB.BZENT_NM AS FRCS_NM
+		        , FB.BZENT_ZIP AS FRCS_ZIP
+		        , FB.BZENT_ADDR AS FRCS_ADDR
+		        , FB.BZENT_DADDR AS FRCS_DADDR
+		        , FB.BZENT_TELNO AS FRCS_TELNO
+		        , CB.BZENT_NO
+		        , CB.BZENT_NM
+		        , CB.BZENT_ZIP
+		        , CB.BZENT_ADDR
+		        , CB.BZENT_DADDR
+		        , CB.BZENT_TELNO
+		FROM PO_CLCLN C
+		JOIN PO P ON P.PO_NO=C.PO_NO
+		JOIN BZENT FB ON P.BZENT_NO = FB.BZENT_NO
+		JOIN (SELECT DISTINCT PO_NO
+							, BZENT_NO
+				FROM STOCK_PO) S ON S.PO_NO=C.PO_NO
+		JOIN BZENT CB ON CB.BZENT_NO = S.BZENT_NO
+		    WHERE 1=1
+		    <include refid="clcln_search"/>
+		)
+		WHERE RNUM BETWEEN ((#{currentPage} - 1) * #{size}) + 1 AND #{currentPage} * #{size}
+	</select>
+	
+	<!-- 정렬 조건 시작 -->
+	<sql id="sort_clcln">
+		<!-- 발주번호 순 -->
+		<if test="sort == 'poNo'">
+			ORDER BY P.PO_NO
+		</if>
+		<if test="sort == bzentNm">
+			<choose>
+				<when test="type == 'po'">
+					ORDER BY CB.BZENT_NM
+				</when>
+				<when test="type == 'so'">
+					ORDER BY FB.BZENT_NM
+				</when>
+			</choose>
+		</if>
+		<!-- 총 금액순 -->
+		<if test="sort == 'clclnAmt'">
+			ORDER BY C.CLCLN_AMT
+		</if>
+		<!-- 배송일자순 -->
+		<if test="sort == 'clclnYmd'">
+			ORDER BY C.CLCLN_YMD
+		</if>
+		<!-- 정산여부순 -->
+		<if test="sort == 'clclnYn'">
+			ORDER BY C.CLCLN_YN
+		</if>
+	</sql>
+	
+	<sql id="orderby">
+		<if test="orderby == 'desc'">
+			DESC
+		</if>
+		 <if test="orderby == 'asc'">
+	        ASC
+	    </if>
+	</sql>
+	<!-- 정렬 조건 끝 -->
+	
+	<!-- 검색 조건 시작 -->
+	<sql id="clcln_search">
+		<!-- 연체 여부 -->
+		<if test="npmntYn == 1">
+			AND (C.NPMNT_AMT!=0 OR (TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') > 7 AND C.CLCLN_YMD IS NULL))
+		</if>
+		<if test="npmntYn == 0">
+		<![CDATA[
+			AND ((TRUNC(SYSDATE) - TO_DATE(C.REG_YMD,'YYYYMMDD') <= 7 AND C.CLCLN_YMD IS NULL) OR (C.NPMNT_AMT=0 AND C.CLCLN_YMD IS NOT NULL))
+		]]>
+		</if>
+		
+		<if test="type=='po'">
+			AND P.BZENT_NO=#{bzentNo}
+		</if>
+		<if test="type=='so'">
+			AND S.BZENT_NO=#{bzentNo}
+		</if>
+		<if test="clclnYn != null and clclnYn != ''">
+			AND C.CLCLN_YN = #{clclnYn}
+		</if>
+		<!-- 거래처 이름 검색 -->
+		<if test="bzentNm != null and bzentNm != ''">
+			<choose>
+				<when test="type == 'po'">
+					AND CB.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+				</when>
+				<when test="type == 'so'">
+					AND FB.BZENT_NM LIKE '%'||#{bzentNm}||'%'
+				</when>
+			</choose>
+		</if>
+		<!-- 등록 일자 검색 -->
+		<if test="sregYmd != null">
+		<![CDATA[
+			AND C.REG_YMD >= #{sregYmd}
+		]]>
+		</if>
+		<if test="eregYmd != null">
+		<![CDATA[
+			AND C.REG_YMD <= #{eregYmd}
+		]]>
+		</if>
+		<!-- 정산 일자 검색 -->
+		<if test="sclYmd != null">
+		<![CDATA[
+			AND C.CLCLN_YMD >= #{sclYmd}
+		]]>
+		</if>
+		<if test="eclYmd != null">
+		<![CDATA[
+			AND C.CLCLN_YMD <= #{eclYmd}
+		]]>
+		</if>
+	</sql>
+	<!-- 검색 조건 끝 -->
+	
+		<!-- 
+		발주나 납품 조회
+	 -->
+	<select id="selectTotalClcln" parameterType="hashMap" resultType="int">
+		SELECT COUNT(1)
+		FROM PO_CLCLN C
+		JOIN PO P ON P.PO_NO=C.PO_NO
+		JOIN BZENT FB ON P.BZENT_NO = FB.BZENT_NO
+		JOIN (SELECT DISTINCT PO_NO
+							, BZENT_NO
+				FROM STOCK_PO) S ON S.PO_NO=C.PO_NO
+		JOIN BZENT CB ON CB.BZENT_NO = S.BZENT_NO
+		    WHERE 1=1
+		    <include refid="clcln_search"/>
+	</select>
+</mapper>

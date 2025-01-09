@@ -1,0 +1,156 @@
+/* 공통 레이아웃 */
+.section-cont {
+	display: flex;
+	position: relative;
+	justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+	font-size: 2rem;
+	font-weight: bold;
+}
+
+/* 이벤트 이미지 슬라이드 배너 스타일 */
+#carouselMain {
+    position: relative;
+    padding-top: 163px;
+}
+
+.main-img {
+    width: -webkit-fill-available;
+}
+
+.wrap-main {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+/* 주문바로가기 */
+.order-wrap {
+	display: flex;
+	gap: 20px;
+    width: 1170px;
+}
+
+.order-cont {
+    width: 100%;
+    border-radius: 12px;
+    padding: 30px 0 0 0;
+    line-height: 70px;
+    font-size: 1.2rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.order-title {
+	font-family: 'KIMM';
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.go-icon {
+    font-size: 2rem;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* 메뉴 영역 */
+.menu-section {
+    padding: 50px 0 70px 0;
+    background: #f6ffdf;
+}
+
+.menu-wrap {
+	display: flex;
+	gap: 20px;
+}
+
+.menu-cont {
+    background: white;
+    padding: 0 40px 40px 40px;
+    border-radius: 12px;
+}
+
+.menu-cont .img-box {
+    height: 300px;
+    background-size: 102%;
+}
+
+.carouselMenu-btn {
+	display: flex;
+	gap: 5px;
+}
+
+.carouselMenu-prev, .carouselMenu-next {
+    position: inherit;
+    display: block;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #fff;
+    text-align: center;
+    background: 0 0;
+    border: 0;
+    opacity: .5;
+    transition: opacity .15s ease;
+    width: 100%;
+    border: 2px solid var(--brand--primary);
+}
+
+.menu-move-icon {
+	font-size: 2.5rem;
+	color: var(--brand--primary);
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    height: 100%;
+}
+
+/* 카드 컨테이너 스타일 */
+.cont {
+    padding: var(--pd--m);
+    background-color: var(--gray--0);
+    border-radius: var(--radius--m);
+}
+
+.card-cont {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap--m); /* 카드 간격 */
+}
+
+/* 카드 스타일 */
+.card {
+    background-color: var(--gray--0);
+    border: 1px solid var(--border--primary);
+    border-radius: var(--radius--s);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: var(--pd--s);
+    width: calc(33.333% - var(--gap--m)); /* 3개씩 배치, 카드 간격을 고려 */
+    box-sizing: border-box;
+    text-align: center; /* 카드 내 텍스트 중앙 정렬 */
+}
+
+/* 카드 제목 스타일 */
+.card h2 {
+    margin-top: 0;
+    font-size: var(--accent--size);
+    font-weight: var(--accent--weight);
+    color: var(--text--primary);
+}
+
+/* 카드 내용 스타일 */
+.card p {
+    margin: var(--gap--s) 0;
+    color: var(--text--secondary);
+}
+
+/* 카드 영역 스타일 */
+.cont-wrap {
+    display: flex;
+    justify-content: center; /* 카드 컨테이너 중앙 정렬 */
+}
