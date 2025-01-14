@@ -1,5 +1,5 @@
 # 🍔 BuFF 햄버거 프랜차이즈 전사자원관리(ERP) 웹사이트 
-
+![프로젝트 개요 캡쳐](https://github.com/user-attachments/assets/e3eb0f12-48ab-4b67-82ba-f7ebe220e891)
 <br/>
 
 
@@ -38,7 +38,7 @@
 
 ##  🖥️ 웹사이트 초기화면
 
-(https://github.com/byeong-hun-illy/myBuFF/issues/3#issue-2787608803)
+![초기화면2](https://github.com/user-attachments/assets/26bcea7d-2c29-472b-bd67-47cb7d6db444)
 
 <br/>
 
