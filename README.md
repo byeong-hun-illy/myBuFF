@@ -1,5 +1,5 @@
 # 🍔 BuFF 햄버거 프랜차이즈 전사자원관리(ERP) 웹사이트 
-![프로젝트개요](https://user-images.githubusercontent.com/71995287/128670411-152ffcf4-e057-4375-8fe7-3327ee45366e.PNG)
+
 <br/>
 
 
@@ -38,9 +38,7 @@
 
 ##  🖥️ 웹사이트 초기화면
 
-* 카카오 오븐 활용
-* Blue Bottle 색깔에 맞춰 제작
-![오븐](https://user-images.githubusercontent.com/71995287/129475873-46659033-6a22-419e-b99b-adcab3a25c27.PNG)
+(https://github.com/byeong-hun-illy/myBuFF/issues/3#issue-2787608803)
 
 <br/>
 
