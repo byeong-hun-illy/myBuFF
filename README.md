@@ -502,7 +502,7 @@ function inputOrd(ord){
 * 대부분 콤마(,) 띄어쓰기 세미콜론(;) 등 의 오타나 문법에 의해 발생한 오류입니다.
 * 나의 경우 `콤마`실수로 콤마를 추가해 문제를 해결했다.
 ```sql
- <!-- 지점 마이페이지 -->
+ 
 	<select id="getBUser" parameterType="hashmap" resultType="hashmap">
 		SELECT BRCH_NO AS BNO, ID, `PW 오류지점` BRCH_NAME AS BNM, POST_NUM AS PNUM, DFT_ADDRESS AS DFADDR, DTL_ADDRESS AS DTADDR, CALL_NUM AS CNUM, MGR_NAME AS MNM, MGR_PHONE_NUM AS MGPNUM
 		FROM BRCH
