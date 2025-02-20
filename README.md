@@ -38,18 +38,36 @@
 
 ##  🖥️ 웹사이트 초기화면
 
+![초기화면1](https://github.com/user-attachments/assets/619c63fb-53e0-4636-8c20-033fa04e963b)
+
+<br/>
+
 ![초기화면2](https://github.com/user-attachments/assets/26bcea7d-2c29-472b-bd67-47cb7d6db444)
 
 <br/>
 
+## 🌐 고객 권한 메인 페이지
+
+![고객 권한 추가된 메인페이지](https://github.com/user-attachments/assets/a36869aa-13f6-41d2-97c0-0ab5997d872e)
+
+<br/>
+
+## 🌐 거래처 관리자 메인 페이지
+
+![거래처 메인페이지](https://github.com/user-attachments/assets/8f11e471-ee7b-4122-9fe5-8bbd2faf38e3)
+
+<br/>
+
+
 ##  ⚒ DB 설계
 
-* diagrams 활용
-![진짜3](https://user-images.githubusercontent.com/71995287/128507795-107c7f19-6c83-42c6-9521-10a36298dd25.PNG)
+* erdCloud 활용
+![BuFF ERD](https://github.com/user-attachments/assets/21244548-a9c1-4e28-9b03-2800e4989667)
 
 ---
 <br/>
 
+<!--
 * 데이터를 기준으로 테이블 정의서 작성
 ![테이블 정의서](https://user-images.githubusercontent.com/71995287/129476034-c6a4ee4c-dadf-44d7-bdaf-3c4921669408.PNG)
 
@@ -507,4 +525,4 @@ function inputOrd(ord){
 	
 > [프로젝트 회고](https://velog.io/@wogus216/%EB%B8%94%EB%A3%A8%EB%B3%B4%ED%8B%80-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%ED%9A%8C%EA%B3%A0)
 	
-	
+-->	
